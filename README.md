@@ -1,4 +1,4 @@
-# Ultimate Todoist Sync for Obsidian
+# Ultimate Todoist Sync for Obsidian (Experimentations)
 
 The Ultimate Todoist Sync plugin automatically creates tasks in Todoist and synchronizes task state between Obsidian and Todoist.
 
