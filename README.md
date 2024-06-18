@@ -1,39 +1,38 @@
-# Ultimate Todoist Sync for Obsidian (Experimentations)
+# Simple Todoist Sync for Obsidian (Alpha)
 
-The Ultimate Todoist Sync plugin automatically creates tasks in Todoist and synchronizes task state between Obsidian and Todoist.
+NOTE: I'm just messing with this repo, please don't use it for anything meaningful yet :)
+
+This is a fork from the Ultimate Todoist Sync plugin for Obsidian. It creates tasks from Obsidian to Todoist and keep them synchronized.
 
 
-## Demo
-
-### Usage
 ![Alt Text](/attachment/demo.gif)
 
-### Settings page
-<img src="/attachment/settings.png" width="500">
 
 
 ## Features 
 
 ### 
-| Feature                 | Sync from Obsidian to Todoist | Sync from Todoist to Obsidian | Description |
-|-------------------------|-------------------------------|-------------------------------|-------------|
-| Add task                | ✅                            | 🔜                           |             |
-| Delete task             | ✅                            | 🔜                           |             |
-| Modify task content     | ✅                            | ✅                           |             |
-| Modify task due date    | ✅                            | ✅                           |             |
-| Modify task description | 🔜                            | 🔜                           |             |
-| Modify task labels/tags | ✅                            | 🔜                           |             |
-| Mark task as completed  | ✅                            | ✅                           |             |
-| Mark task as uncompleted| ✅                            | ✅                           |             |
-| Modify project          | 🔜                            | 🔜                           |             |
-| Modify section          | 🔜                            | 🔜                           |             |
-| Modify priority         | ✅                            | 🔜                           |  Currently, task priority only support one-way synchronization from Todoist to Obsidian.           |
-| Add reminder            | 🔜                            | 🔜                           |             |
-| Move tasks between files| 🔜                            | 🔜                           |             |
-| Added-at date           | 🔜                            | 🔜                           |             |
-| Completed-at date       | 🔜                            | 🔜                           |             |
-| Task notes              | 🔜                            | ✅                           |   Currently, task notes/comments only support one-way synchronization from Todoist to Obsidian.          |
+| Feature                 | from Obsidian to Todoist | from Todoist to Obsidian | 
+|-------------------------|-------------------------------|-------------------------------|
+| Add task                | ✅                            | 🔜                           |             
+| Delete task             | ✅                            | 🔜                           |             
+| Modify task content     | ✅                            | ✅                           |             
+| Modify task due date    | ✅                            | ✅                           |             
+| Modify task description | 🔜                            | 🔜                           |             
+| Modify task labels/tags | ✅                            | 🔜                           |             
+| Mark task as completed  | ✅                            | ✅                           |             
+| Mark task as uncompleted| ✅                            | ✅                           |             
+| Modify project          | 🔜                            | 🔜                           |             
+| Modify section          | 🔜                            | 🔜                           |             
+| Modify priority [1]     | ✅                            | 🔜                           | 
+| Add reminder            | 🔜                            | 🔜                           |
+| Move tasks between files| 🔜                            | 🔜                           |
+| Added-at date           | 🔜                            | 🔜                           |
+| Completed-at date       | 🔜                            | 🔜                           |
+| Task notes [2]          | 🔜                            | ✅                           |
 
+[1] Task priority only support one-way synchronization
+[2] Task notes/comments only support one-way synchronization from Todoist to Obsidian.
 
 ## Installation
 
