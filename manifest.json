@@ -1,7 +1,7 @@
 {
 	"id": "simple-todoist-sync-experiment",
 	"name": "Experimenting with Todoist Sync",
-	"version": "0.0.1",
+	"version": "0.0.3",
 	"minAppVersion": "1.0.0",
 	"description": "This is an experiment based on the fork of the Ultimate Todoist Sync",
 	"author": "eudennis",

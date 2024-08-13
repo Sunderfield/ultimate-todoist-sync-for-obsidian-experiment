@@ -1,7 +1,7 @@
 {
-	"name": "ultimate-todoist-sync",
-	"version": "1.0.1",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"name": "simple-todoist-sync",
+	"version": "1.0.2",
+	"description": "This is fork from Ultimate Todoist Sync plugin for Obsidian (https://obsidian.md)",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",

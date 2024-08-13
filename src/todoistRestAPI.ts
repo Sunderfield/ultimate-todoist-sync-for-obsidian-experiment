@@ -11,7 +11,7 @@ function  localDateStringToUTCDatetimeString(localDateString:string) {
           if(localDateString === null){
             return null
           }
-          localDateString = localDateString + "T08:00";
+          
           let localDateObj = new Date(localDateString);
           let ISOString = localDateObj.toISOString()
           return(ISOString);
@@ -42,14 +42,15 @@ export class TodoistRestAPI  {
         const api = await this.initializeAPI()
         try {
           if(dueDate){
-            dueDatetime = localDateStringToUTCDatetimeString(dueDatetime)
-            dueDate = null
+            dueDatetime = localDateStringToUTCDatetimeString(dueDatetime) || undefined
+            dueDate = undefined
           }  
           const newTask = await api.addTask({
             projectId,
             content,
             parentId,
             dueDate,
+            dueDatetime,
             labels,
             description,
             priority
