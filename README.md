@@ -14,8 +14,6 @@ Create, edit and delete tasks from Obsidian.md to your Todoist.
 
 
 
-
-
 *Some features works only Todoist -> Obsidian, others by-directional. Find more details on the table below.*
 
 <details>
