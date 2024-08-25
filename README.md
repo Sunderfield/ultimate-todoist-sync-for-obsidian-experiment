@@ -25,7 +25,8 @@ Create, edit and delete tasks from Obsidian.md to your Todoist.
 | Add task                | ✅                            | 🔜                           |             
 | Delete task             | ✅                            | 🔜                           |             
 | Modify task content     | ✅                            | ✅                           |             
-| Modify task due date    | ✅                            | ✅                           |             
+| Modify task due date    | ✅                            | ✅                           |    
+| Modify task due time    | ✅                            | 🔜                           |             
 | Modify task description | 🔜                            | 🔜                           |             
 | Modify task labels/tags | ✅                            | 🔜                           |             
 | Mark task as completed  | ✅                            | ✅                           |             
@@ -93,12 +94,21 @@ By enabling this option, the plugin will automatically add `#todoist` to all tas
 
 | Syntax | Description | Example |
 | --- | --- | --- |
-|#todoist|Tasks marked with `#todoist` will be added to Todoist, while tasks without the `#todoist` tag will not be processed.If you have enabled Full vault sync in the settings, `#todoist` will be added automatically.| `- [ ] task #todoist`|
-| 📅YYYY-MM-DD | The date format is 📅YYYY-MM-DD, indicating the due date of a task. | `- [ ] task content 📅2025-02-05 #todoist`   <br>Supports the following calendar emojis.📅📆🗓🗓️|
-| #projectTag | New tasks will be added to the default project(For example,  inbox .), and you can change the default project in the settings or use a tag with the same name to specify a particular project. | `- [ ] taskA #todoist` will be added to inbox.<br>`- [ ] taskB #tag #testProject #todoist` will be added to testProject.|
-| #tag | Note that all tags without a project of the same name are treated as normal tags | `- [ ] task #tagA #tagB #tagC #todoist` |
-|   `!!<number>` | The priority of the task (a number between 1 and 4, 4 for very urgent and 1 for natural).<br>**Note**: Keep in mind that very urgent is the priority 1 on clients. So, the priority 1 in the client corresponds to the number 4 here (Because that's how the official API of Todoist is designed.). | `- [ ] task !!4 #todoist` |
-|⏲HH:MM|This sets the time of the task. If none is given, the default is 08:00|`- [ ] task ⏲23:59|
+|#todoist           |   Tasks marked with `#todoist` will be added to Todoist, while tasks without the `#todoist` tag will not be processed.If you have enabled Full vault sync in the settings, `#todoist` will be added automatically.| `- [ ] task #todoist`|
+| 📅YYYY-MM-DD      | The date format is 📅YYYY-MM-DD, indicating the due date of a task. | `- [ ] task content 📅2025-02-05 #todoist` [1] |
+| #projectTag       | New tasks will be added to the default project (e.g: inbox), and you can change the default project in the settings or use a tag with the same name to specify a particular project. | `- [ ] taskA #todoist` will be added to inbox.<br>`- [ ] taskB #tag #testProject #todoist` will be added to testProject.|
+| #tag              | Note that all tags without a project of the same name are treated as normal tags | `- [ ] task #tagA #tagB #tagC #todoist` |
+|   `!!<number>`    | The priority of the task (a number between 1 and 4, 4 for very urgent and 1 for natural). [2] | `- [ ] task !!4 #todoist` |
+|⏰HH:MM             |This sets the time of the task. If none is given, the default is 08:00|`- [ ] task ⏰23:59`[3]|
+
+<details>
+<summary>#### Usage footnotes</summary>
+
+- [1] Supports the following emojis: 📅, 📆, 🗓, 🗓️
+- [2] Keep in mind that very urgent is the priority 1 on clients. So, the priority 1 in the client corresponds to the number 4 here (Because that's how the official API of Todoist is designed.).
+- [3] Supports the following emojis: ⏰, ⏲
+
+</details>
 
 ###  Set a default project for each file separately
 
