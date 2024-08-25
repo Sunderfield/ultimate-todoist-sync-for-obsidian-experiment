@@ -1,17 +1,27 @@
 # Simple Todoist Sync for Obsidian (Alpha)
 
-NOTE: I'm just messing with this repo, please don't use it for anything meaningful yet :)
+Create, edit and delete tasks from Obsidian.md to your Todoist.
 
-This is a fork from the Ultimate Todoist Sync plugin for Obsidian. It creates tasks from Obsidian to Todoist and keep them synchronized.
+> [!WARNING]
+> This is a fork from the [Ultimate Todoist Sync plugin for Obsidian](https://github.com/HeroBlackInk/ultimate-todoist-sync-for-obsidian), but the project seems to be abandoned. Feel free to do pull requests.
+
+> [!CAUTION]
+> I've made this fork to test some things, please don't use it for anything meaningful yet :)
 
 
 ![Alt Text](/attachment/demo.gif)
 
 
 
-## Features 
 
-### 
+
+
+*Some features works only Todoist -> Obsidian, others by-directional. Find more details on the table below.*
+
+<details>
+
+<summary>Table of detailed features supported</summary>
+
 | Feature                 | from Obsidian to Todoist | from Todoist to Obsidian | 
 |-------------------------|-------------------------------|-------------------------------|
 | Add task                | ✅                            | 🔜                           |             
@@ -34,6 +44,8 @@ This is a fork from the Ultimate Todoist Sync plugin for Obsidian. It creates ta
 [1] Task priority only support one-way synchronization
 [2] Task notes/comments only support one-way synchronization from Todoist to Obsidian.
 
+<details>
+
 ## Installation
 
 ### From within Obsidian
@@ -55,7 +67,7 @@ You can update the plugin following the same procedure, clicking `Update` instea
 
 If you would rather install the plugin manually, you can do the following:
 
-1. Download the latest release of the plugin from the [Releases](https://github.com/HeroBlackInk/ultimate-todoist-sync-for-obsidian/releases) page.
+1. Download the latest release of the plugin from the [Releases](https://github.com/eudennis/ultimate-todoist-sync-for-obsidian-experiment/releases) page.
 2. Extract the downloaded zip file and copy the entire folder to your Obsidian plugins directory.
 3. Enable the plugin in the Obsidian settings.
 
@@ -88,16 +100,14 @@ By enabling this option, the plugin will automatically add `#todoist` to all tas
 | #projectTag | New tasks will be added to the default project(For example,  inbox .), and you can change the default project in the settings or use a tag with the same name to specify a particular project. | `- [ ] taskA #todoist` will be added to inbox.<br>`- [ ] taskB #tag #testProject #todoist` will be added to testProject.|
 | #tag | Note that all tags without a project of the same name are treated as normal tags | `- [ ] task #tagA #tagB #tagC #todoist` |
 |   `!!<number>` | The priority of the task (a number between 1 and 4, 4 for very urgent and 1 for natural).<br>**Note**: Keep in mind that very urgent is the priority 1 on clients. So, the priority 1 in the client corresponds to the number 4 here (Because that's how the official API of Todoist is designed.). | `- [ ] task !!4 #todoist` |
+|⏲HH:MM|This sets the time of the task. If none is given, the default is 08:00|`- [ ] task ⏲23:59|
 
 ###  Set a default project for each file separately
 
-The default project in the setting applies to all files. You can set a separate default project for each file using command. 
+The default project in the setting applies to all files. You can set a separate default project for each file using the comand `Set default project for todoist task in the current file` from the command menu. 
 
 <img src="/attachment/command-set-default-project-for-file.png" width="500">
 <img src="/attachment/default-project-for-file-modal.png" width="500">
-
-You can see the current file's default project in the status bar at the bottom right corner.
-<img src="/attachment/statusBar.png" width="500">
 
 
 ## Disclaimer
