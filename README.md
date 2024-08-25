@@ -39,10 +39,10 @@ Create, edit and delete tasks from Obsidian.md to your Todoist.
 | Completed-at date       | 🔜                            | 🔜                           |
 | Task notes [2]          | 🔜                            | ✅                           |
 
-[1] Task priority only support one-way synchronization
-[2] Task notes/comments only support one-way synchronization from Todoist to Obsidian.
+- [1] Task priority only support one-way synchronization
+- [2] Task notes/comments only support one-way synchronization from Todoist to Obsidian.
 
-<details>
+</details>
 
 ## Installation
 
