@@ -277,6 +277,9 @@ export class FileOperation   {
     // sync updated task due date  to the file
     async syncUpdatedTaskDueDateToTheFile(evt:Object) {
         const taskId = evt.object_id
+        // console.log("The taskID evt object value is: " + JSON.stringify(evt))
+        
+
         // 获取任务文件路径
         const currentTask = await this.plugin.cacheOperation.loadTaskFromCacheyID(taskId)
         const filepath = currentTask.path
@@ -290,15 +293,24 @@ export class FileOperation   {
     
         for (let i = 0; i < lines.length; i++) {
         const line = lines[i]
+
         if (line.includes(taskId) && this.plugin.taskParser.hasTodoistTag(line)) {
             const oldTaskDueDate = this.plugin.taskParser.getDueDateFromLineText(line) || ""
             const newTaskDueDate = this.plugin.taskParser.ISOStringToLocalDateString(evt.extra_data.due_date) || ""
+
             
-            //console.log(`${taskId} duedate is updated`)
-            console.log(oldTaskDueDate)
-            console.log(newTaskDueDate)
+            const oldTaskTime = this.plugin.taskParser.getDueTimeFromLineText(line) || ""
+            
+            const newTaskTime = this.plugin.taskParser.ISOStringToLocalClockTimeString(evt.extra_data.due_date) || ""
+            // TODO needs to consider what to do when the task doesn't have time
+            // TODO how to handle when the task has the new "timeslot" with start + finish time?
+
+            // TODO 'trimmedOldTaskDueDate' looks just for the date, removing any other information, like hour. This very likely will break some dates sometimes, need a more inteligent solution
+            const trimmedOldTaskDueDate = oldTaskDueDate.slice(0,10)
+
+
+      
             if(oldTaskDueDate === ""){
-                //console.log(this.plugin.taskParser.insertDueDateBeforeTodoist(line,newTaskDueDate))
                 lines[i] = this.plugin.taskParser.insertDueDateBeforeTodoist(line,newTaskDueDate)
                 modified = true
 
@@ -309,11 +321,24 @@ export class FileOperation   {
                 lines[i] = line.replace(regexRemoveDate,"")
                 modified = true
             }
-            else{
-
-                lines[i] = line.replace(oldTaskDueDate, newTaskDueDate)
+            else if(newTaskDueDate !== trimmedOldTaskDueDate){
+                lines[i] = line.replace(trimmedOldTaskDueDate, newTaskDueDate)
                 modified = true
             }
+
+            else if(oldTaskTime === "" && newTaskTime !== "") {
+                const newDateWithTime = newTaskDueDate + " ⏰" + newTaskTime;
+                lines[i] = line.replace(newTaskDueDate,newDateWithTime)
+                modified = true
+            }
+
+            else if(oldTaskTime !== newTaskTime){
+                lines[i] = line.replace(oldTaskTime,newTaskTime)
+                modified = true
+            }
+
+            
+
             break
         }
         }

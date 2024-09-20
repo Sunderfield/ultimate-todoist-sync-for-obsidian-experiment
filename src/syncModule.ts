@@ -385,6 +385,7 @@ export class TodoistSync  {
             let priorityChanged = false;
             
             let updatedContent = {}
+            console.log("updatedContent before checks = " + JSON.stringify(updatedContent))
             if (contentModified) {
                 console.log(`Content modified for task ${lineTask_todoist_id}`)
                 updatedContent.content = lineTaskContent
@@ -402,6 +403,7 @@ export class TodoistSync  {
                 console.log(`Due date modified for task ${lineTask_todoist_id}`)
                 console.log(lineTask.dueDate)
                 //console.log(savedTask.due.date)
+                // TODO there is something odd with this date change
                 if(lineTask.dueDate === ""){
                     updatedContent.dueString = "no date"
                 }else{
@@ -431,10 +433,13 @@ export class TodoistSync  {
                 priorityChanged = true;
             }
 
+            console.log("updatedContent after checks = " + JSON.stringify(updatedContent))
+
 
             if (contentChanged || tagsChanged ||dueDateChanged ||projectChanged || parentIdChanged || priorityChanged) {
                 //console.log("task content was modified");
-                //console.log(updatedContent)
+                console.log("Updated content is: " + updatedContent)
+                // Here it calls the updateTask in todoistRestAPI with the content
                 const updatedTask = await this.plugin.todoistRestAPI.UpdateTask(lineTask.todoist_id.toString(),updatedContent)
                 updatedTask.path = filepath
                 this.plugin.cacheOperation.updateTaskToCacheByID(updatedTask);
@@ -458,8 +463,8 @@ export class TodoistSync  {
 
             
             if (contentChanged || statusChanged ||dueDateChanged ||tagsChanged || projectChanged || priorityChanged) {
-                console.log(lineTask)
-                console.log(savedTask)
+                console.log("lineTask content: " + lineTask)
+                console.log("savedTask content:" + savedTask)
                 //`Task ${lastLineTaskTodoistId} was modified`
                 this.plugin.saveSettings()
                 let message = `Task ${lineTask_todoist_id} is updated.`;

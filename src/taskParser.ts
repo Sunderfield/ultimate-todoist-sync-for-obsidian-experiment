@@ -243,6 +243,17 @@ export class TaskParser   {
             : date[1] + "T08:00";
     }
 
+    getDueTimeFromLineText(text: string) {
+        const current_time = REGEX.DUE_TIME.exec(text);
+        if(current_time){
+            return current_time[1]
+        }
+        else {
+            return ""
+        }
+
+    }
+
   
   
     getProjectNameFromLineText(text:string){
@@ -456,10 +467,17 @@ export class TaskParser   {
           }
           let utcDateString = utcTimeString;
           let dateObj = new Date(utcDateString); // 将UTC格式字符串转换为Date对象
+
+          console.log("Inside taskParser.ts the dateObj now is: " + JSON.stringify(dateObj))
           let year = dateObj.getFullYear();
           let month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
           let date = dateObj.getDate().toString().padStart(2, '0');
           let localDateString = `${year}-${month}-${date}`;
+          let timeHour = dateObj.getHours();
+          let timeMinute = dateObj.getMinutes();
+          let localTimeString = `${timeHour}:${timeMinute}`;
+
+          console.log("localTimeString is = " + localTimeString)
           return localDateString;
           return(localDateString);
         } catch (error) {
@@ -467,6 +485,31 @@ export class TaskParser   {
           return null;
         }
     }
+
+
+    //This is a dup from ISOStringToLocalDateString, but parse the time
+    ISOStringToLocalClockTimeString(utcTimeString:string) {
+        try {
+          if(utcTimeString === null){
+            return null
+          }
+          let utcDateString = utcTimeString;
+          let dateObj = new Date(utcDateString); // 将UTC格式字符串转换为Date对象
+
+          let timeHour = dateObj.getHours();
+          let timeMinute = dateObj.getMinutes();
+          let localTimeString = `${timeHour}:${timeMinute}`;
+
+          console.log("localTimeString is = " + localTimeString)
+          return localTimeString;
+          return(localTimeString);
+        } catch (error) {
+          console.error(`Error extracting date from string '${utcTimeString}': ${error}`);
+          return null;
+        }
+    }
+
+
 
 
     //extra date from obsidian event
@@ -496,17 +539,17 @@ export class TaskParser   {
     //const str = "2023-03-27";
     //const utcStr = localDateStringToUTCDatetimeString(str);
     //console.log(dateStr); // 输出 2023-03-27T00:00:00.000Z
-    localDateStringToUTCDatetimeString(localDateString:string) {
+    localDateStringToUTCDatetimeString(localDatetimeString:string) {
         try {
-          if(localDateString === null){
+          if(localDatetimeString === null){
             return null
           }
-          localDateString = localDateString;
-          let localDateObj = new Date(localDateString);
-          let ISOString = localDateObj.toISOString()
+        //   localDatetimeString = localDatetimeString;
+          const localDateObj = new Date(localDatetimeString);
+          const ISOString = localDateObj.toISOString()
           return(ISOString);
         } catch (error) {
-          console.error(`Error extracting date from string '${localDateString}': ${error}`);
+          console.error(`Error extracting date from string '${localDatetimeString}': ${error}`);
           return null;
         }
     }
@@ -521,11 +564,11 @@ export class TaskParser   {
           if(localDateString === null){
             return null
           }
-          localDateString = localDateString;
-          let localDateObj = new Date(localDateString);
-          let ISOString = localDateObj.toISOString()
+        //   localDateString = localDateString;
+          const localDateObj = new Date(localDateString);
+          const ISOString = localDateObj.toISOString()
         //   let utcDateString = ISOString.slice(0,10)
-          return(utcDateString);
+          return(ISOString);
         } catch (error) {
           console.error(`Error extracting date from string '${localDateString}': ${error}`);
           return null;

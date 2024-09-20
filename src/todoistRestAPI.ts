@@ -6,7 +6,13 @@ import UltimateTodoistSyncForObsidian from "../main";
     //const str = "2023-03-27";
     //const utcStr = localDateStringToUTCDatetimeString(str);
     //console.log(dateStr); // 输出 2023-03-27T00:00:00.000Z
+
+    // My hypothesis is that this function fails because there is no date yet
 function  localDateStringToUTCDatetimeString(localDateString:string) {
+        
+        // Let's see what this function is receiving
+        console.log("Here it receives localDateString: " + localDateString)
+
         try {
           if(localDateString === null){
             return null
@@ -20,6 +26,7 @@ function  localDateStringToUTCDatetimeString(localDateString:string) {
           return null;
         }
 }
+
 
 export class TodoistRestAPI  {
 	app:App;
@@ -42,9 +49,13 @@ export class TodoistRestAPI  {
         const api = await this.initializeAPI()
         try {
           if(dueDate){
-            dueDatetime = localDateStringToUTCDatetimeString(dueDatetime) || undefined
+            console.log("dueDate = " + dueDate)
+            console.log("dueDatetime = " + dueDatetime)
+            dueDatetime = localDateStringToUTCDatetimeString(dueDate) || undefined
+            console.log("dueDateTime after transformation = " + dueDatetime)
             dueDate = undefined
           }  
+
           const newTask = await api.addTask({
             projectId,
             content,
@@ -86,7 +97,18 @@ export class TodoistRestAPI  {
         }
         try {
         if(updates.dueDate){
-            console.log(updates.dueDate)
+            console.log(
+              "Console.log from updates = " + taskId
+              + "\n console.log updates.content = " + updates.content
+              + "\n console.log updates.description = " + updates.description
+              + "\n console.log updates.labels = " + updates.labels
+              + "\n console.log updates.dueDate = " + updates.dueDate
+              + "\n console.log updates.dueDatetime = " + updates.dueDatetime 
+              + "\n console.log updates.dueString = " + updates.dueString
+              + "\n console.log updates.parentId = " + updates.parentId 
+              + "\n console.log updates.priority = " + updates.priority 
+            )
+            console.log("Console.log from updates.dueDate = " + updates.dueDate)
             updates.dueDatetime = localDateStringToUTCDatetimeString(updates.dueDate)
             updates.dueDate = null
             console.log(updates.dueDatetime)
