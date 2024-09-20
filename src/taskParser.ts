@@ -60,7 +60,8 @@ const REGEX = {
     PROJECT_NAME: /\[project::\s*(.*?)\]/,
     TASK_CONTENT: {
         REMOVE_PRIORITY: /\s!!([1-4])\s/,
-        REMOVE_TAGS: /(^|\s)(#[a-zA-Z\d\u4e00-\u9fa5-]+)/g,
+        // REMOVE_TAGS: /(^|\s)(#[a-zA-Z\d\u4e00-\u9fa5-]+)/g,
+        REMOVE_TAGS: /(^|\s)(#[\w\d\u4e00-\u9fa5-]+)/g,
         REMOVE_SPACE: /^\s+|\s+$/g,
         REMOVE_DATE: new RegExp(`(${keywords.DUE_DATE})\\s?\\d{4}-\\d{2}-\\d{2}`),
         REMOVE_TIME: new RegExp(`(${keywords.DUE_TIME})\\s?\\d{2}:\\d{2}`),
@@ -143,7 +144,7 @@ export class TaskParser   {
         
         const dueDate = this.getDueDateFromLineText(textWithoutIndentation)
         const labels =  this.getAllTagsFromLineText(textWithoutIndentation)
-        //console.log(`labels is ${labels}`)
+        console.log(`labels is ${labels}`)
 
         //dataview format metadata
         //const projectName = this.getProjectNameFromLineText(textWithoutIndentation) ?? this.plugin.settings.defaultProjectName
@@ -163,7 +164,7 @@ export class TaskParser   {
         
                 //console.log(label)
                 let labelName = label.replace(/#/g, "");
-                //console.log(labelName)
+                // console.log("labelName value = " + labelName)
                 let hasProjectId = this.plugin.cacheOperation.getProjectIdByNameFromCache(labelName)
                 if(!hasProjectId){
                     continue
@@ -317,11 +318,15 @@ export class TaskParser   {
     //get all tags from task text
     getAllTagsFromLineText(lineText:string){
         let tags = lineText.match(REGEX.ALL_TAGS);
+
+        console.log("tags value is: " + tags)
     
         if (tags) {
             // Remove '#' from each tag
             tags = tags.map(tag => tag.replace('#', ''));
         }
+
+        console.log("value of tags = " + tags)
     
         return tags;
     }
