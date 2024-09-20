@@ -1,7 +1,7 @@
 {
 	"id": "another-simple-todoist-sync",
 	"name": "Another Simple Todoist Sync",
-	"version": "0.0.4.0",
+	"version": "0.0.5.0",
 	"minAppVersion": "1.0.0",
 	"description": "Simple plugin to sync Todoist and Obsidian. Forked from Ultimate Todoist Sync for Obsidian.",
 	"author": "eudennis",

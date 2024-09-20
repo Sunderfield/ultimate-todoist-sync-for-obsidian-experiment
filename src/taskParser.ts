@@ -144,7 +144,7 @@ export class TaskParser   {
         
         const dueDate = this.getDueDateFromLineText(textWithoutIndentation)
         const labels =  this.getAllTagsFromLineText(textWithoutIndentation)
-        console.log(`labels is ${labels}`)
+        // console.log(`labels is ${labels}`)
 
         //dataview format metadata
         //const projectName = this.getProjectNameFromLineText(textWithoutIndentation) ?? this.plugin.settings.defaultProjectName

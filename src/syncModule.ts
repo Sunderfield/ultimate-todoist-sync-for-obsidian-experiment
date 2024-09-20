@@ -438,7 +438,7 @@ export class TodoistSync  {
 
             if (contentChanged || tagsChanged ||dueDateChanged ||projectChanged || parentIdChanged || priorityChanged) {
                 //console.log("task content was modified");
-                console.log("Updated content is: " + updatedContent)
+                console.log("Updated content is: " + JSON.stringify(updatedContent))
                 // Here it calls the updateTask in todoistRestAPI with the content
                 const updatedTask = await this.plugin.todoistRestAPI.UpdateTask(lineTask.todoist_id.toString(),updatedContent)
                 updatedTask.path = filepath

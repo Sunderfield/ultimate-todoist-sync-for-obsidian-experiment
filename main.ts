@@ -65,7 +65,7 @@ export default class UltimateTodoistSyncForObsidian extends Plugin {
 				return
 			}
 			//console.log(`key pressed`)
-			
+						
 			//判断点击事件发生的区域,如果不在编辑器中，return
 			if (!(this.app.workspace.activeEditor?.editor?.hasFocus())) {
 				(console.log(`editor is not focused`))

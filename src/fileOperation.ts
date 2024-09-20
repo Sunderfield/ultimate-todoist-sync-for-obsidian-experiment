@@ -356,6 +356,10 @@ export class FileOperation   {
     async syncAddedTaskNoteToTheFile(evt:Object) {
 
 
+        if (this.plugin.settings.debugMode) {
+            console.log("This is the evt object value: " + JSON.stringify(evt))
+        }
+
         const taskId = evt.parent_item_id
         const note = evt.extra_data.content
         const datetime = this.plugin.taskParser.ISOStringToLocalDatetimeString(evt.event_date)
@@ -382,9 +386,17 @@ export class FileOperation   {
         }
     
         if (modified) {
-        const newContent = lines.join('\n')
-        //console.log(newContent)
-        await this.app.vault.modify(file, newContent)
+            if(this.plugin.settings.commentsSync){
+                if (this.plugin.settings.debugMode){console.log("New comments from the task " + taskId)}
+                
+                const newContent = lines.join('\n')
+                //console.log(newContent)
+                await this.app.vault.modify(file, newContent)
+            }
+            else {
+                if (this.plugin.settings.debugMode){console.log("There is new comments on task " + taskId + " but those were not added because the commentsSync settings is disabled.")}
+            }
+
         }
         
     }

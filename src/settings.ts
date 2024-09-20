@@ -21,6 +21,7 @@ export interface UltimateTodoistSyncSettings {
 	enableFullVaultSync: boolean;
 	statistics: any;
 	debugMode:boolean;
+	commentsSync:boolean;
 }
 
 
@@ -34,6 +35,7 @@ export const DEFAULT_SETTINGS: UltimateTodoistSyncSettings = {
 	enableFullVaultSync:false,
 	statistics:{},
 	debugMode:false,
+	commentsSync:true,
 	//mySetting: 'default',
 	//todoistTasksFilePath: 'todoistTasks.json'
 
@@ -380,7 +382,18 @@ export class UltimateTodoistSyncSettingTab extends PluginSettingTab {
 							this.plugin.saveSettings()						
 						})
 						
-				)
+				);
+
+		new Setting(containerEl)
+				.setName('Sync Comments')
+				.setDesc("When enabled, new Todoist comments won't by added below tasks")
+				.addToggle(component =>
+					component.setValue(this.plugin.settings.commentsSync)
+					.onChange((value)=>{
+						this.plugin.settings.commentsSync = value
+						this.plugin.saveSettings()
+					})
+				);
 
 		new Setting(containerEl)
 			.setName('Backup Todoist Data')
