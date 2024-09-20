@@ -1,20 +1,15 @@
-# Simple Todoist Sync for Obsidian (Alpha)
+# Simple Todoist Sync for Obsidian (Beta)
 
 Create, edit and delete tasks from Obsidian.md to your Todoist.
 
 > [!WARNING]
-> This is a fork from the [Ultimate Todoist Sync plugin for Obsidian](https://github.com/HeroBlackInk/ultimate-todoist-sync-for-obsidian), but the project seems to be abandoned. Feel free to do pull requests.
-
-> [!CAUTION]
-> I've made this fork to test some things, please don't use it for anything meaningful yet :)
-
+> This is a fork from the [Ultimate Todoist Sync plugin for Obsidian](https://github.com/HeroBlackInk/ultimate-todoist-sync-for-obsidian). I'm still working on fixing some things, but the main feature should be working. I'm considering this feature a beta. Feel free to contribute.
+>
+> *Some features works only Todoist -> Obsidian, others by-directional. Find more details on the feature table below.*
 
 ![Alt Text](/attachment/demo.gif)
 
 
-
-
-*Some features works only Todoist -> Obsidian, others by-directional. Find more details on the table below.*
 
 <details>
 
@@ -34,7 +29,7 @@ Create, edit and delete tasks from Obsidian.md to your Todoist.
 | Modify project          | 🔜                            | 🔜                           |             
 | Modify section          | 🔜                            | 🔜                           |             
 | Modify priority [1]     | ✅                            | 🔜                           | 
-| Add reminder            | 🔜                            | 🔜                           |
+| Add reminder            | ✅                            | ✅                           |
 | Move tasks between files| 🔜                            | 🔜                           |
 | Added-at date           | 🔜                            | 🔜                           |
 | Completed-at date       | 🔜                            | 🔜                           |
@@ -47,9 +42,12 @@ Create, edit and delete tasks from Obsidian.md to your Todoist.
 
 ## Installation
 
-### From within Obsidian
+### From within Obsidian (*soon*)
 
-From Obsidian v1.3.5+, you can activate this plugin within Obsidian by doing the following:
+> [!NOTE]
+> I'm just doing some fixes on the original plugin, it is not yet published on the Obsidian plugins page.
+
+<!-- From Obsidian v1.3.5+, you can activate this plugin within Obsidian by doing the following:
 
 1. Open Obsidian's `Settings` window
 2. Select the `Community plugins` tab on the left
@@ -60,7 +58,7 @@ From Obsidian v1.3.5+, you can activate this plugin within Obsidian by doing the
 7. Once installed, close the `Community Plugins` window
 8. Under `Installed Plugins`, activate the `Ultimate Todoist Sync` plugin
 
-You can update the plugin following the same procedure, clicking `Update` instead of `Install`
+You can update the plugin following the same procedure, clicking `Update` instead of `Install` -->
 
 ### Manually
 
@@ -120,7 +118,7 @@ The default project in the setting applies to all files. You can set a separate 
 
 ## Disclaimer
 
-This plugin is for learning purposes only. The author makes no representations or warranties of any kind, express or implied, about the accuracy, completeness, or usefulness of this plugin and shall not be liable for any losses or damages resulting from the use of this plugin.
+This plugin is for learning purposes only. The author and contributors makes no representations or warranties of any kind, express or implied, about the accuracy, completeness, or usefulness of this plugin and shall not be liable for any losses or damages resulting from the use of this plugin.
 
 The author shall not be responsible for any loss or damage, including but not limited to data loss, system crashes, computer damage, or any other form of loss arising from software problems or errors. Users assume all risks and are solely responsible for any consequences resulting from the use of this product.
 
