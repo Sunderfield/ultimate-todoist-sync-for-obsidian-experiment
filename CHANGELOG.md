@@ -3,6 +3,7 @@
 ### 2024-09-20
 #### 0.0.4
 - Fixed the issue with with duedatetime, now it should be able to handle tasks with time, but is an overall simple solutions, needs more refinement
+- Fixed the issue where tags with underscore were wrong parsed by REGEX
 
 
 ### 2024-08-13

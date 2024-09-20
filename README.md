@@ -102,7 +102,7 @@ By enabling this option, the plugin will automatically add `#todoist` to all tas
 |⏰HH:MM             |This sets the time of the task. If none is given, the default is 08:00|`- [ ] task ⏰23:59`[3]|
 
 <details>
-<summary>#### Usage footnotes</summary>
+<summary>Usage footnotes</summary>
 
 - [1] Supports the following emojis: 📅, 📆, 🗓, 🗓️
 - [2] Keep in mind that very urgent is the priority 1 on clients. So, the priority 1 in the client corresponds to the number 4 here (Because that's how the official API of Todoist is designed.).
