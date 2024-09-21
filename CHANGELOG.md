@@ -1,6 +1,9 @@
 ## CHANGELOG
 
 ### 2024-09-21
+#### 0.0.6
+- Fixed the issue where time with a single digit breaks the replace logic
+
 #### 0.0.5
 - Added the "Comments Sync" option. Enabled by default, once disabled, won't add the notes/comments from Todoist below the task on Obsidian
 - 

@@ -463,8 +463,10 @@ export class TodoistSync  {
 
             
             if (contentChanged || statusChanged ||dueDateChanged ||tagsChanged || projectChanged || priorityChanged) {
-                console.log("lineTask content: " + lineTask)
-                console.log("savedTask content:" + savedTask)
+                if (this.plugin.settings.debugMode){
+                    console.log("lineTask content: " + JSON.stringify(lineTask))
+                    console.log("savedTask content:" + JSON.stringify(savedTask))
+                }
                 //`Task ${lastLineTaskTodoistId} was modified`
                 this.plugin.saveSettings()
                 let message = `Task ${lineTask_todoist_id} is updated.`;

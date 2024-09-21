@@ -1,5 +1,7 @@
 import { App } from 'obsidian';
 import UltimateTodoistSyncForObsidian from "../main";
+import { stringify } from 'querystring';
+import { json } from 'stream/consumers';
 
 
 
@@ -470,19 +472,15 @@ export class TaskParser   {
           if(utcTimeString === null){
             return null
           }
-          let utcDateString = utcTimeString;
-          let dateObj = new Date(utcDateString); // 将UTC格式字符串转换为Date对象
+          const utcDateString = utcTimeString;
+          const dateObj = new Date(utcDateString); // 将UTC格式字符串转换为Date对象
 
           console.log("Inside taskParser.ts the dateObj now is: " + JSON.stringify(dateObj))
-          let year = dateObj.getFullYear();
-          let month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
-          let date = dateObj.getDate().toString().padStart(2, '0');
-          let localDateString = `${year}-${month}-${date}`;
-          let timeHour = dateObj.getHours();
-          let timeMinute = dateObj.getMinutes();
-          let localTimeString = `${timeHour}:${timeMinute}`;
+          const year = dateObj.getFullYear();
+          const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+          const date = dateObj.getDate().toString().padStart(2, '0');
+          const localDateString = `${year}-${month}-${date}`;
 
-          console.log("localTimeString is = " + localTimeString)
           return localDateString;
           return(localDateString);
         } catch (error) {
@@ -498,14 +496,31 @@ export class TaskParser   {
           if(utcTimeString === null){
             return null
           }
-          let utcDateString = utcTimeString;
-          let dateObj = new Date(utcDateString); // 将UTC格式字符串转换为Date对象
+          const utcDateString = utcTimeString;
+          const dateObj = new Date(utcDateString); // 将UTC格式字符串转换为Date对象
 
           let timeHour = dateObj.getHours();
           let timeMinute = dateObj.getMinutes();
-          let localTimeString = `${timeHour}:${timeMinute}`;
 
-          console.log("localTimeString is = " + localTimeString)
+          let timeHourString;
+          let timeMinuteString;
+
+          if(timeMinute<10){
+            timeMinuteString = "0" + JSON.stringify(dateObj.getMinutes())
+          }else{
+            timeMinuteString = JSON.stringify(dateObj.getMinutes())
+          }
+
+        //   Fixes the issue of hour and minutes having a single digit
+          if(timeHour<10){
+            timeHourString = "0" + JSON.stringify(dateObj.getHours())
+          }else{
+            timeHourString = JSON.stringify(dateObj.getHours())
+          }
+
+          
+          const localTimeString = `${timeHourString}:${timeMinuteString}`;
+
           return localTimeString;
           return(localTimeString);
         } catch (error) {

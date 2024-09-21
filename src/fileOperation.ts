@@ -277,7 +277,8 @@ export class FileOperation   {
     // sync updated task due date  to the file
     async syncUpdatedTaskDueDateToTheFile(evt:Object) {
         const taskId = evt.object_id
-        // console.log("The taskID evt object value is: " + JSON.stringify(evt))
+        
+        if (this.plugin.settings.debugMode){console.log("The taskID evt object value is: " + JSON.stringify(evt))}
         
 
         // 获取任务文件路径
@@ -301,15 +302,13 @@ export class FileOperation   {
             
             const oldTaskTime = this.plugin.taskParser.getDueTimeFromLineText(line) || ""
             
-            const newTaskTime = this.plugin.taskParser.ISOStringToLocalClockTimeString(evt.extra_data.due_date) || ""
+            let newTaskTime = this.plugin.taskParser.ISOStringToLocalClockTimeString(evt.extra_data.due_date) || ""
             // TODO needs to consider what to do when the task doesn't have time
             // TODO how to handle when the task has the new "timeslot" with start + finish time?
-
             // TODO 'trimmedOldTaskDueDate' looks just for the date, removing any other information, like hour. This very likely will break some dates sometimes, need a more inteligent solution
             const trimmedOldTaskDueDate = oldTaskDueDate.slice(0,10)
 
-
-      
+ 
             if(oldTaskDueDate === ""){
                 lines[i] = this.plugin.taskParser.insertDueDateBeforeTodoist(line,newTaskDueDate)
                 modified = true
