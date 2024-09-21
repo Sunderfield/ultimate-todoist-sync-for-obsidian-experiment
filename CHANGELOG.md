@@ -1,5 +1,10 @@
 ## CHANGELOG
 
+### 2024-09-21
+#### 0.0.5
+- Added the "Comments Sync" option. Enabled by default, once disabled, won't add the notes/comments from Todoist below the task on Obsidian
+- 
+
 ### 2024-09-20
 #### 0.0.4
 - Fixed the issue with with duedatetime, now it should be able to handle tasks with time, but is an overall simple solutions, needs more refinement

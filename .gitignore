@@ -15,6 +15,11 @@ main.js
 # Exclude sourcemaps
 *.map
 
+# Exclude the release folder
+release
+release.zip
+another-simple-todoist-sync.zip
+
 # obsidian
 data.json
 userData
