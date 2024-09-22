@@ -1,4 +1,4 @@
-import { App, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Notice, PluginSettingTab, Setting } from 'obsidian';
 import UltimateTodoistSyncForObsidian from "../main";
 
 interface MyProject {
@@ -22,10 +22,11 @@ export interface UltimateTodoistSyncSettings {
 	statistics: any;
 	debugMode:boolean;
 	commentsSync:boolean;
+	alternativeKeywords:boolean;
 }
 
 
-export const DEFAULT_SETTINGS: UltimateTodoistSyncSettings = {
+export const DEFAULT_SETTINGS: Partial<UltimateTodoistSyncSettings> = {
 	initialized: false,
 	apiInitialized:false,
 	defaultProjectName:"Inbox",
@@ -36,6 +37,7 @@ export const DEFAULT_SETTINGS: UltimateTodoistSyncSettings = {
 	statistics:{},
 	debugMode:false,
 	commentsSync:true,
+	alternativeKeywords:false,
 	//mySetting: 'default',
 	//todoistTasksFilePath: 'todoistTasks.json'
 
@@ -394,6 +396,15 @@ export class UltimateTodoistSyncSettingTab extends PluginSettingTab {
 						this.plugin.saveSettings()
 					})
 				);
+		
+		new Setting(containerEl)
+			.setName('Alternative Keywords')
+			.setDesc('Enable the use of @ for settings calendar time, $ for time and & for duration.')
+			.addToggle(component => 
+				component.setValue(this.plugin.settings.alternativeKeywords).onChange((value)=>{
+				this.plugin.settings.alternativeKeywords = value
+				this.plugin.saveSettings()
+		}));
 
 		new Setting(containerEl)
 			.setName('Backup Todoist Data')

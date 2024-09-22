@@ -7,7 +7,6 @@ import UltimateTodoistSyncForObsidian from "../main";
     //const utcStr = localDateStringToUTCDatetimeString(str);
     //console.log(dateStr); // 输出 2023-03-27T00:00:00.000Z
 
-    // My hypothesis is that this function fails because there is no date yet
 function  localDateStringToUTCDatetimeString(localDateString:string) {
         
         // Let's see what this function is receiving
@@ -45,14 +44,17 @@ export class TodoistRestAPI  {
         return(api)
     }
 
-    async AddTask({ projectId, content, parentId = null, dueDate, dueDatetime,labels, description,priority }: { projectId: string, content: string, parentId?: string , dueDate?: string,dueDatetime?: string, labels?: Array<string>, description?: string,priority?:number }) {
+    async AddTask({ projectId, content, parentId = null, dueDate, dueTime, dueDatetime,labels, description,priority }: { projectId: string, content: string, parentId?: string , dueDate?: string, dueTime?: string, dueDatetime?: string, labels?: Array<string>, description?: string,priority?:number }) {
         const api = await this.initializeAPI()
         try {
           if(dueDate){
             console.log("dueDate = " + dueDate)
+            console.log("dueTime = " + dueTime)
             console.log("dueDatetime = " + dueDatetime)
-            dueDatetime = localDateStringToUTCDatetimeString(dueDate) || undefined
-            console.log("dueDateTime after transformation = " + dueDatetime)
+            const dueDateAndTimeMerge = dueDate + "T" + dueTime
+            console.log("dueDateAndTimeMerge = " + dueDateAndTimeMerge)
+            dueDatetime = localDateStringToUTCDatetimeString(dueDateAndTimeMerge) || undefined
+            console.log("dueDateTime after transformation to UTCDateTimeString = " + dueDatetime)
             dueDate = undefined
           }  
 
@@ -87,7 +89,7 @@ export class TodoistRestAPI  {
 
     //Also note that to remove the due date of a task completely, you should set the due_string parameter to no date or no due date.
     //api 没有 update task project id 的函数
-    async UpdateTask(taskId: string, updates: { content?: string, description?: string, labels?:Array<string>,dueDate?: string,dueDatetime?: string,dueString?:string,parentId?:string,priority?:number }) {
+    async UpdateTask(taskId: string, updates: { content?: string, description?: string, labels?:Array<string>,dueDate?: string,dueTime?: string,dueDatetime?: string,dueString?:string,parentId?:string,priority?:number }) {
         const api = await this.initializeAPI()
         if (!taskId) {
         throw new Error('taskId is required');
@@ -97,21 +99,12 @@ export class TodoistRestAPI  {
         }
         try {
         if(updates.dueDate){
-            console.log(
-              "Console.log from updates = " + taskId
-              + "\n console.log updates.content = " + updates.content
-              + "\n console.log updates.description = " + updates.description
-              + "\n console.log updates.labels = " + updates.labels
-              + "\n console.log updates.dueDate = " + updates.dueDate
-              + "\n console.log updates.dueDatetime = " + updates.dueDatetime 
-              + "\n console.log updates.dueString = " + updates.dueString
-              + "\n console.log updates.parentId = " + updates.parentId 
-              + "\n console.log updates.priority = " + updates.priority 
-            )
-            console.log("Console.log from updates.dueDate = " + updates.dueDate)
-            updates.dueDatetime = localDateStringToUTCDatetimeString(updates.dueDate)
+            console.log("value of updates.dueTime =" + updates.dueTime);
+            const dueDateAndTimeMerge = updates.dueDate + "T" + updates.dueTime;
+            console.log("dueDateAndTimeMerge = " + dueDateAndTimeMerge)
+            updates.dueDatetime = localDateStringToUTCDatetimeString(dueDateAndTimeMerge) || undefined;
             updates.dueDate = null
-            console.log(updates.dueDatetime)
+            console.log("value of updates.dueDatime =" + updates.dueDatetime)
           }  
         const updatedTask = await api.updateTask(taskId, updates);
         return updatedTask;
@@ -120,7 +113,14 @@ export class TodoistRestAPI  {
         }
     }
 
-
+    // console.log("dueDate = " + dueDate)
+    // console.log("dueTime = " + dueTime)
+    // console.log("dueDatetime = " + dueDatetime)
+    // const dueDateAndTimeMerge = dueDate + "T" + dueTime
+    // console.log("dueDateAndTimeMerge = " + dueDateAndTimeMerge)
+    // dueDatetime = localDateStringToUTCDatetimeString(dueDateAndTimeMerge) || undefined
+    // console.log("dueDateTime after transformation = " + dueDatetime)
+    // dueDate = undefined
 
 
     //open a task

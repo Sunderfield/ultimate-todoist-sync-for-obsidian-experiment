@@ -1,4 +1,4 @@
-import { MarkdownView, Notice, Plugin ,Editor, WorkspaceLeaf} from 'obsidian';
+import { MarkdownView, Notice, Plugin ,Editor} from 'obsidian';
 
 
 //settings
@@ -480,7 +480,8 @@ export default class UltimateTodoistSyncForObsidian extends Plugin {
 		const taskElement = target.closest("div");    //使用 evt.target.closest() 方法寻找特定的父元素，而不是直接访问事件路径中的特定索引
 		//console.log(taskElement)
 		if (!taskElement) return;
-		const regex = /\[todoist_id:: (\d+)\]/; // 匹配 [todoist_id:: 数字] 格式的字符串
+		const regex = /\[tid:: (\d+)\]/; // 匹配 [todoist_id:: 数字] 格式的字符串
+		// const regex = /\[todoist_id:: (\d+)\]/; // 匹配 [todoist_id:: 数字] 格式的字符串
 		const match = taskElement.textContent?.match(regex) || false;
 		if (match) {
 			const taskId = match[1];

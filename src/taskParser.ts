@@ -1,9 +1,5 @@
-import { App } from 'obsidian';
 import UltimateTodoistSyncForObsidian from "../main";
-import { stringify } from 'querystring';
-import { json } from 'stream/consumers';
-
-
+import { App } from 'obsidian';
 
 
 interface dataviewTaskObject {
@@ -27,7 +23,6 @@ interface dataviewTaskObject {
     blockId: string;
 }
   
-  
 interface todoistTaskObject {
     content: string;
     description?: string;
@@ -44,8 +39,7 @@ interface todoistTaskObject {
     assignee_id?: string;
 }
   
-
-const keywords = {
+let keywords = {
     TODOIST_TAG: "#todoist",
     DUE_DATE: "🗓️|📅|📆|🗓",
     DUE_TIME: "⏰|⏲",
@@ -53,8 +47,10 @@ const keywords = {
 
 const REGEX = {
     TODOIST_TAG: new RegExp(`^[\\s]*[-] \\[[x ]\\] [\\s\\S]*${keywords.TODOIST_TAG}[\\s\\S]*$`, "i"),
-    TODOIST_ID: /\[todoist_id::\s*\d+\]/,
-    TODOIST_ID_NUM:/\[todoist_id::\s*(.*?)\]/,
+    TODOIST_ID: /\[tid::\s*\d+\]/,
+    TODOIST_ID_NUM:/\[tid::\s*(.*?)\]/,
+    // TODOIST_ID: /\[todoist_id::\s*\d+\]/,
+    // TODOIST_ID_NUM:/\[todoist_id::\s*(.*?)\]/,
     TODOIST_LINK:/\[link\]\(.*?\)/,
     DUE_DATE_WITH_EMOJ: new RegExp(`(${keywords.DUE_DATE})\\s?\\d{4}-\\d{2}-\\d{2}`),
     DUE_DATE : new RegExp(`(?:${keywords.DUE_DATE})\\s?(\\d{4}-\\d{2}-\\d{2})`),
@@ -88,16 +84,16 @@ export class TaskParser   {
 	constructor(app:App, plugin:UltimateTodoistSyncForObsidian) {
 		//super(app,settings);
 		this.app = app;
-        this.plugin = plugin
+        this.plugin = plugin;
 	}
 
 
-  
-  
+
+    
     //convert line text to a task object
     async convertTextToTodoistTaskObject(lineText:string,filepath:string,lineNumber?:number,fileContent?:string) {
         //console.log(`linetext is:${lineText}`)
-    
+        
         let hasParent = false
         let parentId = null
         let parentTaskObject = null
@@ -145,6 +141,7 @@ export class TaskParser   {
         }
         
         const dueDate = this.getDueDateFromLineText(textWithoutIndentation)
+        const dueTime = this.getDueTimeFromLineText(textWithoutIndentation)
         const labels =  this.getAllTagsFromLineText(textWithoutIndentation)
         // console.log(`labels is ${labels}`)
 
@@ -198,6 +195,7 @@ export class TaskParser   {
         content: content || '',
         parentId: parentId || null,
         dueDate: dueDate || '',
+        dueTime: dueTime || '',
         labels: labels || [],
         description: description,
         isCompleted:isCompleted,
@@ -209,62 +207,90 @@ export class TaskParser   {
         //console.log(todoistTask)
         return todoistTask;
     }
+
+    keywords_function(text:string){
+        if(text === "TODOIST_TAG"){
+            return "#todoist"
+        }
+        if (text === "DUE_DATE"){
+            return "🗓️|📅|📆|🗓"
+        }
+        if(text === "DUE_TIME"){
+            return "⏰|⏲"
+        }else {
+            return "No such keyword"
+        }
+        
+    }
   
-  
-  
-  
+//   Return true or false if the text has a todoist tag
     hasTodoistTag(text:string){
-        //console.log("检查是否包含 todoist tag")
-        //console.log(text)
-        return(REGEX.TODOIST_TAG.test(text))
+        
+        const regex_test = new RegExp(`^[\\s]*[-] \\[[x ]\\] [\\s\\S]*${this.keywords_function("TODOIST_TAG")}[\\s\\S]*$`, "i");
+        
+        // console.log("Value of regex_test = " + regex_test)
+
+        return(regex_test.test(text))
+        
     }
     
   
-  
+//   Return true or false if the text has a todoist id
     hasTodoistId(text:string){
-        const result = REGEX.TODOIST_ID.test(text)
-        //console.log("检查是否包含 todoist id")
-        //console.log(text)
-        return(result)
+        // const return_old = REGEX.TODOIST_ID.test(text)
+
+        const return_new=new RegExp(`\\[tid::\\s*\\d+\\]`).test(text)
+        return(return_new)
     }
   
-  
+//   Return true or false if the text has a due date
     hasDueDate(text:string){
-        return(REGEX.DUE_DATE_WITH_EMOJ.test(text))
+        //     DUE_DATE_WITH_EMOJ: new RegExp(`(${keywords.DUE_DATE})\\s?\\d{4}-\\d{2}-\\d{2}`),
+        const regex_test = new RegExp(`(${keywords.DUE_DATE})\\s?\\d{4}-\\d{2}-\\d{2}`);
+        
+        return(regex_test.test(text))  
+        // return(REGEX.DUE_DATE_WITH_EMOJ.test(text))
     }
   
   
+    // Get the due date from the text
     getDueDateFromLineText(text: string) {
-        const date = REGEX.DUE_DATE.exec(text);
-        if (date === null){
+  
+        const regex_test = new RegExp(`(?:${this.keywords_function("DUE_DATE")})\\s?(\\d{4}-\\d{2}-\\d{2})`);
+
+        const due_date = regex_test.exec(text);
+
+        if (due_date === null){
             return null;
         }
 
-        const time = REGEX.DUE_TIME.exec(text);
-        return time
-            ? date[1] + "T" + time[1]
-            : date[1] + "T08:00";
+        // Return the due date value without the emoji
+        return due_date[1]
     }
 
+    // Get the duetime from the text
     getDueTimeFromLineText(text: string) {
         const current_time = REGEX.DUE_TIME.exec(text);
+        console.log("current time is: " + current_time)
         if(current_time){
             return current_time[1]
         }
         else {
-            return ""
+            console.log("No time was provided, so it defaults to 11:59 to avoid breaking things with UTC")
+            // TODO Needs to find a better solution, because when it converts to UTC it can change the date, which create a loop of updates
+            return "11:59"
         }
 
     }
 
   
-  
+//   Get the project name from the text
     getProjectNameFromLineText(text:string){
         const result = REGEX.PROJECT_NAME.exec(text);
         return result ? result[1] : null;
     }
   
-  
+//   Get the todoist id from the text
     getTodoistIdFromLineText(text:string){
         //console.log(text)
         const result = REGEX.TODOIST_ID_NUM.exec(text);
@@ -272,6 +298,7 @@ export class TaskParser   {
         return result ? result[1] : null;
     }
   
+    // get the duedate from dataview
     getDueDateFromDataview(dataviewTask:object){
         if(!dataviewTask.due){
         return ""
@@ -302,7 +329,7 @@ export class TaskParser   {
     */
   
   
-  
+//   Remove everything that is not the task content
     getTaskContentFromLineText(lineText:string) {
         const TaskContent = lineText.replace(REGEX.TASK_CONTENT.REMOVE_INLINE_METADATA,"")
                                     .replace(REGEX.TASK_CONTENT.REMOVE_TODOIST_LINK,"")
@@ -378,35 +405,73 @@ export class TaskParser   {
     }
   
   
-    //task due date compare
-    async  compareTaskDueDate(lineTask: object, todoistTask: object): boolean {
-        const lineTaskDue = lineTask.dueDate
+    //Compare if the due date from Obsidian is the same due date from Todoist
+    async  compareTaskDueDate(lineTask: object, todoistTask: object): Promise<boolean> {
+
+        console.log("compareTaskDueDate started...")
+
+        console.log("lineTask value = " + JSON.stringify(lineTask))
+        console.log("todoistTask value = " + JSON.stringify(todoistTask))
+
+        const lineTaskDue = JSON.stringify(lineTask.dueDate)
         const todoistTaskDue = todoistTask.due ?? "";
-        //console.log(dataviewTaskDue)
-        //console.log(todoistTaskDue)
-        if (lineTaskDue === "" && todoistTaskDue === "") {
-        //console.log('没有due date')
-        return true;
+        const todoistTaskDueDate = JSON.stringify(todoistTaskDue.date);
+
+        console.log("lineTaskDue value is: " + lineTaskDue + " and todoistTaskDueDate value is: " + todoistTaskDueDate)
+ 
+
+        // if any falue is empty, return false as you can't compare
+        if ((lineTaskDue || todoistTaskDueDate) === "") {
+            console.log("One of the dates had empty values, so the comparison will fail.")
+            return false;
         }
-    
-        if ((lineTaskDue || todoistTaskDue) === "") {
-        console.log(lineTaskDue);
-        console.log(todoistTaskDue)
-        //console.log('due date 发生了变化')
-        return false;
+
+        // if both values are the same, return false because there is no change
+        if (lineTaskDue == todoistTaskDueDate) {
+            console.log('lineTaskDue == todoistTaskDueDate, returning false on compareTaskDueDate')
+            return false;
         }
-        
-        const oldDueDateUTCString = this.localDateStringToUTCDateString(lineTaskDue)
-        if (oldDueDateUTCString === todoistTaskDue.date) {
-        //console.log('due date 一致')
-        return true;
-        } else if (lineTaskDue.toString() === "Invalid Date" || todoistTaskDue.toString() === "Invalid Date") {
-        console.log('invalid date')
-        return false;
-        } else {
-        //console.log(lineTaskDue);
-        //console.log(todoistTaskDue.date)
-        return false;
+
+        // If any has a invvalid date, return false as you can't compare
+        else if (lineTaskDue.toString() === "Invalid Date" || todoistTaskDue.toString() === "Invalid Date") {
+            console.log('invalid date on compareTaskDueDate')
+            return false;
+        }
+        // If everything above is false, than return true because the dates are different
+        else {
+            console.log('Something is different in the dates, so returning true on compareTaskDueDate')
+            return true;
+        }
+    }
+
+    // Compare if the due time from Obsidian is the same due time from Todoist
+    async  compareTaskDueTime(lineTask: object, todoistTask: object): Promise<boolean> {
+        console.log("compareTaskDueTime started...")
+
+        const lineTaskDueTime = JSON.stringify(lineTask.dueTime)
+        const todoistTaskDue = todoistTask.due ?? "";
+
+        const todoistTaskDueTimeLocalClock = this.ISOStringToLocalClockTimeString(todoistTaskDue.datetime)
+
+        console.log("todoistTaskDueTimeLocalClock = " + todoistTaskDueTimeLocalClock)
+
+        console.log("lineTaskDueTime value is: " + lineTaskDueTime + " and todoistTaskDueTimeLocalClock value is: " + todoistTaskDueTimeLocalClock)
+
+        // if any value is empty, return false as you can't compare
+        if((lineTaskDueTime || todoistTaskDueTimeLocalClock) === ""){
+            console.log("One of the times had empty values, so the comparison will fail.")
+            return false;
+        }
+
+        // if both values are the same, return false because there is no change
+        if (lineTaskDueTime == todoistTaskDueTimeLocalClock) {
+            console.log('lineTaskDueTime == todoistTaskDueTimeLocalClock, returning false on compareTaskDueTime')
+            return false;
+        }
+
+        else { 
+            console.log('Something is different in the times, so returning true on compareTaskDueTime')
+            return true;
         }
     }
     

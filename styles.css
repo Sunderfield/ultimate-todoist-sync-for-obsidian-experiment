@@ -4,7 +4,12 @@
 }
 
 
-
+.dataview.inline-field {
+    opacity: 10%!important;
+}
+.dataview.inline-field:hover {
+    opacity: 100%!important;
+}
 
 
 

@@ -153,7 +153,8 @@ export class TodoistSync  {
                 this.plugin.saveSettings()
 
                 //todoist id 保存到 任务后面
-                const text_with_out_link = `${linetxt} %%[todoist_id:: ${todoist_id}]%%`;
+                const text_with_out_link = `${linetxt} %%[tid:: ${todoist_id}]%%`;
+                // const text_with_out_link = `${linetxt} %%[todoist_id:: ${todoist_id}]%%`;
                 const link = `[link](${newTask.url})`
                 const text = this.plugin.taskParser.addTodoistLink(text_with_out_link,link)
                 const from = { line: cursor.line, ch: 0 };
@@ -278,7 +279,8 @@ export class TodoistSync  {
                 this.plugin.saveSettings()
     
                 //todoist id 保存到 任务后面
-                const text_with_out_link = `${line} %%[todoist_id:: ${todoist_id}]%%`;
+                const text_with_out_link = `${line} %%[tid:: ${todoist_id}]%%`;
+                // const text_with_out_link = `${line} %%[todoist_id:: ${todoist_id}]%%`;
                 const link = `[link](${newTask.url})`
                 const text = this.plugin.taskParser.addTodoistLink(text_with_out_link,link)
                 lines[i] = text;
@@ -368,12 +370,14 @@ export class TodoistSync  {
             const projectModified = !(await this.plugin.taskParser.taskProjectCompare(lineTask,savedTask))
             //status 是否修改
             const statusModified = !this.plugin.taskParser.taskStatusCompare(lineTask,savedTask)
-            //due date 是否修改
-            const dueDateModified = !(await this.plugin.taskParser.compareTaskDueDate(lineTask,savedTask))
+            // Check if the dueDate was modified
+            const dueDateModified = (await this.plugin.taskParser.compareTaskDueDate(lineTask,savedTask))
             //parent id 是否修改
             const parentIdModified = !(lineTask.parentId === savedTask.parentId)
             //check priority
             const priorityModified = !(lineTask.priority === savedTask.priority)
+            // check if the reminder time has changed
+            const dueTimeModified = (await this.plugin.taskParser.compareTaskDueTime(lineTask,savedTask))
 
             try {
             let contentChanged= false;
@@ -381,11 +385,15 @@ export class TodoistSync  {
             let projectChanged = false;
             let statusChanged = false;
             let dueDateChanged = false;
+            let dueTimeChanged = false;
             let parentIdChanged = false;
             let priorityChanged = false;
             
-            let updatedContent = {}
-            console.log("updatedContent before checks = " + JSON.stringify(updatedContent))
+            let updatedContent = {
+  
+            }
+
+            
             if (contentModified) {
                 console.log(`Content modified for task ${lineTask_todoist_id}`)
                 updatedContent.content = lineTaskContent
@@ -398,19 +406,38 @@ export class TodoistSync  {
                 tagsChanged = true;
             }
             
-
+            // if the Due date was modified, update to the new due date
             if (dueDateModified) {
-                console.log(`Due date modified for task ${lineTask_todoist_id}`)
-                console.log(lineTask.dueDate)
-                //console.log(savedTask.due.date)
-                // TODO there is something odd with this date change
+                console.log(`Due date modified for task ${lineTask_todoist_id}. New due date is ${lineTask.dueDate}, old due date is ${JSON.stringify(savedTask.due.date)}`)
                 if(lineTask.dueDate === ""){
                     updatedContent.dueString = "no date"
-                }else{
-                    updatedContent.dueDate = lineTask.dueDate
+                    
                 }
+                
+                // if(JSON.stringify(lineTask.dueDate) == JSON.stringify(savedTask.due.date)){
+                //     console.log(`lineTaskdueDate is same as savedTask.due.date, keeping dueDateChanged to false`)
+                    
+                //     updatedContent.dueDate = "";
+                //     dueDateChanged = false;
+                // }else{
+                    console.log(`lineTaskdueDate is different from savedTask.due.date, setting dueDateChanged to true`)
+                    updatedContent.dueDate = lineTask.dueDate;
+                    updatedContent.dueTime = lineTask.dueTime;
+                    dueDateChanged = true;
+                // }
+                    
+            }
 
-                dueDateChanged = true;
+            if(dueTimeModified){
+                console.log(`Due time modified for task ${lineTask_todoist_id}. New due time is ${lineTask.dueTime}, old due time is ${JSON.stringify(savedTask.due.datime)}`)
+                if(lineTask.dueTime === ""){
+                    updatedContent.dueString = "no time"
+                    
+                }
+                console.log(`lineTaskdueTime is different from savedTask.due.time, setting dueTimeChanged to true`)
+                updatedContent.dueDate = lineTask.dueDate;
+                updatedContent.dueTime = lineTask.dueTime;
+                dueTimeChanged = true;
             }
 
             //todoist Rest api 没有 move task to new project的功能
@@ -433,10 +460,10 @@ export class TodoistSync  {
                 priorityChanged = true;
             }
 
-            console.log("updatedContent after checks = " + JSON.stringify(updatedContent))
+            console.log("Content that needs to be modified updatedContent: " + JSON.stringify(updatedContent))
 
 
-            if (contentChanged || tagsChanged ||dueDateChanged ||projectChanged || parentIdChanged || priorityChanged) {
+            if (contentChanged || tagsChanged ||dueDateChanged ||projectChanged || parentIdChanged || priorityChanged || dueTimeChanged) {
                 //console.log("task content was modified");
                 console.log("Updated content is: " + JSON.stringify(updatedContent))
                 // Here it calls the updateTask in todoistRestAPI with the content
@@ -462,10 +489,9 @@ export class TodoistSync  {
 
 
             
-            if (contentChanged || statusChanged ||dueDateChanged ||tagsChanged || projectChanged || priorityChanged) {
+            if (contentChanged || statusChanged ||dueDateChanged ||tagsChanged || projectChanged || priorityChanged || dueTimeChanged) {
                 if (this.plugin.settings.debugMode){
-                    console.log("lineTask content: " + JSON.stringify(lineTask))
-                    console.log("savedTask content:" + JSON.stringify(savedTask))
+                    console.log("Task has changed. lineTask content: " + JSON.stringify(lineTask) + "savedTask content:" + JSON.stringify(savedTask))
                 }
                 //`Task ${lastLineTaskTodoistId} was modified`
                 this.plugin.saveSettings()
@@ -480,6 +506,9 @@ export class TodoistSync  {
                 if (dueDateChanged) {
                     message += " Due date was changed.";
                 }
+                if (dueTimeChanged) {
+                    message += " Due time was changed.";
+                }
                 if (tagsChanged) {
                     message += " Tags were changed.";
                 }
@@ -490,6 +519,7 @@ export class TodoistSync  {
                     message += " Priority was changed.";
                 }
                 
+                console.log("Sent a Notice with the message: " + message)
                 new Notice(message);
 
             } else {

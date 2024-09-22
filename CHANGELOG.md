@@ -1,6 +1,14 @@
 ## CHANGELOG
 
 ### 2024-09-21
+#### 0.0.7
+- Added opacity to the todoist_tag after the tag id
+- Renamed the todoist_tag to tid (task_id) for short
+- Moved all the REGEX tests on the taskParser to functions
+- There was something odd on how it compare due dates, which was fixed. 
+- Add the check to compare due time (reminder)
+- 
+
 #### 0.0.6
 - Fixed the issue where time with a single digit breaks the replace logic
 

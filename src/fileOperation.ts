@@ -296,20 +296,26 @@ export class FileOperation   {
         const line = lines[i]
 
         if (line.includes(taskId) && this.plugin.taskParser.hasTodoistTag(line)) {
-            const oldTaskDueDate = this.plugin.taskParser.getDueDateFromLineText(line) || ""
+            const lineTaskDueDate = this.plugin.taskParser.getDueDateFromLineText(line) || ""
             const newTaskDueDate = this.plugin.taskParser.ISOStringToLocalDateString(evt.extra_data.due_date) || ""
 
+            console.log(`lineTaskDueDate: ${lineTaskDueDate}`)
             
-            const oldTaskTime = this.plugin.taskParser.getDueTimeFromLineText(line) || ""
+            const lineTaskTime = this.plugin.taskParser.getDueTimeFromLineText(line) || ""
             
-            let newTaskTime = this.plugin.taskParser.ISOStringToLocalClockTimeString(evt.extra_data.due_date) || ""
+            const newTaskTime = this.plugin.taskParser.ISOStringToLocalClockTimeString(evt.extra_data.due_date) || ""
             // TODO needs to consider what to do when the task doesn't have time
             // TODO how to handle when the task has the new "timeslot" with start + finish time?
-            // TODO 'trimmedOldTaskDueDate' looks just for the date, removing any other information, like hour. This very likely will break some dates sometimes, need a more inteligent solution
-            const trimmedOldTaskDueDate = oldTaskDueDate.slice(0,10)
+            // TODO 'trimmedlineTaskDueDate' looks just for the date, removing any other information, like hour. This very likely will break some dates sometimes, need a more inteligent solution
+            const trimmedlineTaskDueDate = lineTaskDueDate.slice(0,10)
+
+            console.log(`lineTaskDueDate: ${lineTaskDueDate}`)
+            console.log(`newTaskDueDate: ${newTaskDueDate}`)
+            console.log(`newTaskTime: ${newTaskTime}`)
+            console.log(`lineTaskTime: ${lineTaskTime}`)
 
  
-            if(oldTaskDueDate === ""){
+            if(lineTaskDueDate === ""){
                 lines[i] = this.plugin.taskParser.insertDueDateBeforeTodoist(line,newTaskDueDate)
                 modified = true
 
@@ -320,19 +326,19 @@ export class FileOperation   {
                 lines[i] = line.replace(regexRemoveDate,"")
                 modified = true
             }
-            else if(newTaskDueDate !== trimmedOldTaskDueDate){
-                lines[i] = line.replace(trimmedOldTaskDueDate, newTaskDueDate)
+            else if(newTaskDueDate !== trimmedlineTaskDueDate){
+                lines[i] = line.replace(trimmedlineTaskDueDate, newTaskDueDate)
                 modified = true
             }
 
-            else if(oldTaskTime === "" && newTaskTime !== "") {
+            else if(lineTaskTime === "" && newTaskTime !== "") {
                 const newDateWithTime = newTaskDueDate + " ⏰" + newTaskTime;
                 lines[i] = line.replace(newTaskDueDate,newDateWithTime)
                 modified = true
             }
 
-            else if(oldTaskTime !== newTaskTime){
-                lines[i] = line.replace(oldTaskTime,newTaskTime)
+            else if(lineTaskTime !== newTaskTime){
+                lines[i] = line.replace(lineTaskTime,newTaskTime)
                 modified = true
             }
 
@@ -435,7 +441,8 @@ export class FileOperation   {
         const line = fileLines[i];
     
         if (line.includes(searchTerm)) {
-            const regexResult = /\[todoist_id::\s*(\w+)\]/.exec(line);
+            // const regexResult = /\[todoist_id::\s*(\w+)\]/.exec(line);
+            const regexResult = /\[tid::\s*(\w+)\]/.exec(line);
     
             if (regexResult) {
             todoistId = regexResult[1];

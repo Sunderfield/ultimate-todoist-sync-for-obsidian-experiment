@@ -2,7 +2,7 @@ import { App, Modal ,Setting } from "obsidian";
 import  UltimateTodoistSyncForObsidian  from "../main"
 
 
-interface MyProject {
+interface ModalInterface {
 	id: string;
 	name: string;
   }
@@ -30,7 +30,7 @@ export class SetDefalutProjectInTheFilepathModal extends Modal {
     this.defaultProjectName = await this.plugin.cacheOperation.getProjectNameByIdFromCache(this.defaultProjectId)
     console.log(this.defaultProjectId)
     console.log(this.defaultProjectName)
-    const myProjectsOptions: MyProject | undefined = this.plugin.settings.todoistTasksData?.projects?.reduce((obj, item) => {
+    const myProjectsOptions: ModalInterface | undefined = this.plugin.settings.todoistTasksData?.projects?.reduce((obj, item) => {
         obj[(item.id).toString()] = item.name;
         return obj;
         }, {}
