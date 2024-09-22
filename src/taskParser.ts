@@ -451,11 +451,12 @@ export class TaskParser   {
         const lineTaskDueTime = JSON.stringify(lineTask.dueTime)
         const todoistTaskDue = todoistTask.due ?? "";
 
-        const todoistTaskDueTimeLocalClock = this.ISOStringToLocalClockTimeString(todoistTaskDue.datetime)
+        const todoistTaskDueTimeLocalClock = JSON.stringify(this.ISOStringToLocalClockTimeString(todoistTaskDue.datetime))
 
-        console.log("todoistTaskDueTimeLocalClock = " + todoistTaskDueTimeLocalClock)
-
-        console.log("lineTaskDueTime value is: " + lineTaskDueTime + " and todoistTaskDueTimeLocalClock value is: " + todoistTaskDueTimeLocalClock)
+        if(this.plguin.settings.debugMode){
+            console.log("todoistTaskDueTimeLocalClock = " + todoistTaskDueTimeLocalClock)
+            console.log("lineTaskDueTime value is: " + lineTaskDueTime + " and todoistTaskDueTimeLocalClock value is: " + todoistTaskDueTimeLocalClock)
+        }
 
         // if any value is empty, return false as you can't compare
         if((lineTaskDueTime || todoistTaskDueTimeLocalClock) === ""){
