@@ -48,11 +48,15 @@ export class TodoistRestAPI  {
         const api = await this.initializeAPI()
         try {
           if(dueDate){
-            console.log("dueDate = " + dueDate)
-            console.log("dueTime = " + dueTime)
-            console.log("dueDatetime = " + dueDatetime)
+            if(this.plugin.settings.debugMode){
+              console.log("dueDate = " + dueDate)
+              console.log("dueTime = " + dueTime)
+            }
+
             const dueDateAndTimeMerge = dueDate + "T" + dueTime
+
             console.log("dueDateAndTimeMerge = " + dueDateAndTimeMerge)
+            
             dueDatetime = localDateStringToUTCDatetimeString(dueDateAndTimeMerge) || undefined
             console.log("dueDateTime after transformation to UTCDateTimeString = " + dueDatetime)
             dueDate = undefined

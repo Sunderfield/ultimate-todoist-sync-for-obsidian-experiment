@@ -126,8 +126,11 @@ export class TodoistSync  {
     
         //添加task
         if ((!this.plugin.taskParser.hasTodoistId(linetxt) && this.plugin.taskParser.hasTodoistTag(linetxt))) {   //是否包含#todoist
-            console.log('this is a new task')
+            
+            if(this.plugin.settings.debugMode){
+            console.log('This is a new task. Content:')
             console.log(linetxt)
+}
             const currentTask =await this.plugin.taskParser.convertTextToTodoistTaskObject(linetxt,filepath,line,fileContent)
             //console.log(currentTask)
     
@@ -395,20 +398,20 @@ export class TodoistSync  {
 
             
             if (contentModified) {
-                console.log(`Content modified for task ${lineTask_todoist_id}`)
+                if(this.plugin.settings.debugMode){console.log(`Content modified for task ${lineTask_todoist_id}`)}
                 updatedContent.content = lineTaskContent
                 contentChanged = true;
             }
 
             if (tagsModified) {
-                console.log(`Tags modified for task ${lineTask_todoist_id}`)
+                if(this.plugin.settings.debugMode){console.log(`Tags modified for task ${lineTask_todoist_id}`)}
                 updatedContent.labels = lineTask.labels
                 tagsChanged = true;
             }
             
             // if the Due date was modified, update to the new due date
             if (dueDateModified) {
-                console.log(`Due date modified for task ${lineTask_todoist_id}. New due date is ${lineTask.dueDate}, old due date is ${JSON.stringify(savedTask.due.date)}`)
+                if(this.plugin.settings.debugMode){console.log(`Due date modified for task ${lineTask_todoist_id}. New due date is ${lineTask.dueDate}, old due date is ${JSON.stringify(savedTask.due.date)}`)}
                 if(lineTask.dueDate === ""){
                     updatedContent.dueString = "no date"
                     
@@ -429,12 +432,12 @@ export class TodoistSync  {
             }
 
             if(dueTimeModified){
-                console.log(`Due time modified for task ${lineTask_todoist_id}. New due time is ${lineTask.dueTime}, old due time is ${JSON.stringify(savedTask.due.datime)}`)
+                if(this.plugin.settings.debugMode){console.log(`Due time modified for task ${lineTask_todoist_id}. New due time is ${lineTask.dueTime}, old due time is ${JSON.stringify(savedTask.due.datime)}`)}
                 if(lineTask.dueTime === ""){
                     updatedContent.dueString = "no time"
                     
                 }
-                console.log(`lineTaskdueTime is different from savedTask.due.time, setting dueTimeChanged to true`)
+                if(this.plugin.settings.debugMode){console.log(`lineTaskdueTime is different from savedTask.due.time, setting dueTimeChanged to true`)}
                 updatedContent.dueDate = lineTask.dueDate;
                 updatedContent.dueTime = lineTask.dueTime;
                 dueTimeChanged = true;
@@ -460,12 +463,12 @@ export class TodoistSync  {
                 priorityChanged = true;
             }
 
-            console.log("Content that needs to be modified updatedContent: " + JSON.stringify(updatedContent))
-
-
+            
+            
             if (contentChanged || tagsChanged ||dueDateChanged ||projectChanged || parentIdChanged || priorityChanged || dueTimeChanged) {
-                //console.log("task content was modified");
-                console.log("Updated content is: " + JSON.stringify(updatedContent))
+                
+                if(this.plugin.settings.debugMode){console.log("Task content was updated. Those are the changes: " + JSON.stringify(updatedContent))}
+
                 // Here it calls the updateTask in todoistRestAPI with the content
                 const updatedTask = await this.plugin.todoistRestAPI.UpdateTask(lineTask.todoist_id.toString(),updatedContent)
                 updatedTask.path = filepath
@@ -836,11 +839,14 @@ export class TodoistSync  {
 
             const unsynchronized_notes_added_events = this.plugin.todoistSyncAPI.filterActivityEvents(result3, { event_type: 'added', object_type: 'note' })
             const unsynchronized_project_events = this.plugin.todoistSyncAPI.filterActivityEvents(result1, { object_type: 'project' })
-            console.log(unsynchronized_item_completed_events)
-            console.log(unsynchronized_item_uncompleted_events)
-            console.log(unsynchronized_item_updated_events)
-            console.log(unsynchronized_project_events) 
-            console.log(unsynchronized_notes_added_events)
+            
+            if(this.plugin.settings.debugMode){
+                console.log(unsynchronized_item_completed_events)
+                console.log(unsynchronized_item_uncompleted_events)
+                console.log(unsynchronized_item_updated_events)
+                console.log(unsynchronized_project_events) 
+                console.log(unsynchronized_notes_added_events)
+            }
     
             await this.syncCompletedTaskStatusToObsidian(unsynchronized_item_completed_events)
             await this.syncUncompletedTaskStatusToObsidian(unsynchronized_item_uncompleted_events)

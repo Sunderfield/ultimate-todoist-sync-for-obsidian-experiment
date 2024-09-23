@@ -1,5 +1,16 @@
 ## CHANGELOG
 
+### 2024-09-23
+#### 0.1.0
+- bumped to v0.1, ready enough to be published
+- when a reminder time is provided with the wrong hour or minute (H > 24 or M >59), it defaults to 11:59
+- 
+
+### 2024-09-22
+#### 0.0.8
+- Encapsulated most of console.log itens inside the debugMode settings
+
+
 ### 2024-09-21
 #### 0.0.7
 - Added opacity to the todoist_tag after the tag id

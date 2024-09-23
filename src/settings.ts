@@ -398,7 +398,7 @@ export class UltimateTodoistSyncSettingTab extends PluginSettingTab {
 				);
 		
 		new Setting(containerEl)
-			.setName('Alternative Keywords')
+			.setName('Alternative Keywords (Work in Progress)')
 			.setDesc('Enable the use of @ for settings calendar time, $ for time and & for duration.')
 			.addToggle(component => 
 				component.setValue(this.plugin.settings.alternativeKeywords).onChange((value)=>{

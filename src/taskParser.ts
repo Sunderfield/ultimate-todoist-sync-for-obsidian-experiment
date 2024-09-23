@@ -41,7 +41,7 @@ interface todoistTaskObject {
   
 let keywords = {
     TODOIST_TAG: "#todoist",
-    DUE_DATE: "🗓️|📅|📆|🗓",
+    DUE_DATE: "🗓️|📅|📆|🗓|@",
     DUE_TIME: "⏰|⏲",
 };
 
@@ -97,27 +97,16 @@ export class TaskParser   {
         let hasParent = false
         let parentId = null
         let parentTaskObject = null
-        // 检测 parentID
         let textWithoutIndentation = lineText
         if(this.getTabIndentation(lineText) > 0){
-        //console.log(`缩进为 ${this.getTabIndentation(lineText)}`)
         textWithoutIndentation = this.removeTaskIndentation(lineText)
-        //console.log(textWithoutIndentation)
-        //console.log(`这是子任务`)
-        //读取filepath
-        //const fileContent = await this.plugin.fileOperation.readContentFromFilePath(filepath)
-        //遍历 line
         const lines = fileContent.split('\n')
-        //console.log(lines)
+       
         for (let i = (lineNumber - 1 ); i >= 0; i--) {
-            //console.log(`正在check${i}行的缩进`)
             const line = lines[i]
-            //console.log(line)
-            //如果是空行说明没有parent
             if(this.isLineBlank(line)){
                 break
             }
-            //如果tab数量大于等于当前line,跳过
             if (this.getTabIndentation(line) >= this.getTabIndentation(lineText)) {
                     //console.log(`缩进为 ${this.getTabIndentation(line)}`)
                     continue       
@@ -213,7 +202,13 @@ export class TaskParser   {
             return "#todoist"
         }
         if (text === "DUE_DATE"){
-            return "🗓️|📅|📆|🗓"
+            if(this.plugin.settings.alternativeKeywords){
+                console.log("alternativeKeywords is true")
+                return "🗓️|📅|📆|🗓|@"
+            }else{
+                console.log("alternativeKeywords is false")
+                return "🗓️|📅|📆|🗓"
+            }
         }
         if(text === "DUE_TIME"){
             return "⏰|⏲"
@@ -246,7 +241,7 @@ export class TaskParser   {
 //   Return true or false if the text has a due date
     hasDueDate(text:string){
         //     DUE_DATE_WITH_EMOJ: new RegExp(`(${keywords.DUE_DATE})\\s?\\d{4}-\\d{2}-\\d{2}`),
-        const regex_test = new RegExp(`(${keywords.DUE_DATE})\\s?\\d{4}-\\d{2}-\\d{2}`);
+        const regex_test = new RegExp(`(${this.keywords_function("DUE_DATE")})\\s?\\d{4}-\\d{2}-\\d{2}`);
         
         return(regex_test.test(text))  
         // return(REGEX.DUE_DATE_WITH_EMOJ.test(text))
@@ -271,12 +266,25 @@ export class TaskParser   {
     // Get the duetime from the text
     getDueTimeFromLineText(text: string) {
         const current_time = REGEX.DUE_TIME.exec(text);
-        console.log("current time is: " + current_time)
+        if(this.plugin.settings.debugMode){
+            console.log("due time reminder for this task is: " + current_time)
+        }
         if(current_time){
+
+            if(this.plugin.settings.debugMode)(console.log("The time provided is: " + Number(current_time[1].slice(0,2)) + " and " + Number(current_time[1].slice(3,5))))
+
+            if(Number(current_time[1].slice(0,2)) > 24 || Number(current_time[1].slice(3,5)) > 59){
+                if(this.plugin.settings.debugMode)(console.log("The time provided is invalid, so it defaults to 11:59 to avoid breaking things with UTC"))
+                    // TODO when it defaults the reminder time, it needs to change the text on Obsidian to reflect that
+                return "11:59"
+            }
             return current_time[1]
         }
         else {
-            console.log("No time was provided, so it defaults to 11:59 to avoid breaking things with UTC")
+            if(this.plugin.settings.debugMode){
+                console.log("No time was provided, so it defaults to 11:59 to avoid breaking things with UTC")
+
+            }
             // TODO Needs to find a better solution, because when it converts to UTC it can change the date, which create a loop of updates
             return "11:59"
         }
@@ -348,14 +356,15 @@ export class TaskParser   {
     getAllTagsFromLineText(lineText:string){
         let tags = lineText.match(REGEX.ALL_TAGS);
 
-        console.log("tags value is: " + tags)
+        if(this.plugin.settings.debugMode){
+            console.log("Tags found on thist ask are: " + tags)
+        }
     
         if (tags) {
             // Remove '#' from each tag
             tags = tags.map(tag => tag.replace('#', ''));
         }
 
-        console.log("value of tags = " + tags)
     
         return tags;
     }
@@ -408,70 +417,72 @@ export class TaskParser   {
     //Compare if the due date from Obsidian is the same due date from Todoist
     async  compareTaskDueDate(lineTask: object, todoistTask: object): Promise<boolean> {
 
-        console.log("compareTaskDueDate started...")
-
-        console.log("lineTask value = " + JSON.stringify(lineTask))
-        console.log("todoistTask value = " + JSON.stringify(todoistTask))
+        if(this.plugin.settings.debugMode){
+            console.log("compareTaskDueDate started...")
+            console.log("lineTask value = " + JSON.stringify(lineTask))
+            console.log("todoistTask value = " + JSON.stringify(todoistTask))
+        }
 
         const lineTaskDue = JSON.stringify(lineTask.dueDate)
         const todoistTaskDue = todoistTask.due ?? "";
         const todoistTaskDueDate = JSON.stringify(todoistTaskDue.date);
 
-        console.log("lineTaskDue value is: " + lineTaskDue + " and todoistTaskDueDate value is: " + todoistTaskDueDate)
+        if(this.plugin.settings.debugMode){console.log("lineTaskDue value is: " + lineTaskDue + " and todoistTaskDueDate value is: " + todoistTaskDueDate)}
  
 
         // if any falue is empty, return false as you can't compare
         if ((lineTaskDue || todoistTaskDueDate) === "") {
-            console.log("One of the dates had empty values, so the comparison will fail.")
+            if(this.plugin.settings.debugMode){console.log("One of the dates had empty values, so the comparison will fail.")}
             return false;
         }
 
         // if both values are the same, return false because there is no change
         if (lineTaskDue == todoistTaskDueDate) {
-            console.log('lineTaskDue == todoistTaskDueDate, returning false on compareTaskDueDate')
+            if(this.plugin.settings.debugMode){console.log('lineTaskDue == todoistTaskDueDate, returning false on compareTaskDueDate')}
             return false;
         }
 
         // If any has a invvalid date, return false as you can't compare
         else if (lineTaskDue.toString() === "Invalid Date" || todoistTaskDue.toString() === "Invalid Date") {
-            console.log('invalid date on compareTaskDueDate')
+            if(this.plugin.settings.debugMode){console.log('invalid date on compareTaskDueDate')}
             return false;
         }
         // If everything above is false, than return true because the dates are different
         else {
-            console.log('Something is different in the dates, so returning true on compareTaskDueDate')
+            if(this.plugin.settings.debugMode){console.log('Something is different in the dates, so returning true on compareTaskDueDate')}
             return true;
         }
     }
 
     // Compare if the due time from Obsidian is the same due time from Todoist
     async  compareTaskDueTime(lineTask: object, todoistTask: object): Promise<boolean> {
-        console.log("compareTaskDueTime started...")
+        
+        if(this.plugin.settings.debugMode){console.log("compareTaskDueTime started...")}
 
         const lineTaskDueTime = JSON.stringify(lineTask.dueTime)
         const todoistTaskDue = todoistTask.due ?? "";
 
         const todoistTaskDueTimeLocalClock = JSON.stringify(this.ISOStringToLocalClockTimeString(todoistTaskDue.datetime))
 
-        if(this.plguin.settings.debugMode){
+        if(this.plugin.settings.debugMode){
             console.log("todoistTaskDueTimeLocalClock = " + todoistTaskDueTimeLocalClock)
             console.log("lineTaskDueTime value is: " + lineTaskDueTime + " and todoistTaskDueTimeLocalClock value is: " + todoistTaskDueTimeLocalClock)
         }
 
         // if any value is empty, return false as you can't compare
         if((lineTaskDueTime || todoistTaskDueTimeLocalClock) === ""){
-            console.log("One of the times had empty values, so the comparison will fail.")
+            if(this.plugin.settings.debugMode){console.log("One of the times had empty values, so the comparison will fail.")}
             return false;
         }
 
         // if both values are the same, return false because there is no change
         if (lineTaskDueTime == todoistTaskDueTimeLocalClock) {
-            console.log('lineTaskDueTime == todoistTaskDueTimeLocalClock, returning false on compareTaskDueTime')
+            if(this.plugin.settings.debugMode){console.log('lineTaskDueTime == todoistTaskDueTimeLocalClock, returning false on compareTaskDueTime')}
             return false;
         }
 
         else { 
-            console.log('Something is different in the times, so returning true on compareTaskDueTime')
+            if(this.plugin.settings.debugMode){console.log('Something is different in the times, so returning true on compareTaskDueTime')}
             return true;
         }
     }
@@ -485,10 +496,18 @@ export class TaskParser   {
         return(lineTask.projectId === todoistTask.projectId)
     }
   
+
   
-    //判断任务是否缩进
+    // Check if the task is indented
     isIndentedTask(text:string) {
-        return(REGEX.TASK_INDENTATION.test(text));
+        // TASK_INDENTATION: /^(\s{2,}|\t)(-|\*)\s+\[(x|X| )\]/,
+        const check_indentation = /^(\s{2,}|\t)(-|\*)\s+\[(x|X| )\]/;
+
+        if(this.plugin.settings.debugMode){
+            console.log("Checking if the task is indented. Return value should be: " + check_indentation.test(text))
+        }
+
+        return(check_indentation.test(text));
     }
   
   
@@ -541,7 +560,8 @@ export class TaskParser   {
           const utcDateString = utcTimeString;
           const dateObj = new Date(utcDateString); // 将UTC格式字符串转换为Date对象
 
-          console.log("Inside taskParser.ts the dateObj now is: " + JSON.stringify(dateObj))
+          if(this.plugin.settings.debugMode){console.log("Inside taskParser.ts the dateObj now is: " + JSON.stringify(dateObj))}
+
           const year = dateObj.getFullYear();
           const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
           const date = dateObj.getDate().toString().padStart(2, '0');
