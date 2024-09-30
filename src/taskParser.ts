@@ -698,7 +698,12 @@ export class TaskParser   {
 
 
     addTodoistLink(linetext: string,todoistLink:string): string {
-        const regex = new RegExp(`${keywords.TODOIST_TAG}`, "g");
+        // const regex = new RegExp(`${keywords.TODOIST_TAG}`, "g");
+
+        // Looks for #todoist to identify where to put the link.
+        // TODO let the user choose which tag to use
+        const regex = new RegExp("#todoist", "g");
+        console.log("regex is " + regex)
         return linetext.replace(regex, todoistLink + ' ' + '$&');
     }
 

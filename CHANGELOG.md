@@ -1,9 +1,21 @@
 ## CHANGELOG
 
+### 2024-09-30
+#### 1.0.0+202409302138
+- Moving to stable
+
+### 2024-09-24
+#### 0.1.2+202409242147
+- Create a quick script to generate build numbers automatically
+
 ### 2024-09-23
 #### 0.1.0
 - bumped to v0.1, ready enough to be published
 - when a reminder time is provided with the wrong hour or minute (H > 24 or M >59), it defaults to 11:59
+
+#### 0.1.2
+- Moved the link from the REGEX list to the function
+- Now the `tid` also includes the link to the task. Next step is to remove the `link` text without break anything
 - 
 
 ### 2024-09-22

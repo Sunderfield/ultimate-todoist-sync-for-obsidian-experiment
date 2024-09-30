@@ -156,7 +156,7 @@ export class TodoistSync  {
                 this.plugin.saveSettings()
 
                 //todoist id 保存到 任务后面
-                const text_with_out_link = `${linetxt} %%[tid:: ${todoist_id}]%%`;
+                const text_with_out_link = `${linetxt} %%[tid:: [${todoist_id}](${newTask.url})]%%`;
                 // const text_with_out_link = `${linetxt} %%[todoist_id:: ${todoist_id}]%%`;
                 const link = `[link](${newTask.url})`
                 const text = this.plugin.taskParser.addTodoistLink(text_with_out_link,link)
@@ -282,7 +282,7 @@ export class TodoistSync  {
                 this.plugin.saveSettings()
     
                 //todoist id 保存到 任务后面
-                const text_with_out_link = `${line} %%[tid:: ${todoist_id}]%%`;
+                const text_with_out_link = `${line} %%[tid:: [${todoist_id}](${newTask.url})]%%`;
                 // const text_with_out_link = `${line} %%[todoist_id:: ${todoist_id}]%%`;
                 const link = `[link](${newTask.url})`
                 const text = this.plugin.taskParser.addTodoistLink(text_with_out_link,link)
