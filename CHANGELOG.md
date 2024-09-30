@@ -1,8 +1,11 @@
 ## CHANGELOG
 
 ### 2024-09-30
-#### 1.0.0+202409302138
-- Moving to stable
+#### 0.1.3+202409302257
+- Encapsulated some console.log on debugMode settings
+- Fix an issue with the regex to look for links
+- Removed the "link" keyword to have only the link within the TID property tag
+- Fixed the issue where the text replace was not considering the tid_link
 
 ### 2024-09-24
 #### 0.1.2+202409242147

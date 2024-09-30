@@ -156,9 +156,10 @@ export class TodoistSync  {
                 this.plugin.saveSettings()
 
                 //todoist id 保存到 任务后面
-                const text_with_out_link = `${linetxt} %%[tid:: [${todoist_id}](${newTask.url})]%%`;
+                const text_with_out_link = `${linetxt}`;
                 // const text_with_out_link = `${linetxt} %%[todoist_id:: ${todoist_id}]%%`;
-                const link = `[link](${newTask.url})`
+                // const link = `[link](${newTask.url})`
+                const link = `%%[tid:: [${todoist_id}](${newTask.url})]%%`
                 const text = this.plugin.taskParser.addTodoistLink(text_with_out_link,link)
                 const from = { line: cursor.line, ch: 0 };
                 const to = { line: cursor.line, ch: linetxt.length };
@@ -259,12 +260,15 @@ export class TodoistSync  {
             //console.log('this is a new task')
             //console.log(`current line is ${i}`)
             //console.log(`line text: ${line}`)
+            if(this.plugin.settings.debugMode){
             console.log(filepath)
+        }
+            
             const currentTask =await this.plugin.taskParser.convertTextToTodoistTaskObject(line,filepath,i,content)
             if(typeof currentTask === "undefined"){
                 continue
             }
-            console.log(currentTask)
+        if(this.plugin.settings.debugMode){    console.log(currentTask)}
             try {
                 const newTask = await this.plugin.todoistRestAPI.AddTask(currentTask)
                 const { id: todoist_id, projectId: todoist_projectId, url: todoist_url } = newTask;
@@ -282,9 +286,10 @@ export class TodoistSync  {
                 this.plugin.saveSettings()
     
                 //todoist id 保存到 任务后面
-                const text_with_out_link = `${line} %%[tid:: [${todoist_id}](${newTask.url})]%%`;
+                const text_with_out_link = `${line}`;
                 // const text_with_out_link = `${line} %%[todoist_id:: ${todoist_id}]%%`;
-                const link = `[link](${newTask.url})`
+                // const link = `[link](${newTask.url})`
+                const link = `%%[tid:: [${todoist_id}](${newTask.url})]%%`
                 const text = this.plugin.taskParser.addTodoistLink(text_with_out_link,link)
                 lines[i] = text;
     
@@ -354,7 +359,7 @@ export class TodoistSync  {
             //console.log(`lastline task id is ${lastLineTask_todoist_id}`)
             const savedTask = await this.plugin.cacheOperation.loadTaskFromCacheyID(lineTask_todoist_id)  //dataview中 id为数字，todoist中id为字符串，需要转换
             if(!savedTask){
-                console.log(`本地缓存中没有task ${lineTask.todoist_id}`)
+                console.log(`task ${lineTask.todoist_id} is not on local cache`)
                 const url = this.plugin.taskParser.getObsidianUrlFromFilepath(filepath)
                 console.log(url)
                 return

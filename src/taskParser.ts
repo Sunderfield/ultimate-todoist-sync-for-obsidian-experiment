@@ -47,8 +47,8 @@ let keywords = {
 
 const REGEX = {
     TODOIST_TAG: new RegExp(`^[\\s]*[-] \\[[x ]\\] [\\s\\S]*${keywords.TODOIST_TAG}[\\s\\S]*$`, "i"),
-    TODOIST_ID: /\[tid::\s*\d+\]/,
-    TODOIST_ID_NUM:/\[tid::\s*(.*?)\]/,
+    TODOIST_ID: /\[tid:: \[(\d+)\]\(https:\/\/todoist\.com\/app\/task\/\d+\)\]/,
+    // TODOIST_ID_NUM:/\[tid::\s*\[\d+\]\(/,
     // TODOIST_ID: /\[todoist_id::\s*\d+\]/,
     // TODOIST_ID_NUM:/\[todoist_id::\s*(.*?)\]/,
     TODOIST_LINK:/\[link\]\(.*?\)/,
@@ -67,6 +67,7 @@ const REGEX = {
         REMOVE_CHECKBOX:  /^(-|\*)\s+\[(x|X| )\]\s/,
         REMOVE_CHECKBOX_WITH_INDENTATION: /^([ \t]*)?(-|\*)\s+\[(x|X| )\]\s/,
         REMOVE_TODOIST_LINK: /\[link\]\(.*?\)/,
+        REMOVE_TODOIST_TID_LINK: /%%\[tid::\s*\[\d+\]\(https:\/\/todoist\.com\/app\/task\/\d+\)\]%%/,
     },
     ALL_TAGS: /#[\w\u4e00-\u9fa5-]+/g,
     TASK_CHECKBOX_CHECKED: /- \[(x|X)\] /,
@@ -203,10 +204,10 @@ export class TaskParser   {
         }
         if (text === "DUE_DATE"){
             if(this.plugin.settings.alternativeKeywords){
-                console.log("alternativeKeywords is true")
+                if(this.plugin.settings.debugMode){console.log("alternativeKeywords is true")}
                 return "🗓️|📅|📆|🗓|@"
             }else{
-                console.log("alternativeKeywords is false")
+                if(this.plugin.settings.debugMode){console.log("alternativeKeywords is false")}
                 return "🗓️|📅|📆|🗓"
             }
         }
@@ -233,9 +234,23 @@ export class TaskParser   {
 //   Return true or false if the text has a todoist id
     hasTodoistId(text:string){
         // const return_old = REGEX.TODOIST_ID.test(text)
+        if(text === ""){
+            if(this.plugin.settings.debugMode){console.log("The text is empty. Can't check for Todoist ID. Will return null.")}
+            return null
+        } else {
 
-        const return_new=new RegExp(`\\[tid::\\s*\\d+\\]`).test(text)
-        return(return_new)
+            
+            
+            const regex_tag_test=new RegExp(`%%\\[tid:: \\[(\\d+)\\]\\(https:\\/\\/todoist\\.com\\/app\\/task\\/\\d+\\)\\]%%`).test(text)
+            
+            if(this.plugin.settings.debugMode){if(regex_tag_test){
+                console.log("The task has a Todoist ID")
+            } else {
+                console.log("The task does not have a Todoist ID")
+            }}
+            
+            return(regex_tag_test)
+        }
     }
   
 //   Return true or false if the text has a due date
@@ -300,10 +315,21 @@ export class TaskParser   {
   
 //   Get the todoist id from the text
     getTodoistIdFromLineText(text:string){
-        //console.log(text)
-        const result = REGEX.TODOIST_ID_NUM.exec(text);
-        //console.log(result)
-        return result ? result[1] : null;
+        if(this.plugin.settings.debugMode){console.log(`getTodoistIdFromLineText text is ${text}`)}
+        // const result = REGEX.TODOIST_ID_NUM.exec(text);
+
+        const regex_todoist_id = /\[tid::\s*\[\d+\]\(/
+        const search_for_tid_id = regex_todoist_id.exec(text)
+
+        if(search_for_tid_id === null){ return null}
+        const strip_tid_for_number_id = search_for_tid_id.toString().replace(/\D/g, "")
+
+
+        // console.log(`getTodoistIdFromLineText result is ${search_for_tid_id}`)
+        // console.log(`strip_tid_for_number_id: ${strip_tid_for_number_id}`)
+        // return result ? result[1] : null;
+
+        return strip_tid_for_number_id ? strip_tid_for_number_id : null;
     }
   
     // get the duedate from dataview
@@ -340,7 +366,7 @@ export class TaskParser   {
 //   Remove everything that is not the task content
     getTaskContentFromLineText(lineText:string) {
         const TaskContent = lineText.replace(REGEX.TASK_CONTENT.REMOVE_INLINE_METADATA,"")
-                                    .replace(REGEX.TASK_CONTENT.REMOVE_TODOIST_LINK,"")
+                                    .replace(REGEX.TASK_CONTENT.REMOVE_TODOIST_TID_LINK,"")
                                     .replace(REGEX.TASK_CONTENT.REMOVE_PRIORITY," ") //priority 前后必须都有空格，
                                     .replace(REGEX.TASK_CONTENT.REMOVE_TAGS,"")
                                     .replace(REGEX.TASK_CONTENT.REMOVE_DATE,"")
@@ -348,6 +374,8 @@ export class TaskParser   {
                                     .replace(REGEX.TASK_CONTENT.REMOVE_CHECKBOX,"")
                                     .replace(REGEX.TASK_CONTENT.REMOVE_CHECKBOX_WITH_INDENTATION,"")
                                     .replace(REGEX.TASK_CONTENT.REMOVE_SPACE,"")
+
+                                    if(this.plugin.settings.debugMode){console.log(`TaskContent is ${TaskContent}`)}
         return(TaskContent)
     }
   
@@ -357,7 +385,7 @@ export class TaskParser   {
         let tags = lineText.match(REGEX.ALL_TAGS);
 
         if(this.plugin.settings.debugMode){
-            console.log("Tags found on thist ask are: " + tags)
+            console.log("Tags found on this task are: " + tags)
         }
     
         if (tags) {
@@ -702,9 +730,9 @@ export class TaskParser   {
 
         // Looks for #todoist to identify where to put the link.
         // TODO let the user choose which tag to use
-        const regex = new RegExp("#todoist", "g");
-        console.log("regex is " + regex)
-        return linetext.replace(regex, todoistLink + ' ' + '$&');
+        const regex = new RegExp(this.keywords_function("TODOIST_TAG"), "g");
+        // console.log("regex is " + regex)
+        return linetext.replace(regex, ' ' + '$&' + ' ' + todoistLink);
     }
 
 

@@ -55,10 +55,10 @@ export class TodoistRestAPI  {
 
             const dueDateAndTimeMerge = dueDate + "T" + dueTime
 
-            console.log("dueDateAndTimeMerge = " + dueDateAndTimeMerge)
+            if(this.plugin.settings.debugMode){console.log("dueDateAndTimeMerge = " + dueDateAndTimeMerge)}
             
             dueDatetime = localDateStringToUTCDatetimeString(dueDateAndTimeMerge) || undefined
-            console.log("dueDateTime after transformation to UTCDateTimeString = " + dueDatetime)
+            if(this.plugin.settings.debugMode){console.log("dueDateTime after transformation to UTCDateTimeString = " + dueDatetime)}
             dueDate = undefined
           }  
 
@@ -147,7 +147,7 @@ export class TodoistRestAPI  {
         const api = await this.initializeAPI()
         try {
         const isSuccess = await api.closeTask(taskId);
-        console.log(`Task ${taskId} is closed`)
+        if(this.plugin.settings.debugMode){console.log(`Task ${taskId} is closed`)}
         return isSuccess;
         } catch (error) {
         console.error('Error closing task:', error);

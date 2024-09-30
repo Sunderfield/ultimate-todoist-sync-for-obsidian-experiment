@@ -118,19 +118,19 @@ export class FileOperation   {
             const line = lines[i]
             if(!this.plugin.taskParser.isMarkdownTask(line)){
                 //console.log(line)
-                //console.log("It is not a markdown task.")
+                console.log("It is not a markdown task.")
                 continue;
             }
             //if content is empty
             if(this.plugin.taskParser.getTaskContentFromLineText(line) == ""){
-                //console.log("Line content is empty")
+                console.log("Line content is empty")
                 continue;
             }
             if (!this.plugin.taskParser.hasTodoistId(line) && !this.plugin.taskParser.hasTodoistTag(line)) {
                 //console.log(line)
-                //console.log('prepare to add todoist tag')
+                console.log('prepare to add todoist tag')
                 const newLine = this.plugin.taskParser.addTodoistTag(line);
-                //console.log(newLine)
+                console.log(newLine)
                 lines[i] = newLine
                 modified = true
             }

@@ -1,4 +1,4 @@
-# Simple Todoist Sync for Obsidian (Beta)
+# Another Simple Todoist Sync for Obsidian (BETA)
 
 Create, edit and delete tasks from Obsidian.md to your Todoist.
 
