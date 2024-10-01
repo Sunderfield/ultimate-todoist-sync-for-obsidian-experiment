@@ -23,6 +23,8 @@ export interface UltimateTodoistSyncSettings {
 	debugMode:boolean;
 	commentsSync:boolean;
 	alternativeKeywords:boolean;
+	customSyncTag:string;
+	experimentalFeatures:boolean;
 }
 
 
@@ -38,6 +40,8 @@ export const DEFAULT_SETTINGS: Partial<UltimateTodoistSyncSettings> = {
 	debugMode:false,
 	commentsSync:true,
 	alternativeKeywords:false,
+	customSyncTag:"#todoist",
+	experimentalFeatures:false,
 	//mySetting: 'default',
 	//todoistTasksFilePath: 'todoistTasks.json'
 
@@ -396,15 +400,8 @@ export class UltimateTodoistSyncSettingTab extends PluginSettingTab {
 						this.plugin.saveSettings()
 					})
 				);
-		
-		new Setting(containerEl)
-			.setName('Alternative Keywords (Work in Progress)')
-			.setDesc('Enable the use of @ for settings calendar time, $ for time and & for duration.')
-			.addToggle(component => 
-				component.setValue(this.plugin.settings.alternativeKeywords).onChange((value)=>{
-				this.plugin.settings.alternativeKeywords = value
-				this.plugin.saveSettings()
-		}));
+
+
 
 		new Setting(containerEl)
 			.setName('Backup Todoist Data')
@@ -420,6 +417,43 @@ export class UltimateTodoistSyncSettingTab extends PluginSettingTab {
 					this.plugin.todoistSync.backupTodoistAllResources()
 				})
 			);
+
+
+			new Setting(containerEl)
+			.setName('Experimental Features')
+			.setDesc('Enable experimental features. Some might not be working yet.')
+			.addToggle(component =>
+				component
+					.setValue(this.plugin.settings.experimentalFeatures)
+					.onChange((value)=>{
+						this.plugin.settings.experimentalFeatures = value
+						this.plugin.saveSettings()
+						new Notice('Experimental features have been enabled. Close this window and open again to see the experimental features.')
+					})
+			)
+	
+		if(this.plugin.settings.experimentalFeatures){
+		new Setting(containerEl)
+			.setName('Custom Sync Tag')
+			.setDesc('Set a custom tag to sync tasks with Todoist. NOTE: Using #todoist might conflict with old version of this plugin')
+			.addText((text) => text.setPlaceholder('Enter custom tag')
+			.setValue(this.plugin.settings.customSyncTag).onChange(async (value) => {
+				this.plugin.settings.customSyncTag = value;
+				// TODO add validation on the value of 'value' to make sure is a tag with #
+				console.log(value)
+				this.plugin.saveSettings()
+				new Notice('New custom sync tag have been updated.');
+			}));
+	}		
+			if(this.plugin.settings.experimentalFeatures){
+			new Setting(containerEl)
+				.setName('Alternative Keywords')
+				.setDesc('Enable the use of @ for settings calendar time, $ for time and & for duration.')
+				.addToggle(component => 
+					component.setValue(this.plugin.settings.alternativeKeywords).onChange((value)=>{
+					this.plugin.settings.alternativeKeywords = value
+					this.plugin.saveSettings()
+			}));}
 	}
 }
 

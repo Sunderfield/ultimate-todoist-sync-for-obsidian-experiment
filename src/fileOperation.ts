@@ -165,17 +165,18 @@ export class FileOperation   {
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i]
             if (this.plugin.taskParser.hasTodoistId(line) && this.plugin.taskParser.hasTodoistTag(line)) {
-                if(this.plugin.taskParser.hasTodoistLink(line)){
+                if(this.plugin.taskParser && this.plugin.taskParser.hasTodoistLink(line)){
+                    if(this.plugin.settings.debugMode){console.log(`Todoist link already exists in line: ${line}`)}
                     return
                 }
-                console.log(line)
+                if(this.plugin.settings.debugMode){console.log(`Content for line is: ${line}`)}
                 //console.log('prepare to add todoist link')
                 const taskID = this.plugin.taskParser.getTodoistIdFromLineText(line)
                 const taskObject = this.plugin.cacheOperation.loadTaskFromCacheyID(taskID)
                 const todoistLink = taskObject.url
                 const link = `[link](${todoistLink})`
                 const newLine = this.plugin.taskParser.addTodoistLink(line,link)
-                console.log(newLine)
+                if(this.plugin.settings.debugMode){console.log(`Content for newLine is: ${newLine}`)}
                 lines[i] = newLine
                 modified = true
             }else{
@@ -299,7 +300,6 @@ export class FileOperation   {
             const lineTaskDueDate = this.plugin.taskParser.getDueDateFromLineText(line) || ""
             const newTaskDueDate = this.plugin.taskParser.ISOStringToLocalDateString(evt.extra_data.due_date) || ""
 
-            console.log(`lineTaskDueDate: ${lineTaskDueDate}`)
             
             const lineTaskTime = this.plugin.taskParser.getDueTimeFromLineText(line) || ""
             
@@ -309,13 +309,13 @@ export class FileOperation   {
             // TODO 'trimmedlineTaskDueDate' looks just for the date, removing any other information, like hour. This very likely will break some dates sometimes, need a more inteligent solution
             const trimmedlineTaskDueDate = lineTaskDueDate.slice(0,10)
 
-            console.log(`lineTaskDueDate: ${lineTaskDueDate}`)
-            console.log(`newTaskDueDate: ${newTaskDueDate}`)
-            console.log(`newTaskTime: ${newTaskTime}`)
-            console.log(`lineTaskTime: ${lineTaskTime}`)
-
+if(this.plugin.settings.debugMode){
+            console.log(`lineTaskDueDate: ${lineTaskDueDate} and newTaskDueDate: ${newTaskDueDate}`)
+            console.log(`lineTaskTime: ${lineTaskTime} and newTaskTime: ${newTaskTime}`)
+}
  
-            if(lineTaskDueDate === ""){
+            if(this.plugin.taskParser && lineTaskDueDate === ""){
+                if(this.plugin.settings.debugMode){console.log("Task doesn't have a due date, it will attempt to add one.")}
                 lines[i] = this.plugin.taskParser.insertDueDateBeforeTodoist(line,newTaskDueDate)
                 modified = true
 

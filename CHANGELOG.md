@@ -1,14 +1,20 @@
 ## CHANGELOG
 
+### 2024-10-01
+#### 0.1.4
+- Added a new feature flag that hide experimental or in-development features
+- Cleanup on the regex function of the taskParser file
+
+
 ### 2024-09-30
-#### 0.1.3+202409302257
+#### 0.1.3
 - Encapsulated some console.log on debugMode settings
 - Fix an issue with the regex to look for links
 - Removed the "link" keyword to have only the link within the TID property tag
 - Fixed the issue where the text replace was not considering the tid_link
 
 ### 2024-09-24
-#### 0.1.2+202409242147
+#### 0.1.2
 - Create a quick script to generate build numbers automatically
 
 ### 2024-09-23

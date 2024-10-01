@@ -40,21 +40,21 @@ interface todoistTaskObject {
 }
   
 let keywords = {
-    TODOIST_TAG: "#todoist",
+    // TODOIST_TAG: "#todoist",
     DUE_DATE: "🗓️|📅|📆|🗓|@",
     DUE_TIME: "⏰|⏲",
 };
 
 const REGEX = {
-    TODOIST_TAG: new RegExp(`^[\\s]*[-] \\[[x ]\\] [\\s\\S]*${keywords.TODOIST_TAG}[\\s\\S]*$`, "i"),
+    // TODOIST_TAG: new RegExp(`^[\\s]*[-] \\[[x ]\\] [\\s\\S]*${keywords.TODOIST_TAG}[\\s\\S]*$`, "i"),
     TODOIST_ID: /\[tid:: \[(\d+)\]\(https:\/\/todoist\.com\/app\/task\/\d+\)\]/,
     // TODOIST_ID_NUM:/\[tid::\s*\[\d+\]\(/,
     // TODOIST_ID: /\[todoist_id::\s*\d+\]/,
     // TODOIST_ID_NUM:/\[todoist_id::\s*(.*?)\]/,
-    TODOIST_LINK:/\[link\]\(.*?\)/,
-    DUE_DATE_WITH_EMOJ: new RegExp(`(${keywords.DUE_DATE})\\s?\\d{4}-\\d{2}-\\d{2}`),
-    DUE_DATE : new RegExp(`(?:${keywords.DUE_DATE})\\s?(\\d{4}-\\d{2}-\\d{2})`),
-    DUE_TIME: new RegExp(`(?:${keywords.DUE_TIME})\\s?(\\d{2}:\\d{2})`),
+    // TODOIST_LINK:/\[link\]\(.*?\)/,
+    // DUE_DATE_WITH_EMOJ: new RegExp(`(${keywords.DUE_DATE})\\s?\\d{4}-\\d{2}-\\d{2}`),
+    // DUE_DATE : new RegExp(`(?:${keywords.DUE_DATE})\\s?(\\d{4}-\\d{2}-\\d{2})`),
+    // DUE_TIME: new RegExp(`(?:${keywords.DUE_TIME})\\s?(\\d{2}:\\d{2})`),
     PROJECT_NAME: /\[project::\s*(.*?)\]/,
     TASK_CONTENT: {
         REMOVE_PRIORITY: /\s!!([1-4])\s/,
@@ -200,7 +200,13 @@ export class TaskParser   {
 
     keywords_function(text:string){
         if(text === "TODOIST_TAG"){
-            return "#todoist"
+            
+            const customSyncTagValue = this.plugin.settings.customSyncTag;
+
+            // if(this.plugin.settings.debugMode){console.log("customSyncTag value: " + customSyncTagValue)}
+
+
+            return customSyncTagValue
         }
         if (text === "DUE_DATE"){
             if(this.plugin.settings.alternativeKeywords){
@@ -213,9 +219,11 @@ export class TaskParser   {
         }
         if(text === "DUE_TIME"){
             return "⏰|⏲"
+            // TODO add other keywords for the timing
         }else {
             return "No such keyword"
         }
+        // TODO add keywords for duration
         
     }
   
@@ -235,7 +243,7 @@ export class TaskParser   {
     hasTodoistId(text:string){
         // const return_old = REGEX.TODOIST_ID.test(text)
         if(text === ""){
-            if(this.plugin.settings.debugMode){console.log("The text is empty. Can't check for Todoist ID. Will return null.")}
+            // if(this.plugin.settings.debugMode){console.log("The text is empty. Can't check for Todoist ID. Will return null.")}
             return null
         } else {
 
@@ -243,11 +251,11 @@ export class TaskParser   {
             
             const regex_tag_test=new RegExp(`%%\\[tid:: \\[(\\d+)\\]\\(https:\\/\\/todoist\\.com\\/app\\/task\\/\\d+\\)\\]%%`).test(text)
             
-            if(this.plugin.settings.debugMode){if(regex_tag_test){
-                console.log("The task has a Todoist ID")
-            } else {
-                console.log("The task does not have a Todoist ID")
-            }}
+            // if(this.plugin.settings.debugMode){if(regex_tag_test){
+            //     console.log("The task has a Todoist ID")
+            // } else {
+            //     console.log("The task does not have a Todoist ID")
+            // }}
             
             return(regex_tag_test)
         }
@@ -280,7 +288,12 @@ export class TaskParser   {
 
     // Get the duetime from the text
     getDueTimeFromLineText(text: string) {
-        const current_time = REGEX.DUE_TIME.exec(text);
+        // DUE_TIME: new RegExp(`(?:${keywords.DUE_TIME})\\s?(\\d{2}:\\d{2})`),
+        const regex_search_for_duetime = new RegExp(`(?:${this.keywords_function("DUE_TIME")})\\s?(\\d{2}:\\d{2})`);
+        // TODO need to handle single duetime. e.g: 7:33 instead of 07:33. It returns null for 07:33
+
+        const current_time = regex_search_for_duetime.exec(text);
+        // const current_time = REGEX.DUE_TIME.exec(text);
         if(this.plugin.settings.debugMode){
             console.log("due time reminder for this task is: " + current_time)
         }
@@ -570,9 +583,13 @@ export class TaskParser   {
   
   
   //在linetext中插入日期
-    insertDueDateBeforeTodoist(text, dueDate) {
-        const regex = new RegExp(`(${keywords.TODOIST_TAG})`)
-        return text.replace(regex, `📅 ${dueDate} $1`);
+    insertDueDateBeforeTodoist(text:string, dueDate:string) {
+        // const regex = new RegExp(`(${keywords.TODOIST_TAG})`)
+        const tag_to_look_for = this.keywords_function("TODOIST_TAG")
+
+        if(this.plugin.settings.debugMode){console.log(`The tag to look for is: ${tag_to_look_for}`)}
+
+        return text.replace(tag_to_look_for, `📅 ${dueDate} $1`);
   }
 
     //extra date from obsidian event
@@ -715,7 +732,8 @@ export class TaskParser   {
     }
 
     addTodoistTag(str: string): string {
-        return(str +` ${keywords.TODOIST_TAG}`);
+        const tag_to_be_added = this.keywords_function("TODOIST_TAG")
+        return(str +` ${tag_to_be_added}`);
     }
 
     getObsidianUrlFromFilepath(filepath:string){
@@ -738,6 +756,11 @@ export class TaskParser   {
 
     //检查是否包含todoist link
     hasTodoistLink(lineText:string){
-        return(REGEX.TODOIST_LINK.test(lineText))
+        // TODOIST_LINK:/\[link\]\(.*?\)/,
+        const regex_has_todoist_link = new RegExp(`/%%\[tid::\s*\[\d+\]\(https:\/\/todoist\.com\/app\/task\/\d+\)\]%%/`);
+
+        if(this.plugin.settings.debugMode){console.log(`The check on hasTodoistLink returned:  ${regex_has_todoist_link}`)}
+
+        return(regex_has_todoist_link.test(lineText))
     }
 }

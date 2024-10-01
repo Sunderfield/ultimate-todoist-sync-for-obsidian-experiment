@@ -120,6 +120,8 @@ export class TodoistSync  {
         const line = cursor.line
         const linetxt = editor.getLine(line)
 
+        // console.log("lineContentNewTaskCheck activated")
+
        
 
     
