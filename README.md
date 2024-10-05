@@ -92,7 +92,7 @@ By enabling this option, the plugin will automatically add `#todoist` to all tas
 
 | Syntax | Description | Example |
 | --- | --- | --- |
-|#todoist           |   Tasks marked with `#todoist` will be added to Todoist, while tasks without the `#todoist` tag will not be processed.If you have enabled Full vault sync in the settings, `#todoist` will be added automatically.| `- [ ] task #todoist`|
+|#tdsync           |   Tasks marked with `#tdsync`[4] will be added to Todoist, while tasks without the `#tdsync` tag will not be processed. If you have enabled Full vault sync in the settings, `#tdsync` will be added automatically.| `- [ ] task #tdsync`|
 | 📅YYYY-MM-DD      | The date format is 📅YYYY-MM-DD, indicating the due date of a task. | `- [ ] task content 📅2025-02-05 #todoist` [1] |
 | #projectTag       | New tasks will be added to the default project (e.g: inbox), and you can change the default project in the settings or use a tag with the same name to specify a particular project. | `- [ ] taskA #todoist` will be added to inbox.<br>`- [ ] taskB #tag #testProject #todoist` will be added to testProject.|
 | #tag              | Note that all tags without a project of the same name are treated as normal tags | `- [ ] task #tagA #tagB #tagC #todoist` |
@@ -105,6 +105,7 @@ By enabling this option, the plugin will automatically add `#todoist` to all tas
 - [1] Supports the following emojis: 📅, 📆, 🗓, 🗓️
 - [2] Keep in mind that very urgent is the priority 1 on clients. So, the priority 1 in the client corresponds to the number 4 here (Because that's how the official API of Todoist is designed.).
 - [3] Supports the following emojis: ⏰, ⏲
+- [4] On the original plugin, this tag was `#todoist`, but on this fork was changed to avoid conflicts.
 
 </details>
 

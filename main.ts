@@ -199,11 +199,11 @@ export default class UltimateTodoistSyncForObsidian extends Plugin {
 			if(!this.settings.apiInitialized){
 				return
 			}
-			console.log(`${oldpath} is renamed`)
+			// console.log(`${oldpath} is renamed`)
 			//读取frontMatter
 			//const frontMatter = await this.fileOperation.getFrontMatter(file)
 			const frontMatter =  await this.cacheOperation.getFileMetadata(oldpath)
-			console.log(frontMatter)
+			// console.log(frontMatter)
 			if(frontMatter === null || frontMatter.todoistTasks === undefined){
 				//console.log('删除的文件中没有task')
 				return
@@ -233,13 +233,13 @@ export default class UltimateTodoistSyncForObsidian extends Plugin {
 					return
 				}
 				const filepath = file.path
-				console.log(`${filepath} is modified`)
+				// console.log(`${filepath} is modified`)
 
 				//get current view
 				
 				const activateFile = this.app.workspace.getActiveFile()
 
-				console.log(activateFile?.path)
+				// console.log(activateFile?.path)
 
 				//To avoid conflicts, Do not check files being edited
 				if(activateFile?.path == filepath){
@@ -289,7 +289,7 @@ export default class UltimateTodoistSyncForObsidian extends Plugin {
 
 
 	async onunload() {
-		console.log(`Ultimate Todoist Sync for Obsidian id unloaded!`)
+		// console.log(`Ultimate Todoist Sync for Obsidian id unloaded!`)
 		await this.saveSettings()
 
 	}
@@ -436,9 +436,9 @@ export default class UltimateTodoistSyncForObsidian extends Plugin {
 					//console.log(`filename is ${fileName}`)
 			if(this.lastLines.has(fileName as string) && line !== this.lastLines.get(fileName as string)){
 				const lastLine = this.lastLines.get(fileName as string)
-				if(this.settings.debugMode){
-					console.log('Line changed!', `current line is ${line}`, `last line is ${lastLine}`);
-				}
+				// if(this.settings.debugMode){
+				// 	console.log('Line changed!', `current line is ${line}`, `last line is ${lastLine}`);
+				// }
 
 
 				// 执行你想要的操作
@@ -534,12 +534,12 @@ export default class UltimateTodoistSyncForObsidian extends Plugin {
 		else{
 			const filepath = this.app.workspace.getActiveViewOfType(MarkdownView)?.file.path
 			if(filepath === undefined){
-				console.log(`file path undefined`)
+				// console.log(`file path undefined`)
 				return
 			}
 			const defaultProjectName = await this.cacheOperation.getDefaultProjectNameForFilepath(filepath as string)
 			if(defaultProjectName === undefined){
-				console.log(`projectName undefined`)
+				// console.log(`projectName undefined`)
 				return
 			}
 			this.statusBar.setText(defaultProjectName)
@@ -571,12 +571,12 @@ export default class UltimateTodoistSyncForObsidian extends Plugin {
 
 			const filesToSync = this.settings.fileMetadata;
 			if(this.settings.debugMode){
-				console.log(filesToSync)
+				// console.log(filesToSync)
 			}
 
 			for (let fileKey in filesToSync) {
 				if(this.settings.debugMode){
-					console.log(fileKey)
+					// console.log(fileKey)
 				}
 
 				if (!await this.checkAndHandleSyncLock()) return;

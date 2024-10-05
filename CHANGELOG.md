@@ -1,4 +1,9 @@
 ## CHANGELOG
+### 2024-10-04
+#### 0.1.5
+- Change the default tag to `#tdsync` instead of `#todoist` to avoid conflict for installation over the Ultimate Todoist Sync plugin
+- Commented most of the console.log to check if is going to pass on the Obsidian's  community plugin submit validation
+
 
 ### 2024-10-01
 #### 0.1.4

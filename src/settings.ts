@@ -40,7 +40,7 @@ export const DEFAULT_SETTINGS: Partial<UltimateTodoistSyncSettings> = {
 	debugMode:false,
 	commentsSync:true,
 	alternativeKeywords:false,
-	customSyncTag:"#todoist",
+	customSyncTag:"#tdsync",
 	experimentalFeatures:false,
 	//mySetting: 'default',
 	//todoistTasksFilePath: 'todoistTasks.json'

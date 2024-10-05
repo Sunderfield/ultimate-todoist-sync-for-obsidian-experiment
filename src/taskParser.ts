@@ -295,14 +295,14 @@ export class TaskParser   {
         const current_time = regex_search_for_duetime.exec(text);
         // const current_time = REGEX.DUE_TIME.exec(text);
         if(this.plugin.settings.debugMode){
-            console.log("due time reminder for this task is: " + current_time)
+            // console.log("due time reminder for this task is: " + current_time)
         }
         if(current_time){
 
             if(this.plugin.settings.debugMode)(console.log("The time provided is: " + Number(current_time[1].slice(0,2)) + " and " + Number(current_time[1].slice(3,5))))
 
             if(Number(current_time[1].slice(0,2)) > 24 || Number(current_time[1].slice(3,5)) > 59){
-                if(this.plugin.settings.debugMode)(console.log("The time provided is invalid, so it defaults to 11:59 to avoid breaking things with UTC"))
+                // if(this.plugin.settings.debugMode)(console.log("The time provided is invalid, so it defaults to 11:59 to avoid breaking things with UTC"))
                     // TODO when it defaults the reminder time, it needs to change the text on Obsidian to reflect that
                 return "11:59"
             }
@@ -328,7 +328,7 @@ export class TaskParser   {
   
 //   Get the todoist id from the text
     getTodoistIdFromLineText(text:string){
-        if(this.plugin.settings.debugMode){console.log(`getTodoistIdFromLineText text is ${text}`)}
+        // if(this.plugin.settings.debugMode){console.log(`getTodoistIdFromLineText text is ${text}`)}
         // const result = REGEX.TODOIST_ID_NUM.exec(text);
 
         const regex_todoist_id = /\[tid::\s*\[\d+\]\(/
@@ -388,7 +388,7 @@ export class TaskParser   {
                                     .replace(REGEX.TASK_CONTENT.REMOVE_CHECKBOX_WITH_INDENTATION,"")
                                     .replace(REGEX.TASK_CONTENT.REMOVE_SPACE,"")
 
-                                    if(this.plugin.settings.debugMode){console.log(`TaskContent is ${TaskContent}`)}
+                                    // if(this.plugin.settings.debugMode){console.log(`TaskContent is ${TaskContent}`)}
         return(TaskContent)
     }
   
@@ -398,7 +398,7 @@ export class TaskParser   {
         let tags = lineText.match(REGEX.ALL_TAGS);
 
         if(this.plugin.settings.debugMode){
-            console.log("Tags found on this task are: " + tags)
+            // console.log("Tags found on this task are: " + tags)
         }
     
         if (tags) {
@@ -458,39 +458,39 @@ export class TaskParser   {
     //Compare if the due date from Obsidian is the same due date from Todoist
     async  compareTaskDueDate(lineTask: object, todoistTask: object): Promise<boolean> {
 
-        if(this.plugin.settings.debugMode){
-            console.log("compareTaskDueDate started...")
-            console.log("lineTask value = " + JSON.stringify(lineTask))
-            console.log("todoistTask value = " + JSON.stringify(todoistTask))
-        }
+        // if(this.plugin.settings.debugMode){
+        //     console.log("compareTaskDueDate started...")
+        //     console.log("lineTask value = " + JSON.stringify(lineTask))
+        //     console.log("todoistTask value = " + JSON.stringify(todoistTask))
+        // }
 
         const lineTaskDue = JSON.stringify(lineTask.dueDate)
         const todoistTaskDue = todoistTask.due ?? "";
         const todoistTaskDueDate = JSON.stringify(todoistTaskDue.date);
 
-        if(this.plugin.settings.debugMode){console.log("lineTaskDue value is: " + lineTaskDue + " and todoistTaskDueDate value is: " + todoistTaskDueDate)}
+        // if(this.plugin.settings.debugMode){console.log("lineTaskDue value is: " + lineTaskDue + " and todoistTaskDueDate value is: " + todoistTaskDueDate)}
  
 
         // if any falue is empty, return false as you can't compare
         if ((lineTaskDue || todoistTaskDueDate) === "") {
-            if(this.plugin.settings.debugMode){console.log("One of the dates had empty values, so the comparison will fail.")}
+            // if(this.plugin.settings.debugMode){console.log("One of the dates had empty values, so the comparison will fail.")}
             return false;
         }
 
         // if both values are the same, return false because there is no change
         if (lineTaskDue == todoistTaskDueDate) {
-            if(this.plugin.settings.debugMode){console.log('lineTaskDue == todoistTaskDueDate, returning false on compareTaskDueDate')}
+            // if(this.plugin.settings.debugMode){console.log('lineTaskDue == todoistTaskDueDate, returning false on compareTaskDueDate')}
             return false;
         }
 
         // If any has a invvalid date, return false as you can't compare
         else if (lineTaskDue.toString() === "Invalid Date" || todoistTaskDue.toString() === "Invalid Date") {
-            if(this.plugin.settings.debugMode){console.log('invalid date on compareTaskDueDate')}
+            // if(this.plugin.settings.debugMode){console.log('invalid date on compareTaskDueDate')}
             return false;
         }
         // If everything above is false, than return true because the dates are different
         else {
-            if(this.plugin.settings.debugMode){console.log('Something is different in the dates, so returning true on compareTaskDueDate')}
+            // if(this.plugin.settings.debugMode){console.log('Something is different in the dates, so returning true on compareTaskDueDate')}
             return true;
         }
     }
@@ -498,32 +498,32 @@ export class TaskParser   {
     // Compare if the due time from Obsidian is the same due time from Todoist
     async  compareTaskDueTime(lineTask: object, todoistTask: object): Promise<boolean> {
         
-        if(this.plugin.settings.debugMode){console.log("compareTaskDueTime started...")}
+        // if(this.plugin.settings.debugMode){console.log("compareTaskDueTime started...")}
 
         const lineTaskDueTime = JSON.stringify(lineTask.dueTime)
         const todoistTaskDue = todoistTask.due ?? "";
 
         const todoistTaskDueTimeLocalClock = JSON.stringify(this.ISOStringToLocalClockTimeString(todoistTaskDue.datetime))
 
-        if(this.plugin.settings.debugMode){
-            console.log("todoistTaskDueTimeLocalClock = " + todoistTaskDueTimeLocalClock)
-            console.log("lineTaskDueTime value is: " + lineTaskDueTime + " and todoistTaskDueTimeLocalClock value is: " + todoistTaskDueTimeLocalClock)
-        }
+        // if(this.plugin.settings.debugMode){
+        //     console.log("todoistTaskDueTimeLocalClock = " + todoistTaskDueTimeLocalClock)
+        //     console.log("lineTaskDueTime value is: " + lineTaskDueTime + " and todoistTaskDueTimeLocalClock value is: " + todoistTaskDueTimeLocalClock)
+        // }
 
         // if any value is empty, return false as you can't compare
         if((lineTaskDueTime || todoistTaskDueTimeLocalClock) === ""){
-            if(this.plugin.settings.debugMode){console.log("One of the times had empty values, so the comparison will fail.")}
+            // if(this.plugin.settings.debugMode){console.log("One of the times had empty values, so the comparison will fail.")}
             return false;
         }
 
         // if both values are the same, return false because there is no change
         if (lineTaskDueTime == todoistTaskDueTimeLocalClock) {
-            if(this.plugin.settings.debugMode){console.log('lineTaskDueTime == todoistTaskDueTimeLocalClock, returning false on compareTaskDueTime')}
+            // if(this.plugin.settings.debugMode){console.log('lineTaskDueTime == todoistTaskDueTimeLocalClock, returning false on compareTaskDueTime')}
             return false;
         }
 
         else { 
-            if(this.plugin.settings.debugMode){console.log('Something is different in the times, so returning true on compareTaskDueTime')}
+            // if(this.plugin.settings.debugMode){console.log('Something is different in the times, so returning true on compareTaskDueTime')}
             return true;
         }
     }
@@ -544,9 +544,9 @@ export class TaskParser   {
         // TASK_INDENTATION: /^(\s{2,}|\t)(-|\*)\s+\[(x|X| )\]/,
         const check_indentation = /^(\s{2,}|\t)(-|\*)\s+\[(x|X| )\]/;
 
-        if(this.plugin.settings.debugMode){
-            console.log("Checking if the task is indented. Return value should be: " + check_indentation.test(text))
-        }
+        // if(this.plugin.settings.debugMode){
+        //     console.log("Checking if the task is indented. Return value should be: " + check_indentation.test(text))
+        // }
 
         return(check_indentation.test(text));
     }
@@ -587,7 +587,7 @@ export class TaskParser   {
         // const regex = new RegExp(`(${keywords.TODOIST_TAG})`)
         const tag_to_look_for = this.keywords_function("TODOIST_TAG")
 
-        if(this.plugin.settings.debugMode){console.log(`The tag to look for is: ${tag_to_look_for}`)}
+        // if(this.plugin.settings.debugMode){console.log(`The tag to look for is: ${tag_to_look_for}`)}
 
         return text.replace(tag_to_look_for, `📅 ${dueDate} $1`);
   }

@@ -10,7 +10,7 @@ import UltimateTodoistSyncForObsidian from "../main";
 function  localDateStringToUTCDatetimeString(localDateString:string) {
         
         // Let's see what this function is receiving
-        console.log("Here it receives localDateString: " + localDateString)
+        // console.log("Here it receives localDateString: " + localDateString)
 
         try {
           if(localDateString === null){
@@ -48,17 +48,17 @@ export class TodoistRestAPI  {
         const api = await this.initializeAPI()
         try {
           if(dueDate){
-            if(this.plugin.settings.debugMode){
-              console.log("dueDate = " + dueDate)
-              console.log("dueTime = " + dueTime)
-            }
+            // if(this.plugin.settings.debugMode){
+            //   console.log("dueDate = " + dueDate)
+            //   console.log("dueTime = " + dueTime)
+            // }
 
             const dueDateAndTimeMerge = dueDate + "T" + dueTime
 
-            if(this.plugin.settings.debugMode){console.log("dueDateAndTimeMerge = " + dueDateAndTimeMerge)}
+            // if(this.plugin.settings.debugMode){console.log("dueDateAndTimeMerge = " + dueDateAndTimeMerge)}
             
             dueDatetime = localDateStringToUTCDatetimeString(dueDateAndTimeMerge) || undefined
-            if(this.plugin.settings.debugMode){console.log("dueDateTime after transformation to UTCDateTimeString = " + dueDatetime)}
+            // if(this.plugin.settings.debugMode){console.log("dueDateTime after transformation to UTCDateTimeString = " + dueDatetime)}
             dueDate = undefined
           }  
 
@@ -103,12 +103,12 @@ export class TodoistRestAPI  {
         }
         try {
         if(updates.dueDate){
-            console.log("value of updates.dueTime =" + updates.dueTime);
+            // console.log("value of updates.dueTime =" + updates.dueTime);
             const dueDateAndTimeMerge = updates.dueDate + "T" + updates.dueTime;
-            console.log("dueDateAndTimeMerge = " + dueDateAndTimeMerge)
+            // console.log("dueDateAndTimeMerge = " + dueDateAndTimeMerge)
             updates.dueDatetime = localDateStringToUTCDatetimeString(dueDateAndTimeMerge) || undefined;
             updates.dueDate = null
-            console.log("value of updates.dueDatime =" + updates.dueDatetime)
+            // console.log("value of updates.dueDatime =" + updates.dueDatetime)
           }  
         const updatedTask = await api.updateTask(taskId, updates);
         return updatedTask;
@@ -133,7 +133,7 @@ export class TodoistRestAPI  {
         try {
     
         const isSuccess = await api.reopenTask(taskId);
-        console.log(`Task ${taskId} is reopend`)
+        // console.log(`Task ${taskId} is reopend`)
         return(isSuccess)
     
         } catch (error) {
@@ -147,7 +147,7 @@ export class TodoistRestAPI  {
         const api = await this.initializeAPI()
         try {
         const isSuccess = await api.closeTask(taskId);
-        if(this.plugin.settings.debugMode){console.log(`Task ${taskId} is closed`)}
+        // if(this.plugin.settings.debugMode){console.log(`Task ${taskId} is closed`)}
         return isSuccess;
         } catch (error) {
         console.error('Error closing task:', error);
