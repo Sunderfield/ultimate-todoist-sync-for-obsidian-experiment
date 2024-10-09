@@ -30,6 +30,7 @@ Create, edit and delete tasks from Obsidian.md to your Todoist.
 | Modify section          | 🔜                            | 🔜                           |             
 | Modify priority [1]     | ✅                            | 🔜                           | 
 | Add reminder            | ✅                            | ✅                           |
+| Add duration            | ✅                            | 🔜                           |
 | Move tasks between files| 🔜                            | 🔜                           |
 | Added-at date           | 🔜                            | 🔜                           |
 | Completed-at date       | 🔜                            | 🔜                           |
@@ -98,14 +99,17 @@ By enabling this option, the plugin will automatically add `#todoist` to all tas
 | #tag              | Note that all tags without a project of the same name are treated as normal tags | `- [ ] task #tagA #tagB #tagC #todoist` |
 |   `!!<number>`    | The priority of the task (a number between 1 and 4, 4 for very urgent and 1 for natural). [2] | `- [ ] task !!4 #todoist` |
 |⏰HH:MM             |This sets the time of the task. If none is given, the default is 08:00|`- [ ] task ⏰23:59`[3]|
+|⏳MMmin | This sets the duration of the task|`- [ ] task ⏳30min`[[5]] |
 
 <details>
 <summary>Usage footnotes</summary>
 
-- [1] Supports the following emojis: 📅, 📆, 🗓, 🗓️
+- [1] Supports the following characters/emojis: 📅, 📆, 🗓, 🗓️, @ [6]
 - [2] Keep in mind that very urgent is the priority 1 on clients. So, the priority 1 in the client corresponds to the number 4 here (Because that's how the official API of Todoist is designed.).
-- [3] Supports the following emojis: ⏰, ⏲
+- [3] Supports the following characters/emojis: ⏰, ⏲, $ [6]
 - [4] On the original plugin, this tag was `#todoist`, but on this fork was changed to avoid conflicts.
+- [5] Supports the following characters/emojis: ⏳, & [6]
+- [6] Alternative characters are enabled via "Alternative Keywords" on plugin settings page
 
 </details>
 

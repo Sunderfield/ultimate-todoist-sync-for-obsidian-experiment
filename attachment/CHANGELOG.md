@@ -1,4 +1,18 @@
 ## CHANGELOG
+
+#### 0.2.1
+TODO
+- Update task duration if is updated on Todoist
+
+#### 2024-10-08
+#### 0.2.0
+- Removed some references to the original Ultimate Todoist Sync plugin
+- Added the duration via ⏳ or &MMmin syntax
+- Enabled @ for due date and $ for due time via Alternative Keywords settings option
+- Update task duration if is added after task is already created
+- Cleaned up more unecessary console.logs
+
+
 ### 2024-10-04
 #### 0.1.5
 - Change the default tag to `#tdsync` instead of `#todoist` to avoid conflict for installation over the Ultimate Todoist Sync plugin
@@ -16,7 +30,7 @@
 - Encapsulated some console.log on debugMode settings
 - Fix an issue with the regex to look for links
 - Removed the "link" keyword to have only the link within the TID property tag
-- Fixed the issue where the text replace was not considering the tid_link
+- Fixed the issue where the text replace was not considering the **tid_link**
 
 ### 2024-09-24
 #### 0.1.2

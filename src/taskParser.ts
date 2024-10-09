@@ -1,5 +1,7 @@
-import UltimateTodoistSyncForObsidian from "../main";
+import { get } from "http";
+import AnotherSimpleTodoistSync from "../main";
 import { App } from 'obsidian';
+import { Duration } from "@doist/todoist-api-typescript";
 
 
 interface dataviewTaskObject {
@@ -42,7 +44,8 @@ interface todoistTaskObject {
 let keywords = {
     // TODOIST_TAG: "#todoist",
     DUE_DATE: "🗓️|📅|📆|🗓|@",
-    DUE_TIME: "⏰|⏲",
+    DUE_TIME: "⏰|⏲|\\$",
+    DURATION: "⏳|&",
 };
 
 const REGEX = {
@@ -68,6 +71,7 @@ const REGEX = {
         REMOVE_CHECKBOX_WITH_INDENTATION: /^([ \t]*)?(-|\*)\s+\[(x|X| )\]\s/,
         REMOVE_TODOIST_LINK: /\[link\]\(.*?\)/,
         REMOVE_TODOIST_TID_LINK: /%%\[tid::\s*\[\d+\]\(https:\/\/todoist\.com\/app\/task\/\d+\)\]%%/,
+        REMOVE_TODOIST_DURATION: new RegExp(`(${keywords.DURATION})\\d+min`),
     },
     ALL_TAGS: /#[\w\u4e00-\u9fa5-]+/g,
     TASK_CHECKBOX_CHECKED: /- \[(x|X)\] /,
@@ -80,9 +84,9 @@ const REGEX = {
 
 export class TaskParser   {
 	app:App;
-    plugin: UltimateTodoistSyncForObsidian;
+    plugin: AnotherSimpleTodoistSync;
 
-	constructor(app:App, plugin:UltimateTodoistSyncForObsidian) {
+	constructor(app:App, plugin:AnotherSimpleTodoistSync) {
 		//super(app,settings);
 		this.app = app;
         this.plugin = plugin;
@@ -99,6 +103,8 @@ export class TaskParser   {
         let parentId = null
         let parentTaskObject = null
         let textWithoutIndentation = lineText
+        // TODO need to remove any empty spaces from the task
+        // console.log(`textwithoutindentation is ${textWithoutIndentation}`)
         if(this.getTabIndentation(lineText) > 0){
         textWithoutIndentation = this.removeTaskIndentation(lineText)
         const lines = fileContent.split('\n')
@@ -134,6 +140,20 @@ export class TaskParser   {
         const dueTime = this.getDueTimeFromLineText(textWithoutIndentation)
         const labels =  this.getAllTagsFromLineText(textWithoutIndentation)
         // console.log(`labels is ${labels}`)
+        
+        // TODO this will get the task duration
+        // TODO need to add duration only if the task has a duration
+        const durationTime = Number(this.getTaskDurationFromLineText(textWithoutIndentation))
+        // TODO the API can also accept "day" 
+        const durationUnit = "minute"
+
+        // console.log(`durationTime is ${durationTime}`)
+        const hasDuration = this.hasDuration(textWithoutIndentation);
+
+        // console.log(`hasDuration is ${hasDuration}`)
+
+  
+
 
         //dataview format metadata
         //const projectName = this.getProjectNameFromLineText(textWithoutIndentation) ?? this.plugin.settings.defaultProjectName
@@ -180,7 +200,7 @@ export class TaskParser   {
             description =`[${filepath}](${url})`;
         }
     
-        const todoistTask = {
+        const todoistTask: any = {
         projectId: projectId,
         content: content || '',
         parentId: parentId || null,
@@ -194,7 +214,13 @@ export class TaskParser   {
         priority:priority
         };
         //console.log(`converted task `)
-        //console.log(todoistTask)
+
+        if(hasDuration){
+            todoistTask["duration"] = durationTime
+            todoistTask["duration_unit"] = durationUnit
+        }
+
+        // console.log(`todoistTask value is ${JSON.stringify(todoistTask)}`)
         return todoistTask;
     }
 
@@ -217,14 +243,24 @@ export class TaskParser   {
                 return "🗓️|📅|📆|🗓"
             }
         }
+        // TODO add keywords for duration
+        if(text === "DURATION"){
+            if(this.plugin.settings.alternativeKeywords){
+                return "⏳|&"
+            }else {
+                return "⏳"
+            }
+        }
         if(text === "DUE_TIME"){
-            return "⏰|⏲"
-            // TODO add other keywords for the timing
+            if(this.plugin.settings.alternativeKeywords){
+                return "⏰|⏲|\\$"
+            }else{
+                return "⏰|⏲"
+            }
         }else {
             return "No such keyword"
         }
-        // TODO add keywords for duration
-        
+
     }
   
 //   Return true or false if the text has a todoist tag
@@ -238,6 +274,12 @@ export class TaskParser   {
         
     }
     
+// Return true/false if the text has a duration
+    hasDuration(text:string){
+        const regex_test = new RegExp(`(${this.keywords_function("DURATION")})\\d+min`);
+        return(regex_test.test(text))
+    }
+
   
 //   Return true or false if the text has a todoist id
     hasTodoistId(text:string){
@@ -286,20 +328,53 @@ export class TaskParser   {
         return due_date[1]
     }
 
+    // Get the task duration from the text
+    getTaskDurationFromLineText(text: string) {
+        const regex_text = new RegExp(`(?:${this.keywords_function("DURATION")})\\d+min`);
+        const extract_duration = regex_text.exec(text)?.toString();
+        const extract_duration_number = Number(extract_duration?.match(/\d+/g))
+
+        if(extract_duration_number === null){
+            return null
+        }
+        if(extract_duration_number && extract_duration_number > 1440){
+            console.log("The duration is more than 24 hours. It will be ignored.")
+            return null
+        } else {
+            return extract_duration_number
+        }
+
+
+    }
+
+    transformDurationToObject(text:number) {
+        const amount = text;
+        const unit = "minute";
+
+        const duration_object = {duration: {amount: amount, unit: unit}}
+
+        return duration_object
+    }
+
     // Get the duetime from the text
     getDueTimeFromLineText(text: string) {
         // DUE_TIME: new RegExp(`(?:${keywords.DUE_TIME})\\s?(\\d{2}:\\d{2})`),
+        
         const regex_search_for_duetime = new RegExp(`(?:${this.keywords_function("DUE_TIME")})\\s?(\\d{2}:\\d{2})`);
         // TODO need to handle single duetime. e.g: 7:33 instead of 07:33. It returns null for 07:33
 
+        // console.log("The text is: " + text)
+        // console.log("The keywords function is: " + this.keywords_function("DUE_TIME"))
+        // console.log("The regex_search_for_duetime is: " + regex_search_for_duetime)
+
         const current_time = regex_search_for_duetime.exec(text);
         // const current_time = REGEX.DUE_TIME.exec(text);
-        if(this.plugin.settings.debugMode){
-            // console.log("due time reminder for this task is: " + current_time)
-        }
+        // if(this.plugin.settings.debugMode){
+        //     console.log("due time reminder for this task is: " + current_time)
+        // }
         if(current_time){
 
-            if(this.plugin.settings.debugMode)(console.log("The time provided is: " + Number(current_time[1].slice(0,2)) + " and " + Number(current_time[1].slice(3,5))))
+            // if(this.plugin.settings.debugMode)(console.log("The time provided is: " + Number(current_time[1].slice(0,2)) + " and " + Number(current_time[1].slice(3,5))))
 
             if(Number(current_time[1].slice(0,2)) > 24 || Number(current_time[1].slice(3,5)) > 59){
                 // if(this.plugin.settings.debugMode)(console.log("The time provided is invalid, so it defaults to 11:59 to avoid breaking things with UTC"))
@@ -387,6 +462,7 @@ export class TaskParser   {
                                     .replace(REGEX.TASK_CONTENT.REMOVE_CHECKBOX,"")
                                     .replace(REGEX.TASK_CONTENT.REMOVE_CHECKBOX_WITH_INDENTATION,"")
                                     .replace(REGEX.TASK_CONTENT.REMOVE_SPACE,"")
+                                    .replace(REGEX.TASK_CONTENT.REMOVE_TODOIST_DURATION,"") //remove duration
 
                                     // if(this.plugin.settings.debugMode){console.log(`TaskContent is ${TaskContent}`)}
         return(TaskContent)
@@ -424,9 +500,26 @@ export class TaskParser   {
         const todoistTaskContent = todoistTask.content
         //console.log(todoistTask.content)
 
+        // console.log(`lineTaskContent is ${lineTaskContent} and todoistTaskContent is ${todoistTaskContent}`)
+        // TODO remove all spaces and compare both strings without any spaces
+
+        const lineContentWithoutSpaces = lineTaskContent.replace(/\s/g, "")
+        const todoistContentWithoutSpaces = todoistTaskContent.replace(/\s/g, "")
+
+        // console.log(`lineContentWithoutSpaces is ${lineContentWithoutSpaces} and todoistContentWithoutSpaces is ${todoistContentWithoutSpaces}`)
+
+        if(lineContentWithoutSpaces === todoistContentWithoutSpaces){
+            // console.log("The content on the comparisson is the same")
+            // If the content is the same, return true
+            return true
+        }else {
+            // If content is not the same, returns false
+            return false
+        }
+
         //content 是否修改
-        const contentModified = (lineTaskContent === todoistTaskContent)
-        return(contentModified)  
+        // const contentModified = (lineTaskContent === todoistTaskContent)
+        // return(contentModified)  
     }
   
   
@@ -525,6 +618,33 @@ export class TaskParser   {
         else { 
             // if(this.plugin.settings.debugMode){console.log('Something is different in the times, so returning true on compareTaskDueTime')}
             return true;
+        }
+    }
+
+    async compareTaskDuration(lineTask: object, todoistTask: object): Promise<boolean> {
+
+        if(lineTask.duration && todoistTask.duration?.amount === undefined){
+            console.log("The task has a duration, but Todoist does not. It will return true")
+            return true
+        }
+
+// If the line duration was removed or updated in Todoist, needs to update on the lineTask as well
+        if(lineTask.duration && todoistTask.duration.amount){
+            // TODO it shoudl check if there is a duration on the lineTask, if does not, retrieve the task duration and add it. If it has, check if matches the current duration on Todoist
+            const lineTaskDuration = Number(lineTask.duration);
+            const todoistCacheTaskDuration = Number(todoistTask.duration.amount);
+
+            if(lineTaskDuration === todoistCacheTaskDuration){
+                // console.log("The task duration is the same. It will return false")
+                return false
+            } else {
+                // console.log("The task duration is different. It will return true")
+                return true
+            }
+    
+
+        } else {
+            return false
         }
     }
     

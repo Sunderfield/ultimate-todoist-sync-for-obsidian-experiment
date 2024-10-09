@@ -1,6 +1,6 @@
 import { TodoistApi } from "@doist/todoist-api-typescript"
 import { App} from 'obsidian';
-import UltimateTodoistSyncForObsidian from "../main";
+import AnotherSimpleTodoistSync from "../main";
     //convert date from obsidian event
     // 使用示例
     //const str = "2023-03-27";
@@ -29,9 +29,9 @@ function  localDateStringToUTCDatetimeString(localDateString:string) {
 
 export class TodoistRestAPI  {
 	app:App;
-  plugin: UltimateTodoistSyncForObsidian;
+  plugin: AnotherSimpleTodoistSync;
 
-	constructor(app:App, plugin:UltimateTodoistSyncForObsidian) {
+	constructor(app:App, plugin:AnotherSimpleTodoistSync) {
 		//super(app,settings);
 		this.app = app;
     this.plugin = plugin;
@@ -44,7 +44,7 @@ export class TodoistRestAPI  {
         return(api)
     }
 
-    async AddTask({ projectId, content, parentId = null, dueDate, dueTime, dueDatetime,labels, description,priority }: { projectId: string, content: string, parentId?: string , dueDate?: string, dueTime?: string, dueDatetime?: string, labels?: Array<string>, description?: string,priority?:number }) {
+    async AddTask({ projectId, content, parentId = null, dueDate, dueTime, dueDatetime,labels, description,priority,duration,duration_unit }: { projectId: string, content: string, parentId?: string , dueDate?: string, dueTime?: string, dueDatetime?: string, labels?: Array<string>, description?: string,priority?:number, duration?: number,duration_unit?: string }) {
         const api = await this.initializeAPI()
         try {
           if(dueDate){
@@ -60,9 +60,13 @@ export class TodoistRestAPI  {
             dueDatetime = localDateStringToUTCDatetimeString(dueDateAndTimeMerge) || undefined
             // if(this.plugin.settings.debugMode){console.log("dueDateTime after transformation to UTCDateTimeString = " + dueDatetime)}
             dueDate = undefined
-          }  
+          }
+          
+          // console.log("duration = " + duration)
+          // console.log("duration_unit = " + duration_unit)
+          
 
-          const newTask = await api.addTask({
+          const taskData: any ={
             projectId,
             content,
             parentId,
@@ -71,7 +75,18 @@ export class TodoistRestAPI  {
             labels,
             description,
             priority
-          });
+          };
+
+          // Check if duration is a number, not null and not a NaN. Case it doesn't, the duration is not provided to the request
+          if (duration !== null && typeof duration === 'number' && !isNaN(duration)) {
+            // console.log("The task has a valid duration")
+            taskData.duration = duration;
+            taskData.duration_unit = duration_unit;
+          }
+
+
+          const newTask = await api.addTask(taskData);
+
           return newTask;
         } catch (error) {
           throw new Error(`Error adding task: ${error.message}`);
@@ -93,13 +108,13 @@ export class TodoistRestAPI  {
 
     //Also note that to remove the due date of a task completely, you should set the due_string parameter to no date or no due date.
     //api 没有 update task project id 的函数
-    async UpdateTask(taskId: string, updates: { content?: string, description?: string, labels?:Array<string>,dueDate?: string,dueTime?: string,dueDatetime?: string,dueString?:string,parentId?:string,priority?:number }) {
+    async UpdateTask(taskId: string, updates: { content?: string, description?: string, labels?:Array<string>,dueDate?: string,dueTime?: string,dueDatetime?: string,dueString?:string,parentId?:string,priority?:number,duration?: string,duration_unit?: string }) {
         const api = await this.initializeAPI()
         if (!taskId) {
-        throw new Error('taskId is required');
+          throw new Error('taskId is required');
         }
-        if (!updates.content && !updates.description &&!updates.dueDate && !updates.dueDatetime && !updates.dueString && !updates.labels &&!updates.parentId && !updates.priority) {
-        throw new Error('At least one update is required');
+        if (!updates.content && !updates.description &&!updates.dueDate && !updates.dueDatetime && !updates.dueString && !updates.labels &&!updates.parentId && !updates.priority && !updates.duration && !updates.duration_unit) {
+          throw new Error('At least one update is required');
         }
         try {
         if(updates.dueDate){
@@ -110,6 +125,17 @@ export class TodoistRestAPI  {
             updates.dueDate = null
             // console.log("value of updates.dueDatime =" + updates.dueDatetime)
           }  
+
+          if(updates.duration){
+            // updates.duration = `"duration":{"duration":${updates.duration},"unit":"minute"}`;
+            // console.log("updates.duration = " + updates.duration)
+            updates.duration_unit = "minute";
+          }
+
+          console.log(`updates.duration = ${updates.duration} and updates.duration_unit = ${updates.duration_unit}`)
+
+          // TODO The content still logs with whitespaces after so it keep looping trying to update the content
+          console.log(`updates = ${JSON.stringify(updates)}`)
         const updatedTask = await api.updateTask(taskId, updates);
         return updatedTask;
         } catch (error) {

@@ -2,7 +2,7 @@ import { MarkdownView, Notice, Plugin ,Editor} from 'obsidian';
 
 
 //settings
-import { UltimateTodoistSyncSettings,DEFAULT_SETTINGS,UltimateTodoistSyncSettingTab } from './src/settings';
+import { UltimateTodoistSyncSettings as AnotherSimpleTodoistSyncSettings,DEFAULT_SETTINGS,UltimateTodoistSyncSettingTab } from './src/settings';
 //todoist  api
 import { TodoistRestAPI } from './src/todoistRestAPI';
 import { TodoistSyncAPI } from './src/todoistSyncAPI';
@@ -20,8 +20,8 @@ import { TodoistSync } from './src/syncModule';
 //import modal
 import { SetDefalutProjectInTheFilepathModal } from 'src/modal';
 
-export default class UltimateTodoistSyncForObsidian extends Plugin {
-	settings: UltimateTodoistSyncSettings;
+export default class AnotherSimpleTodoistSync extends Plugin {
+	settings: AnotherSimpleTodoistSyncSettings;
     todoistRestAPI: TodoistRestAPI | undefined;
     todoistSyncAPI: TodoistSyncAPI | undefined;
     taskParser: TaskParser | undefined;

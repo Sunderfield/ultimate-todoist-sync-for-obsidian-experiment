@@ -1,4 +1,4 @@
-import UltimateTodoistSyncForObsidian from "../main";
+import AnotherSimpleTodoistSync from "../main";
 import { App, Editor, MarkdownView, Notice} from 'obsidian';
 
 
@@ -9,10 +9,10 @@ type FrontMatter = {
 
 export class TodoistSync  {
 	app:App;
-    plugin: UltimateTodoistSyncForObsidian;
+    plugin: AnotherSimpleTodoistSync;
 
 
-	constructor(app:App, plugin:UltimateTodoistSyncForObsidian) {
+	constructor(app:App, plugin:AnotherSimpleTodoistSync) {
 		//super(app,settings,todoistRestAPI,todoistSyncAPI,taskParser,cacheOperation);
 		this.app = app;
         this.plugin = plugin;
@@ -130,9 +130,8 @@ export class TodoistSync  {
         if ((!this.plugin.taskParser.hasTodoistId(linetxt) && this.plugin.taskParser.hasTodoistTag(linetxt))) {   //是否包含#todoist
             
             if(this.plugin.settings.debugMode){
-            console.log('This is a new task. Content:')
-            console.log(linetxt)
-}
+                        console.log(`This is a new task. Content: ${linetxt}`)
+            }
             const currentTask =await this.plugin.taskParser.convertTextToTodoistTaskObject(linetxt,filepath,line,fileContent)
             //console.log(currentTask)
     
@@ -270,12 +269,12 @@ export class TodoistSync  {
             if(typeof currentTask === "undefined"){
                 continue
             }
-        if(this.plugin.settings.debugMode){    console.log(currentTask)}
+        if(this.plugin.settings.debugMode){    console.log(`currentTask value is ${currentTask}`)}
             try {
                 const newTask = await this.plugin.todoistRestAPI.AddTask(currentTask)
                 const { id: todoist_id, projectId: todoist_projectId, url: todoist_url } = newTask;
                 newTask.path = filepath;
-                console.log(newTask);
+                console.log(`newTask is ${JSON.stringify(newTask)}`);
                 new Notice(`new task ${newTask.content} id is ${newTask.id}`)
                 //newTask写入json文件
                 this.plugin.cacheOperation.appendTaskToCache(newTask)
@@ -337,8 +336,10 @@ export class TodoistSync  {
     }
 
 
+    // Compare the content of the task in the file with the content of the task in the cache to see if they are in sync
     async lineModifiedTaskCheck(filepath:string,lineText:string,lineNumber:number,fileContent:string): Promise<void>{
         //const lineText = await this.plugin.fileOperation.getLineTextFromFilePath(filepath,lineNumber)
+
 
         if(this.plugin.settings.enableFullVaultSync){
             //await this.plugin.fileOperation.addTodoistTagToLine(filepath,lineText,lineNumber,fileContent)
@@ -368,11 +369,14 @@ export class TodoistSync  {
             }
         //console.log(savedTask)
 
+        // console.log(`Value for lineTask is: ${JSON.stringify(lineTask)}. \n \n And value for savedTask is: ${JSON.stringify(savedTask)}`)
+
             //检查内容是否修改
             const lineTaskContent = lineTask.content;
 
 
             //content 是否修改
+            // The content is compared and inverts the value received 
             const contentModified = !this.plugin.taskParser.taskContentCompare(lineTask,savedTask)
             //tag or labels 是否修改
             const tagsModified = !this.plugin.taskParser.taskTagCompare(lineTask,savedTask)
@@ -388,6 +392,9 @@ export class TodoistSync  {
             const priorityModified = !(lineTask.priority === savedTask.priority)
             // check if the reminder time has changed
             const dueTimeModified = (await this.plugin.taskParser.compareTaskDueTime(lineTask,savedTask))
+            // check if the dyration time has changed
+            // will return true or false depending on the finding
+            const durationTimeModified = (await this.plugin.taskParser.compareTaskDuration(lineTask,savedTask))
 
             try {
             let contentChanged= false;
@@ -398,6 +405,7 @@ export class TodoistSync  {
             let dueTimeChanged = false;
             let parentIdChanged = false;
             let priorityChanged = false;
+            let durationChanged = false;
             
             let updatedContent = {
   
@@ -450,6 +458,15 @@ export class TodoistSync  {
                 dueTimeChanged = true;
             }
 
+            if(durationTimeModified){
+                // TODO: Add the duration time to the updatedContent object
+                updatedContent.duration = lineTask.duration;
+
+                // TODO : Add the duration unit to the updatedContent object
+                durationChanged = true;
+                               
+            }
+
             //todoist Rest api 没有 move task to new project的功能
             if (projectModified) {
                 //console.log(`Project id modified for task ${lineTask_todoist_id}`)
@@ -472,7 +489,7 @@ export class TodoistSync  {
 
             
             
-            if (contentChanged || tagsChanged ||dueDateChanged ||projectChanged || parentIdChanged || priorityChanged || dueTimeChanged) {
+            if (contentChanged || tagsChanged ||dueDateChanged ||projectChanged || parentIdChanged || priorityChanged || dueTimeChanged || durationChanged) {
                 
                 if(this.plugin.settings.debugMode){console.log("Task content was updated. Those are the changes: " + JSON.stringify(updatedContent))}
 
@@ -499,7 +516,7 @@ export class TodoistSync  {
 
 
             
-            if (contentChanged || statusChanged ||dueDateChanged ||tagsChanged || projectChanged || priorityChanged || dueTimeChanged) {
+            if (contentChanged || statusChanged ||dueDateChanged ||tagsChanged || projectChanged || priorityChanged || dueTimeChanged || durationChanged) {
                 if (this.plugin.settings.debugMode){
                     console.log("Task has changed. lineTask content: " + JSON.stringify(lineTask) + "savedTask content:" + JSON.stringify(savedTask))
                 }
@@ -527,6 +544,9 @@ export class TodoistSync  {
                 }
                 if (priorityChanged) {
                     message += " Priority was changed.";
+                }
+                if(durationChanged){
+                    message += " Duration was changed.";
                 }
                 
                 console.log("Sent a Notice with the message: " + message)

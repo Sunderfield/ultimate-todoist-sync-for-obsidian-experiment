@@ -1,5 +1,5 @@
 import { App} from 'obsidian';
-import UltimateTodoistSyncForObsidian from "../main";
+import AnotherSimpleTodoistSync from "../main";
 
 interface Due {
     date?: string;
@@ -8,9 +8,9 @@ interface Due {
 
 export class CacheOperation   {
 	app:App;
-    plugin: UltimateTodoistSyncForObsidian;
+    plugin: AnotherSimpleTodoistSync;
 
-	constructor(app:App, plugin: UltimateTodoistSyncForObsidian) {
+	constructor(app:App, plugin: AnotherSimpleTodoistSync) {
 		//super(app,settings);
 		this.app = app;
         this.plugin = plugin;
@@ -185,6 +185,7 @@ export class CacheOperation   {
 
     // 覆盖保存所有task到cache
     saveTasksToCache(newTasks) {
+        console.log(`aveTasksToCache task variable is ${JSON.stringify(newTasks)}`)
         try {
             this.plugin.settings.todoistTasksData.tasks = newTasks
             
@@ -231,6 +232,12 @@ export class CacheOperation   {
       
     // 追加到 Cache 文件
     appendTaskToCache(task) {
+        // console.log(`appendTaskToCache task variable is ${JSON.stringify(task)}`)
+        // TODO for some reason the task receives duration even when was not specified, so I had to add this extra step to remove it. I need to find a better way to handle this.
+        if(task.duration === null){
+            delete task.duration
+        }
+        // console.log(`appendTaskToCache task after modified variable is ${JSON.stringify(task)}`)
         try {
             if(task === null){
                 return

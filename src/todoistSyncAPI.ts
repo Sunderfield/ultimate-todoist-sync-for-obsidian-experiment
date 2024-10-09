@@ -1,5 +1,5 @@
 import { App} from 'obsidian';
-import UltimateTodoistSyncForObsidian from "../main";
+import AnotherSimpleTodoistSync from "../main";
 
 
 type Event = {
@@ -21,9 +21,9 @@ type FilterOptions = {
 
 export class TodoistSyncAPI   {
 	app:App;
-  plugin: UltimateTodoistSyncForObsidian;
+  plugin: AnotherSimpleTodoistSync;
 
-	constructor(app:App, plugin:UltimateTodoistSyncForObsidian) {
+	constructor(app:App, plugin:AnotherSimpleTodoistSync) {
 		//super(app,settings);
 		this.app = app;
     this.plugin = plugin;
