@@ -1,10 +1,16 @@
 ## CHANGELOG
 
-#### 0.2.1
-TODO
-- Update task duration if is updated on Todoist
+### 2024-10-14
+#### 0.3
+- Priority order now follows the same pattern as the Todoist UI (eg.: !!1 = p1, !!4 = p4)
+- Removed a bunch of unused code, old comments
+- 
 
-#### 2024-10-08
+### 2024-10-12
+#### 0.2.1
+- Fixed the issue where tasks without dueTime would be 11:59
+
+### 2024-10-08
 #### 0.2.0
 - Removed some references to the original Ultimate Todoist Sync plugin
 - Added the duration via ⏳ or &MMmin syntax

@@ -1,85 +1,13 @@
-import { get } from "http";
 import AnotherSimpleTodoistSync from "../main";
 import { App } from 'obsidian';
-import { Duration } from "@doist/todoist-api-typescript";
 
-
-interface dataviewTaskObject {
-    status: string;
-    checked: boolean;
-    completed: boolean;
-    fullyCompleted: boolean;
-    text: string;
-    visual: string;
-    line: number;
-    lineCount: number;
-    path: string;
-    section: string;
-    tags: string[];
-    outlinks: string[];
-    link: string;
-    children: any[];
-    task: boolean;
-    annotated: boolean;
-    parent: number;
-    blockId: string;
-}
-  
-interface todoistTaskObject {
-    content: string;
-    description?: string;
-    project_id?: string;
-    section_id?: string;
-    parent_id?: string;
-    order?: number | null;
-    labels?: string[];
-    priority?: number | null;
-    due_string?: string;
-    due_date?: string;
-    due_datetime?: string;
-    due_lang?: string;
-    assignee_id?: string;
-}
-  
-let keywords = {
-    // TODOIST_TAG: "#todoist",
-    DUE_DATE: "🗓️|📅|📆|🗓|@",
-    DUE_TIME: "⏰|⏲|\\$",
-    DURATION: "⏳|&",
-};
-
+ 
 const REGEX = {
-    // TODOIST_TAG: new RegExp(`^[\\s]*[-] \\[[x ]\\] [\\s\\S]*${keywords.TODOIST_TAG}[\\s\\S]*$`, "i"),
-    TODOIST_ID: /\[tid:: \[(\d+)\]\(https:\/\/todoist\.com\/app\/task\/\d+\)\]/,
-    // TODOIST_ID_NUM:/\[tid::\s*\[\d+\]\(/,
-    // TODOIST_ID: /\[todoist_id::\s*\d+\]/,
-    // TODOIST_ID_NUM:/\[todoist_id::\s*(.*?)\]/,
-    // TODOIST_LINK:/\[link\]\(.*?\)/,
-    // DUE_DATE_WITH_EMOJ: new RegExp(`(${keywords.DUE_DATE})\\s?\\d{4}-\\d{2}-\\d{2}`),
-    // DUE_DATE : new RegExp(`(?:${keywords.DUE_DATE})\\s?(\\d{4}-\\d{2}-\\d{2})`),
-    // DUE_TIME: new RegExp(`(?:${keywords.DUE_TIME})\\s?(\\d{2}:\\d{2})`),
-    PROJECT_NAME: /\[project::\s*(.*?)\]/,
-    TASK_CONTENT: {
-        REMOVE_PRIORITY: /\s!!([1-4])\s/,
-        // REMOVE_TAGS: /(^|\s)(#[a-zA-Z\d\u4e00-\u9fa5-]+)/g,
-        REMOVE_TAGS: /(^|\s)(#[\w\d\u4e00-\u9fa5-]+)/g,
-        REMOVE_SPACE: /^\s+|\s+$/g,
-        REMOVE_DATE: new RegExp(`(${keywords.DUE_DATE})\\s?\\d{4}-\\d{2}-\\d{2}`),
-        REMOVE_TIME: new RegExp(`(${keywords.DUE_TIME})\\s?\\d{2}:\\d{2}`),
-        REMOVE_INLINE_METADATA: /%%\[\w+::\s*\w+\]%%/,
-        REMOVE_CHECKBOX:  /^(-|\*)\s+\[(x|X| )\]\s/,
-        REMOVE_CHECKBOX_WITH_INDENTATION: /^([ \t]*)?(-|\*)\s+\[(x|X| )\]\s/,
-        REMOVE_TODOIST_LINK: /\[link\]\(.*?\)/,
-        REMOVE_TODOIST_TID_LINK: /%%\[tid::\s*\[\d+\]\(https:\/\/todoist\.com\/app\/task\/\d+\)\]%%/,
-        REMOVE_TODOIST_DURATION: new RegExp(`(${keywords.DURATION})\\d+min`),
-    },
+    // PROJECT_NAME: /\[project::\s*(.*?)\]/,
     ALL_TAGS: /#[\w\u4e00-\u9fa5-]+/g,
     TASK_CHECKBOX_CHECKED: /- \[(x|X)\] /,
     TASK_INDENTATION: /^(\s{2,}|\t)(-|\*)\s+\[(x|X| )\]/,
     TAB_INDENTATION: /^(\t+)/,
-    TASK_PRIORITY: /\s!!([1-4])\s/,
-    BLANK_LINE: /^\s*$/,
-    TODOIST_EVENT_DATE: /(\d{4})-(\d{2})-(\d{2})/
 };
 
 export class TaskParser   {
@@ -108,7 +36,7 @@ export class TaskParser   {
         if(this.getTabIndentation(lineText) > 0){
         textWithoutIndentation = this.removeTaskIndentation(lineText)
         const lines = fileContent.split('\n')
-       
+
         for (let i = (lineNumber - 1 ); i >= 0; i--) {
             const line = lines[i]
             if(this.isLineBlank(line)){
@@ -139,7 +67,6 @@ export class TaskParser   {
         const dueDate = this.getDueDateFromLineText(textWithoutIndentation)
         const dueTime = this.getDueTimeFromLineText(textWithoutIndentation)
         const labels =  this.getAllTagsFromLineText(textWithoutIndentation)
-        // console.log(`labels is ${labels}`)
         
         // TODO this will get the task duration
         // TODO need to add duration only if the task has a duration
@@ -195,6 +122,7 @@ export class TaskParser   {
         let description = ""
         const todoist_id = this.getTodoistIdFromLineText(textWithoutIndentation)
         const priority = this.getTaskPriority(textWithoutIndentation)
+
         if(filepath){
             let url = encodeURI(`obsidian://open?vault=${this.app.vault.getName()}&file=${filepath}`)
             description =`[${filepath}](${url})`;
@@ -236,10 +164,8 @@ export class TaskParser   {
         }
         if (text === "DUE_DATE"){
             if(this.plugin.settings.alternativeKeywords){
-                if(this.plugin.settings.debugMode){console.log("alternativeKeywords is true")}
                 return "🗓️|📅|📆|🗓|@"
             }else{
-                if(this.plugin.settings.debugMode){console.log("alternativeKeywords is false")}
                 return "🗓️|📅|📆|🗓"
             }
         }
@@ -283,21 +209,11 @@ export class TaskParser   {
   
 //   Return true or false if the text has a todoist id
     hasTodoistId(text:string){
-        // const return_old = REGEX.TODOIST_ID.test(text)
         if(text === ""){
-            // if(this.plugin.settings.debugMode){console.log("The text is empty. Can't check for Todoist ID. Will return null.")}
             return null
         } else {
 
-            
-            
             const regex_tag_test=new RegExp(`%%\\[tid:: \\[(\\d+)\\]\\(https:\\/\\/todoist\\.com\\/app\\/task\\/\\d+\\)\\]%%`).test(text)
-            
-            // if(this.plugin.settings.debugMode){if(regex_tag_test){
-            //     console.log("The task has a Todoist ID")
-            // } else {
-            //     console.log("The task does not have a Todoist ID")
-            // }}
             
             return(regex_tag_test)
         }
@@ -305,11 +221,9 @@ export class TaskParser   {
   
 //   Return true or false if the text has a due date
     hasDueDate(text:string){
-        //     DUE_DATE_WITH_EMOJ: new RegExp(`(${keywords.DUE_DATE})\\s?\\d{4}-\\d{2}-\\d{2}`),
         const regex_test = new RegExp(`(${this.keywords_function("DUE_DATE")})\\s?\\d{4}-\\d{2}-\\d{2}`);
         
         return(regex_test.test(text))  
-        // return(REGEX.DUE_DATE_WITH_EMOJ.test(text))
     }
   
   
@@ -358,53 +272,36 @@ export class TaskParser   {
 
     // Get the duetime from the text
     getDueTimeFromLineText(text: string) {
-        // DUE_TIME: new RegExp(`(?:${keywords.DUE_TIME})\\s?(\\d{2}:\\d{2})`),
         
         const regex_search_for_duetime = new RegExp(`(?:${this.keywords_function("DUE_TIME")})\\s?(\\d{2}:\\d{2})`);
         // TODO need to handle single duetime. e.g: 7:33 instead of 07:33. It returns null for 07:33
 
-        // console.log("The text is: " + text)
-        // console.log("The keywords function is: " + this.keywords_function("DUE_TIME"))
-        // console.log("The regex_search_for_duetime is: " + regex_search_for_duetime)
-
         const current_time = regex_search_for_duetime.exec(text);
-        // const current_time = REGEX.DUE_TIME.exec(text);
-        // if(this.plugin.settings.debugMode){
-        //     console.log("due time reminder for this task is: " + current_time)
-        // }
+
         if(current_time){
-
-            // if(this.plugin.settings.debugMode)(console.log("The time provided is: " + Number(current_time[1].slice(0,2)) + " and " + Number(current_time[1].slice(3,5))))
-
             if(Number(current_time[1].slice(0,2)) > 24 || Number(current_time[1].slice(3,5)) > 59){
-                // if(this.plugin.settings.debugMode)(console.log("The time provided is invalid, so it defaults to 11:59 to avoid breaking things with UTC"))
                     // TODO when it defaults the reminder time, it needs to change the text on Obsidian to reflect that
-                return "11:59"
+                return false
             }
             return current_time[1]
         }
         else {
-            if(this.plugin.settings.debugMode){
-                console.log("No time was provided, so it defaults to 11:59 to avoid breaking things with UTC")
-
-            }
             // TODO Needs to find a better solution, because when it converts to UTC it can change the date, which create a loop of updates
-            return "11:59"
+            return false
         }
 
     }
 
-  
-//   Get the project name from the text
-    getProjectNameFromLineText(text:string){
-        const result = REGEX.PROJECT_NAME.exec(text);
-        return result ? result[1] : null;
-    }
+// TODO Implement the project based on project::<value>
+// //   Get the project name from the text
+//     getProjectNameFromLineText(text:string){
+//         const result = REGEX.PROJECT_NAME.exec(text);
+//         return result ? result[1] : null;
+//     }
   
 //   Get the todoist id from the text
     getTodoistIdFromLineText(text:string){
         // if(this.plugin.settings.debugMode){console.log(`getTodoistIdFromLineText text is ${text}`)}
-        // const result = REGEX.TODOIST_ID_NUM.exec(text);
 
         const regex_todoist_id = /\[tid::\s*\[\d+\]\(/
         const search_for_tid_id = regex_todoist_id.exec(text)
@@ -433,36 +330,34 @@ export class TaskParser   {
     }
   
   
-  
-    /*
-    //convert line task to dataview task object
-    async  getLineTask(filepath,line){
-        //const tasks = this.app.plugins.plugins.dataview.api.pages(`"${filepath}"`).file.tasks
-        const tasks = await getAPI(this.app).pages(`"${filepath}"`).file.tasks
-        const tasksValues = tasks.values
-        //console.log(`dataview filepath is ${filepath}`)
-        //console.log(`dataview line is ${line}`)
-        //console.log(tasksValues)
-        const currentLineTask = tasksValues.find(obj => obj.line === line )	
-        console.log(currentLineTask)
-        return(currentLineTask)
-    
-    }
-    */
-  
-  
 //   Remove everything that is not the task content
-    getTaskContentFromLineText(lineText:string) {
-        const TaskContent = lineText.replace(REGEX.TASK_CONTENT.REMOVE_INLINE_METADATA,"")
-                                    .replace(REGEX.TASK_CONTENT.REMOVE_TODOIST_TID_LINK,"")
-                                    .replace(REGEX.TASK_CONTENT.REMOVE_PRIORITY," ") //priority 前后必须都有空格，
-                                    .replace(REGEX.TASK_CONTENT.REMOVE_TAGS,"")
-                                    .replace(REGEX.TASK_CONTENT.REMOVE_DATE,"")
-                                    .replace(REGEX.TASK_CONTENT.REMOVE_TIME,"")
-                                    .replace(REGEX.TASK_CONTENT.REMOVE_CHECKBOX,"")
-                                    .replace(REGEX.TASK_CONTENT.REMOVE_CHECKBOX_WITH_INDENTATION,"")
-                                    .replace(REGEX.TASK_CONTENT.REMOVE_SPACE,"")
-                                    .replace(REGEX.TASK_CONTENT.REMOVE_TODOIST_DURATION,"") //remove duration
+getTaskContentFromLineText(lineText:string) {
+
+            const regex_remove_rules = 
+                {
+            REMOVE_PRIORITY: /\s!!([1-4])\s/,
+            REMOVE_TAGS: /(^|\s)(#[\w\d\u4e00-\u9fa5-]+)/g,
+            REMOVE_SPACE: /^\s+|\s+$/g,
+            REMOVE_DATE: new RegExp(`((🗓️|📅|📆|🗓|@)\\s?\\d{4}-\\d{2}-\\d{2})`),
+            REMOVE_TIME: new RegExp(`((⏰|⏲|\\$)\\s?\\d{2}:\\d{2})`),
+            REMOVE_INLINE_METADATA: /%%\[\w+::\s*\w+\]%%/,
+            REMOVE_CHECKBOX:  /^(-|\*)\s+\[(x|X| )\]\s/,
+            REMOVE_CHECKBOX_WITH_INDENTATION: /^([ \t]*)?(-|\*)\s+\[(x|X| )\]\s/,
+            REMOVE_TODOIST_LINK: /\[link\]\(.*?\)/,
+            REMOVE_TODOIST_TID_LINK: /%%\[tid::\s*\[\d+\]\(https:\/\/todoist\.com\/app\/task\/\d+\)\]%%/,
+            REMOVE_TODOIST_DURATION: new RegExp(`(⏳|&)\\d+min`)
+                }
+        
+        const TaskContent = lineText.replace(regex_remove_rules.REMOVE_INLINE_METADATA,"")
+                                    .replace(regex_remove_rules.REMOVE_TODOIST_TID_LINK,"")
+                                    .replace(regex_remove_rules.REMOVE_PRIORITY," ") //priority 前后必须都有空格，
+                                    .replace(regex_remove_rules.REMOVE_TAGS,"")
+                                    .replace(regex_remove_rules.REMOVE_DATE,"")
+                                    .replace(regex_remove_rules.REMOVE_TIME,"")
+                                    .replace(regex_remove_rules.REMOVE_CHECKBOX,"")
+                                    .replace(regex_remove_rules.REMOVE_CHECKBOX_WITH_INDENTATION,"")
+                                    .replace(regex_remove_rules.REMOVE_SPACE,"")
+                                    .replace(regex_remove_rules.REMOVE_TODOIST_DURATION,"") //remove duration
 
                                     // if(this.plugin.settings.debugMode){console.log(`TaskContent is ${TaskContent}`)}
         return(TaskContent)
@@ -598,11 +493,6 @@ export class TaskParser   {
 
         const todoistTaskDueTimeLocalClock = JSON.stringify(this.ISOStringToLocalClockTimeString(todoistTaskDue.datetime))
 
-        // if(this.plugin.settings.debugMode){
-        //     console.log("todoistTaskDueTimeLocalClock = " + todoistTaskDueTimeLocalClock)
-        //     console.log("lineTaskDueTime value is: " + lineTaskDueTime + " and todoistTaskDueTimeLocalClock value is: " + todoistTaskDueTimeLocalClock)
-        // }
-
         // if any value is empty, return false as you can't compare
         if((lineTaskDueTime || todoistTaskDueTimeLocalClock) === ""){
             // if(this.plugin.settings.debugMode){console.log("One of the times had empty values, so the comparison will fail.")}
@@ -610,9 +500,16 @@ export class TaskParser   {
         }
 
         // if both values are the same, return false because there is no change
-        if (lineTaskDueTime == todoistTaskDueTimeLocalClock) {
+        if(lineTaskDueTime == todoistTaskDueTimeLocalClock) {
             // if(this.plugin.settings.debugMode){console.log('lineTaskDueTime == todoistTaskDueTimeLocalClock, returning false on compareTaskDueTime')}
             return false;
+        }
+
+        // TODO For some reason the empty DueTime lenght is 2, so I need a better way to check this one in the future
+        // If the lineTask is empty and the todoistTask has only the date, return false because both don't have duetime
+        if(lineTaskDueTime.length === 2 && todoistTaskDue.string && todoistTaskDue.string.length === 10){
+            // console.log(`The task has no due time and todoisttask object has only the date, not duetime. It will return false because both don't have duetime`)
+            return false
         }
 
         else { 
@@ -681,10 +578,35 @@ export class TaskParser   {
     }
 
 
-    //	Task priority from 1 (normal) to 4 (urgent).
+    //	Task priority from 1 (for urgent) up to 4 (default priority).
     getTaskPriority(lineText:string): number{
-        const match = REGEX.TASK_PRIORITY.exec(lineText)
-        return match ? Number(match[1]) : 1;
+
+        // It checks with spaces before and after to avoid any strings containing the same values
+        const regex_test_priority_rule = new RegExp("\\s!!([1-4])\\s");
+        const regex_priority_check = regex_test_priority_rule.exec(lineText);
+
+        function invertPriorityOrder(priority:number){
+            switch(priority){
+                case 1:
+                    return 4
+                case 2:
+                    return 3
+                case 3:
+                    return 2
+                case 4:
+                    return 1
+            }
+        }
+
+        if(regex_priority_check && typeof Number(regex_priority_check[1]) === 'number'){
+            const inverted_priority_return = invertPriorityOrder(Number(regex_priority_check[1]))
+
+            return Number(inverted_priority_return)
+        }
+        else{
+            return 1
+        }
+        
     }
   
   
@@ -698,8 +620,12 @@ export class TaskParser   {
   
     //判断line是不是空行
     isLineBlank(lineText:string) {
-        return(REGEX.BLANK_LINE.test(lineText))
+        // BLANK_LINE: /^\s*$/,
+        const blank_line_regex = /^\s*$/;
+        return blank_line_regex.test(lineText)
+        // return(REGEX.BLANK_LINE.test(lineText))
     }
+    
   
   
   //在linetext中插入日期

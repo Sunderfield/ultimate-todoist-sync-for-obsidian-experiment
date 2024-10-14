@@ -47,7 +47,29 @@ export class TodoistRestAPI  {
     async AddTask({ projectId, content, parentId = null, dueDate, dueTime, dueDatetime,labels, description,priority,duration,duration_unit }: { projectId: string, content: string, parentId?: string , dueDate?: string, dueTime?: string, dueDatetime?: string, labels?: Array<string>, description?: string,priority?:number, duration?: number,duration_unit?: string }) {
         const api = await this.initializeAPI()
         try {
-          if(dueDate){
+          
+          console.log(`dueDate = ${dueDate} and dueTime = ${dueTime} and dueDatetime = ${dueDatetime}`)
+
+          const taskData: any ={
+            projectId,
+            content,
+            parentId,
+            dueDate,
+            labels,
+            description,
+            priority
+          };
+          
+          // Check if duration is a number, not null and not a NaN. Case it doesn't, the duration is not provided to the request
+          if (duration !== null && typeof duration === 'number' && !isNaN(duration)) {
+            // console.log("The task has a valid duration")
+            taskData.duration = duration;
+            taskData.duration_unit = duration_unit;
+          }
+          
+
+          // If there is a dueTime, merge dueDate and dueTime and convert it to UTC, if not, returns only the date
+          if(dueTime){
             // if(this.plugin.settings.debugMode){
             //   console.log("dueDate = " + dueDate)
             //   console.log("dueTime = " + dueTime)
@@ -60,30 +82,13 @@ export class TodoistRestAPI  {
             dueDatetime = localDateStringToUTCDatetimeString(dueDateAndTimeMerge) || undefined
             // if(this.plugin.settings.debugMode){console.log("dueDateTime after transformation to UTCDateTimeString = " + dueDatetime)}
             dueDate = undefined
-          }
-          
-          // console.log("duration = " + duration)
-          // console.log("duration_unit = " + duration_unit)
-          
 
-          const taskData: any ={
-            projectId,
-            content,
-            parentId,
-            dueDate,
-            dueDatetime,
-            labels,
-            description,
-            priority
-          };
-
-          // Check if duration is a number, not null and not a NaN. Case it doesn't, the duration is not provided to the request
-          if (duration !== null && typeof duration === 'number' && !isNaN(duration)) {
-            // console.log("The task has a valid duration")
-            taskData.duration = duration;
-            taskData.duration_unit = duration_unit;
+            taskData.dueDate = dueDate
+            taskData.dueDatetime = dueDatetime
           }
 
+          console.log(`taskData = ${JSON.stringify(taskData)}`)
+          
 
           const newTask = await api.addTask(taskData);
 
@@ -132,10 +137,12 @@ export class TodoistRestAPI  {
             updates.duration_unit = "minute";
           }
 
-          console.log(`updates.duration = ${updates.duration} and updates.duration_unit = ${updates.duration_unit}`)
+          // console.log(`updates.duration = ${updates.duration} and updates.duration_unit = ${updates.duration_unit}`)
 
           // TODO The content still logs with whitespaces after so it keep looping trying to update the content
           console.log(`updates = ${JSON.stringify(updates)}`)
+
+          
         const updatedTask = await api.updateTask(taskId, updates);
         return updatedTask;
         } catch (error) {

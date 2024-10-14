@@ -449,7 +449,7 @@ export class TodoistSync  {
             if(dueTimeModified){
                 if(this.plugin.settings.debugMode){console.log(`Due time modified for task ${lineTask_todoist_id}. New due time is ${lineTask.dueTime}, old due time is ${JSON.stringify(savedTask.due.datime)}`)}
                 if(lineTask.dueTime === ""){
-                    updatedContent.dueString = "no time"
+                    updatedContent.dueString = ""
                     
                 }
                 if(this.plugin.settings.debugMode){console.log(`lineTaskdueTime is different from savedTask.due.time, setting dueTimeChanged to true`)}
