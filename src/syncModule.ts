@@ -377,24 +377,24 @@ export class TodoistSync  {
 
             //content 是否修改
             // The content is compared and inverts the value received 
-            const contentModified = !this.plugin.taskParser.taskContentCompare(lineTask,savedTask)
+            const contentModified = !this.plugin.taskParser?.taskContentCompare(lineTask,savedTask)
             //tag or labels 是否修改
-            const tagsModified = !this.plugin.taskParser.taskTagCompare(lineTask,savedTask)
+            const tagsModified = !this.plugin.taskParser?.taskTagCompare(lineTask,savedTask)
             //project 是否修改
-            const projectModified = !(await this.plugin.taskParser.taskProjectCompare(lineTask,savedTask))
+            const projectModified = !(await this.plugin.taskParser?.taskProjectCompare(lineTask,savedTask))
             //status 是否修改
-            const statusModified = !this.plugin.taskParser.taskStatusCompare(lineTask,savedTask)
+            const statusModified = !this.plugin.taskParser?.taskStatusCompare(lineTask,savedTask)
             // Check if the dueDate was modified
-            const dueDateModified = (await this.plugin.taskParser.compareTaskDueDate(lineTask,savedTask))
+            const dueDateModified = (await this.plugin.taskParser?.compareTaskDueDate(lineTask,savedTask))
             //parent id 是否修改
             const parentIdModified = !(lineTask.parentId === savedTask.parentId)
             //check priority
             const priorityModified = !(lineTask.priority === savedTask.priority)
             // check if the reminder time has changed
-            const dueTimeModified = (await this.plugin.taskParser.compareTaskDueTime(lineTask,savedTask))
+            const dueTimeModified = (await this.plugin.taskParser?.compareTaskDueTime(lineTask,savedTask))
             // check if the dyration time has changed
             // will return true or false depending on the finding
-            const durationTimeModified = (await this.plugin.taskParser.compareTaskDuration(lineTask,savedTask))
+            const durationTimeModified = (await this.plugin.taskParser?.compareTaskDuration(lineTask,savedTask))
 
             try {
             let contentChanged= false;
@@ -448,11 +448,11 @@ export class TodoistSync  {
 
             if(dueTimeModified){
                 if(this.plugin.settings.debugMode){console.log(`Due time modified for task ${lineTask_todoist_id}. New due time is ${lineTask.dueTime}, old due time is ${JSON.stringify(savedTask.due.datime)}`)}
+                
                 if(lineTask.dueTime === ""){
                     updatedContent.dueString = ""
                     
                 }
-                if(this.plugin.settings.debugMode){console.log(`lineTaskdueTime is different from savedTask.due.time, setting dueTimeChanged to true`)}
                 updatedContent.dueDate = lineTask.dueDate;
                 updatedContent.dueTime = lineTask.dueTime;
                 dueTimeChanged = true;
@@ -837,6 +837,8 @@ export class TodoistSync  {
     async syncTodoistToObsidian(){
         try{
             const all_activity_events = await this.plugin.todoistSyncAPI.getNonObsidianAllActivityEvents()
+
+            // console.log(`all_activity_events is ${JSON.stringify(all_activity_events)}`)
             
             // remove synchonized events
             const savedEvents = await this.plugin.cacheOperation.loadEventsFromCache()

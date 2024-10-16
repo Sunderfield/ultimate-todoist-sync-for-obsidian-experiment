@@ -48,7 +48,7 @@ export class TodoistRestAPI  {
         const api = await this.initializeAPI()
         try {
           
-          console.log(`dueDate = ${dueDate} and dueTime = ${dueTime} and dueDatetime = ${dueDatetime}`)
+          // console.log(`dueDate = ${dueDate} and dueTime = ${dueTime} and dueDatetime = ${dueDatetime}`)
 
           const taskData: any ={
             projectId,
@@ -122,14 +122,24 @@ export class TodoistRestAPI  {
           throw new Error('At least one update is required');
         }
         try {
-        if(updates.dueDate){
-            // console.log("value of updates.dueTime =" + updates.dueTime);
+
+        if(!updates.dueTime){
+          delete updates.dueTime
+        }
+        if(!updates.dueString){
+          delete updates.dueString
+        }
+        if(updates.dueDate && updates.dueTime){
             const dueDateAndTimeMerge = updates.dueDate + "T" + updates.dueTime;
-            // console.log("dueDateAndTimeMerge = " + dueDateAndTimeMerge)
             updates.dueDatetime = localDateStringToUTCDatetimeString(dueDateAndTimeMerge) || undefined;
+            // TODO need to delete due date?
             updates.dueDate = null
             // console.log("value of updates.dueDatime =" + updates.dueDatetime)
           }  
+          // if(updates.dueDate && !updates.dueTime){
+          //   const dueDateAndTimeMerge = updates.dueDate + "T00:00:00";
+          //   updates.dueDatetime = localDateStringToUTCDatetimeString(dueDateAndTimeMerge) || undefined;
+          // }
 
           if(updates.duration){
             // updates.duration = `"duration":{"duration":${updates.duration},"unit":"minute"}`;
@@ -149,16 +159,6 @@ export class TodoistRestAPI  {
         throw new Error(`Error updating task: ${error.message}`);
         }
     }
-
-    // console.log("dueDate = " + dueDate)
-    // console.log("dueTime = " + dueTime)
-    // console.log("dueDatetime = " + dueDatetime)
-    // const dueDateAndTimeMerge = dueDate + "T" + dueTime
-    // console.log("dueDateAndTimeMerge = " + dueDateAndTimeMerge)
-    // dueDatetime = localDateStringToUTCDatetimeString(dueDateAndTimeMerge) || undefined
-    // console.log("dueDateTime after transformation = " + dueDatetime)
-    // dueDate = undefined
-
 
     //open a task
     async OpenTask(taskId:string) {

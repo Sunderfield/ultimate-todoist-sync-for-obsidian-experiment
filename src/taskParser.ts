@@ -2,14 +2,6 @@ import AnotherSimpleTodoistSync from "../main";
 import { App } from 'obsidian';
 
  
-const REGEX = {
-    // PROJECT_NAME: /\[project::\s*(.*?)\]/,
-    ALL_TAGS: /#[\w\u4e00-\u9fa5-]+/g,
-    TASK_CHECKBOX_CHECKED: /- \[(x|X)\] /,
-    TASK_INDENTATION: /^(\s{2,}|\t)(-|\*)\s+\[(x|X| )\]/,
-    TAB_INDENTATION: /^(\t+)/,
-};
-
 export class TaskParser   {
 	app:App;
     plugin: AnotherSimpleTodoistSync;
@@ -35,9 +27,9 @@ export class TaskParser   {
         // console.log(`textwithoutindentation is ${textWithoutIndentation}`)
         if(this.getTabIndentation(lineText) > 0){
         textWithoutIndentation = this.removeTaskIndentation(lineText)
-        const lines = fileContent.split('\n')
+        const lines = fileContent?.split('\n') || ""
 
-        for (let i = (lineNumber - 1 ); i >= 0; i--) {
+        for (let i = (Number(lineNumber) - 1 ); i >= 0; i--) {
             const line = lines[i]
             if(this.isLineBlank(line)){
                 break
@@ -52,7 +44,7 @@ export class TaskParser   {
                     parentId = this.getTodoistIdFromLineText(line)
                     hasParent = true
                     //console.log(`parent id is ${parentId}`)
-                    parentTaskObject = this.plugin.cacheOperation.loadTaskFromCacheyID(parentId)
+                    parentTaskObject = this.plugin.cacheOperation?.loadTaskFromCacheyID(parentId)
                     break
                 }
                 else{
@@ -87,25 +79,25 @@ export class TaskParser   {
         //const projectId = await this.plugin.cacheOperation.getProjectIdByNameFromCache(projectName)
         //use tag as project name
 
-        let projectId = this.plugin.cacheOperation.getDefaultProjectIdForFilepath(filepath as string)
-        let projectName = this.plugin.cacheOperation.getProjectNameByIdFromCache(projectId)
+        let projectId = this.plugin.cacheOperation?.getDefaultProjectIdForFilepath(filepath as string)
+        // let projectName = this.plugin.cacheOperation?.getProjectNameByIdFromCache(projectId)
 
         if(hasParent){
             projectId = parentTaskObject.projectId
-            projectName =this.plugin.cacheOperation.getProjectNameByIdFromCache(projectId)
+            // projectName =this.plugin.cacheOperation?.getProjectNameByIdFromCache(projectId)
         }
-        if(!hasParent){
+        if(!hasParent && labels){
                     //匹配 tag 和 peoject
             for (const label of labels){
         
                 //console.log(label)
-                let labelName = label.replace(/#/g, "");
+                const labelName = label.replace(/#/g, "");
                 // console.log("labelName value = " + labelName)
-                let hasProjectId = this.plugin.cacheOperation.getProjectIdByNameFromCache(labelName)
+                const hasProjectId = this.plugin.cacheOperation?.getProjectIdByNameFromCache(labelName)
                 if(!hasProjectId){
                     continue
                 }
-                projectName = labelName
+                // projectName = labelName
                 //console.log(`project is ${projectName} ${label}`)
                 projectId = hasProjectId
                 break
@@ -124,7 +116,7 @@ export class TaskParser   {
         const priority = this.getTaskPriority(textWithoutIndentation)
 
         if(filepath){
-            let url = encodeURI(`obsidian://open?vault=${this.app.vault.getName()}&file=${filepath}`)
+            const url = encodeURI(`obsidian://open?vault=${this.app.vault.getName()}&file=${filepath}`)
             description =`[${filepath}](${url})`;
         }
     
@@ -318,7 +310,7 @@ export class TaskParser   {
     }
   
     // get the duedate from dataview
-    getDueDateFromDataview(dataviewTask:object){
+    getDueDateFromDataview(dataviewTask: { due?: string }){
         if(!dataviewTask.due){
         return ""
         }
@@ -366,29 +358,27 @@ getTaskContentFromLineText(lineText:string) {
   
     //get all tags from task text
     getAllTagsFromLineText(lineText:string){
-        let tags = lineText.match(REGEX.ALL_TAGS);
+        const regex_tags_search = /#[\w\u4e00-\u9fa5-]+/g;
+        let tags: string[] = lineText.match(regex_tags_search) || [];
 
-        if(this.plugin.settings.debugMode){
-            // console.log("Tags found on this task are: " + tags)
-        }
-    
+
         if (tags) {
             // Remove '#' from each tag
             tags = tags.map(tag => tag.replace('#', ''));
         }
 
-    
         return tags;
     }
   
     //get checkbox status
     isTaskCheckboxChecked(lineText:string) {
-        return(REGEX.TASK_CHECKBOX_CHECKED.test(lineText))
+        const checkbox_status_search = /- \[(x|X)\] /;
+        return(checkbox_status_search.test(lineText))
     }
   
   
     //task content compare
-    taskContentCompare(lineTask:Object,todoistTask:Object) {
+    taskContentCompare(lineTask: { content: string }, todoistTask: { content: string }) {
         const lineTaskContent = lineTask.content
         //console.log(dataviewTaskContent)
         
@@ -419,7 +409,7 @@ getTaskContentFromLineText(lineText:string) {
   
   
     //tag compare
-    taskTagCompare(lineTask:Object,todoistTask:Object) {
+    taskTagCompare(lineTask:{labels: string[]},todoistTask:{labels:string[]}) {
     
     
         const lineTaskTags = lineTask.labels
@@ -434,7 +424,7 @@ getTaskContentFromLineText(lineText:string) {
     }
   
     //task status compare
-    taskStatusCompare(lineTask:Object,todoistTask:Object) {
+    taskStatusCompare(lineTask:{isCompleted: boolean},todoistTask:{isCompleted: boolean}) {
         //status 是否修改
         const statusModified = (lineTask.isCompleted === todoistTask.isCompleted)
         //console.log(lineTask)
@@ -444,19 +434,23 @@ getTaskContentFromLineText(lineText:string) {
   
   
     //Compare if the due date from Obsidian is the same due date from Todoist
-    async  compareTaskDueDate(lineTask: object, todoistTask: object): Promise<boolean> {
+    async  compareTaskDueDate(lineTask: { dueDate?: any }, todoistTask: any): Promise<boolean> {
 
-        // if(this.plugin.settings.debugMode){
-        //     console.log("compareTaskDueDate started...")
-        //     console.log("lineTask value = " + JSON.stringify(lineTask))
-        //     console.log("todoistTask value = " + JSON.stringify(todoistTask))
-        // }
+        
+        const lineTaskDue = lineTask.dueDate
+        const todoistTaskDue = todoistTask.due;
 
-        const lineTaskDue = JSON.stringify(lineTask.dueDate)
-        const todoistTaskDue = todoistTask.due ?? "";
-        const todoistTaskDueDate = JSON.stringify(todoistTaskDue.date);
+        let todoistTaskDueDate = "";
 
-        // if(this.plugin.settings.debugMode){console.log("lineTaskDue value is: " + lineTaskDue + " and todoistTaskDueDate value is: " + todoistTaskDueDate)}
+        if(todoistTask.due?.date){
+            todoistTaskDueDate = todoistTask.due.date
+        }
+
+        // TODO this is stupid, but works for now
+        if(lineTaskDue == "\"\"" && todoistTaskDue === null){
+            // This usually happens when a task without date is created, it saves as null on the cache but is a empty string on the lineTask
+            return false;
+        }
  
 
         // if any falue is empty, return false as you can't compare
@@ -484,12 +478,19 @@ getTaskContentFromLineText(lineText:string) {
     }
 
     // Compare if the due time from Obsidian is the same due time from Todoist
-    async  compareTaskDueTime(lineTask: object, todoistTask: object): Promise<boolean> {
+    async  compareTaskDueTime(lineTask: {dueTime:string}, todoistTask: {due?:any}): Promise<boolean> {
         
         // if(this.plugin.settings.debugMode){console.log("compareTaskDueTime started...")}
 
         const lineTaskDueTime = JSON.stringify(lineTask.dueTime)
         const todoistTaskDue = todoistTask.due ?? "";
+
+        // console.log(`lineTaskDueTime is ${lineTaskDueTime} and todoistTaskDue is ${todoistTaskDue}`)
+
+        // TODO is stupid but works. If the task is created without any date, it saves as empty string on the cache but is a empty string on the lineTask
+        if(lineTaskDueTime === "\"\"" && todoistTaskDue === null || todoistTaskDue === ""){
+            return false
+        }
 
         const todoistTaskDueTimeLocalClock = JSON.stringify(this.ISOStringToLocalClockTimeString(todoistTaskDue.datetime))
 
@@ -518,7 +519,7 @@ getTaskContentFromLineText(lineText:string) {
         }
     }
 
-    async compareTaskDuration(lineTask: object, todoistTask: object): Promise<boolean> {
+    async compareTaskDuration(lineTask: {duration:{amount:number}}, todoistTask: {duration:{amount:number}}): Promise<boolean> {
 
         if(lineTask.duration && todoistTask.duration?.amount === undefined){
             console.log("The task has a duration, but Todoist does not. It will return true")
@@ -547,7 +548,7 @@ getTaskContentFromLineText(lineText:string) {
     
   
     //task project id compare
-    async  taskProjectCompare(lineTask:Object,todoistTask:Object) {
+    async  taskProjectCompare(lineTask:{projectId:number},todoistTask:{projectId:number}) {
         //project 是否修改
         //console.log(dataviewTaskProjectId)
         //console.log(todoistTask.projectId)
@@ -573,7 +574,9 @@ getTaskContentFromLineText(lineText:string) {
     //console.log(getTabIndentation("\t\t- [x] This is a task with two tabs")); // 2
     //console.log(getTabIndentation("  - [x] This is a task without tabs")); // 0
     getTabIndentation(lineText:string){
-        const match = REGEX.TAB_INDENTATION.exec(lineText)
+        // TAB_INDENTATION: /^(\t+)/,
+        const tab_indentation_search = /^(\t+)/;
+        const match = tab_indentation_search.exec(lineText)
         return match ? match[1].length : 0;
     }
 
@@ -612,7 +615,7 @@ getTaskContentFromLineText(lineText:string) {
   
   
     //remove task indentation
-    removeTaskIndentation(text) {
+    removeTaskIndentation(text:string) {
         const regex = /^([ \t]*)?- \[(x| )\] /;
         return text.replace(regex, "- [$2] ");
     }
@@ -635,7 +638,7 @@ getTaskContentFromLineText(lineText:string) {
 
         // if(this.plugin.settings.debugMode){console.log(`The tag to look for is: ${tag_to_look_for}`)}
 
-        return text.replace(tag_to_look_for, `📅 ${dueDate} $1`);
+        return text.replace(tag_to_look_for, `📅 ${dueDate} ${tag_to_look_for}`);
   }
 
     //extra date from obsidian event
@@ -676,8 +679,8 @@ getTaskContentFromLineText(lineText:string) {
           const utcDateString = utcTimeString;
           const dateObj = new Date(utcDateString); // 将UTC格式字符串转换为Date对象
 
-          let timeHour = dateObj.getHours();
-          let timeMinute = dateObj.getMinutes();
+          const timeHour = dateObj.getHours();
+          const timeMinute = dateObj.getMinutes();
 
           let timeHourString;
           let timeMinuteString;
@@ -719,9 +722,9 @@ getTaskContentFromLineText(lineText:string) {
           if(utcTimeString === null){
             return null
           }
-          let utcDateString = utcTimeString;
-          let dateObj = new Date(utcDateString); // 将UTC格式字符串转换为Date对象
-          let result = dateObj.toString();
+          const utcDateString = utcTimeString;
+          const dateObj = new Date(utcDateString); // 将UTC格式字符串转换为Date对象
+          const result = dateObj.toString();
           return(result);
         } catch (error) {
           console.error(`Error extracting date from string '${utcTimeString}': ${error}`);
@@ -803,9 +806,7 @@ getTaskContentFromLineText(lineText:string) {
     //检查是否包含todoist link
     hasTodoistLink(lineText:string){
         // TODOIST_LINK:/\[link\]\(.*?\)/,
-        const regex_has_todoist_link = new RegExp(`/%%\[tid::\s*\[\d+\]\(https:\/\/todoist\.com\/app\/task\/\d+\)\]%%/`);
-
-        if(this.plugin.settings.debugMode){console.log(`The check on hasTodoistLink returned:  ${regex_has_todoist_link}`)}
+        const regex_has_todoist_link = new RegExp(/%%\[tid::\s*\[\d+\]\(https:\/\/todoist\.com\/app\/task\/\d+\)\]%%/);
 
         return(regex_has_todoist_link.test(lineText))
     }

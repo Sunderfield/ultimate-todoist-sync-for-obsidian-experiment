@@ -570,14 +570,14 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			await new Promise(resolve => setTimeout(resolve, 5000));
 
 			const filesToSync = this.settings.fileMetadata;
-			if(this.settings.debugMode){
-				// console.log(filesToSync)
-			}
+			// if(this.settings.debugMode){
+			// 	console.log(`filesToSync are ${JSON.stringify(filesToSync)}`)
+			// }
 
 			for (let fileKey in filesToSync) {
-				if(this.settings.debugMode){
-					// console.log(fileKey)
-				}
+				// if(this.settings.debugMode){
+				// 	console.log(`fileKey is ${fileKey}`)
+				// }
 
 				if (!await this.checkAndHandleSyncLock()) return;
 				try {

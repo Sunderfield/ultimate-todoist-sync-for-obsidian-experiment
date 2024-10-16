@@ -1,7 +1,12 @@
 ## CHANGELOG
 
+### 2024-10-
+#### 0.3.1
+- Removing a lot of unused code and fixing errors, mostly on taskParser.ts
+- Fixed the issue#3 where a task without duedate, when received the date from Todoist, break
+
 ### 2024-10-14
-#### 0.3
+#### 0.3.0
 - Priority order now follows the same pattern as the Todoist UI (eg.: !!1 = p1, !!4 = p4)
 - Removed a bunch of unused code, old comments
 - 

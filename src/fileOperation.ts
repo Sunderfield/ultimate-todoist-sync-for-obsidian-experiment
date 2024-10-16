@@ -164,7 +164,7 @@ export class FileOperation   {
     
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i]
-            if (this.plugin.taskParser.hasTodoistId(line) && this.plugin.taskParser.hasTodoistTag(line)) {
+            if (this.plugin.taskParser?.hasTodoistId(line) && this.plugin.taskParser.hasTodoistTag(line)) {
                 if(this.plugin.taskParser && this.plugin.taskParser.hasTodoistLink(line)){
                     if(this.plugin.settings.debugMode){console.log(`Todoist link already exists in line: ${line}`)}
                     return
@@ -172,7 +172,7 @@ export class FileOperation   {
                 if(this.plugin.settings.debugMode){console.log(`Content for line is: ${line}`)}
                 //console.log('prepare to add todoist link')
                 const taskID = this.plugin.taskParser.getTodoistIdFromLineText(line)
-                const taskObject = this.plugin.cacheOperation.loadTaskFromCacheyID(taskID)
+                const taskObject = this.plugin.cacheOperation?.loadTaskFromCacheyID(taskID)
                 const todoistLink = taskObject.url
                 const link = `[link](${todoistLink})`
                 const newLine = this.plugin.taskParser.addTodoistLink(line,link)
@@ -309,17 +309,17 @@ export class FileOperation   {
             // TODO 'trimmedlineTaskDueDate' looks just for the date, removing any other information, like hour. This very likely will break some dates sometimes, need a more inteligent solution
             const trimmedlineTaskDueDate = lineTaskDueDate.slice(0,10)
 
-if(this.plugin.settings.debugMode){
-            console.log(`lineTaskDueDate: ${lineTaskDueDate} and newTaskDueDate: ${newTaskDueDate}`)
-            console.log(`lineTaskTime: ${lineTaskTime} and newTaskTime: ${newTaskTime}`)
-}
+            // if(this.plugin.settings.debugMode){
+            //             console.log(`lineTaskDueDate: ${lineTaskDueDate} and newTaskDueDate: ${newTaskDueDate}`)
+            //             console.log(`lineTaskTime: ${lineTaskTime} and newTaskTime: ${newTaskTime}`)
+            // }
  
             if(this.plugin.taskParser && lineTaskDueDate === ""){
                 if(this.plugin.settings.debugMode){console.log("Task doesn't have a due date, it will attempt to add one.")}
                 lines[i] = this.plugin.taskParser.insertDueDateBeforeTodoist(line,newTaskDueDate)
                 modified = true
-
             }
+
             else if(newTaskDueDate === ""){
                 //remove 日期from text
                 const regexRemoveDate = /(🗓️|📅|📆|🗓)\s?\d{4}-\d{2}-\d{2}/; //匹配日期🗓️2023-03-07"
@@ -330,14 +330,15 @@ if(this.plugin.settings.debugMode){
                 lines[i] = line.replace(trimmedlineTaskDueDate, newTaskDueDate)
                 modified = true
             }
-
-            else if(lineTaskTime === "" && newTaskTime !== "") {
+            
+            // TODO when a task is created without dueTime, while trying to convert from ISO to local time, it will return 23:59, which is not the best option. So for now this will work
+            else if(lineTaskTime === "" && newTaskTime !== "" && newTaskTime !== "23:59"){
                 const newDateWithTime = newTaskDueDate + " ⏰" + newTaskTime;
                 lines[i] = line.replace(newTaskDueDate,newDateWithTime)
                 modified = true
             }
 
-            else if(lineTaskTime !== newTaskTime){
+            else if(lineTaskTime !== newTaskTime && newTaskTime !== "23:59"){
                 lines[i] = line.replace(lineTaskTime,newTaskTime)
                 modified = true
             }
