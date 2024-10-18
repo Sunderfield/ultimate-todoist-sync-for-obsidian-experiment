@@ -205,7 +205,8 @@ export class TaskParser   {
             return null
         } else {
 
-            const regex_tag_test=new RegExp(`%%\\[tid:: \\[(\\d+)\\]\\(https:\\/\\/todoist\\.com\\/app\\/task\\/\\d+\\)\\]%%`).test(text)
+            const regex_tag_test=new RegExp(/%%\[tid:: \[(\d+)\]\(https:\/\/app.todoist.com\/app\/task\/(\d+)\)\]%%/).test(text)
+
             
             return(regex_tag_test)
         }
@@ -336,7 +337,7 @@ getTaskContentFromLineText(lineText:string) {
             REMOVE_CHECKBOX:  /^(-|\*)\s+\[(x|X| )\]\s/,
             REMOVE_CHECKBOX_WITH_INDENTATION: /^([ \t]*)?(-|\*)\s+\[(x|X| )\]\s/,
             REMOVE_TODOIST_LINK: /\[link\]\(.*?\)/,
-            REMOVE_TODOIST_TID_LINK: /%%\[tid::\s*\[\d+\]\(https:\/\/todoist\.com\/app\/task\/\d+\)\]%%/,
+            REMOVE_TODOIST_TID_LINK: /%\[tid::\s*\[\d+\]\(https:\/\/app.todoist\.com\/app\/task\/\d+\)\]%/,
             REMOVE_TODOIST_DURATION: new RegExp(`(⏳|&)\\d+min`)
                 }
         
@@ -351,7 +352,6 @@ getTaskContentFromLineText(lineText:string) {
                                     .replace(regex_remove_rules.REMOVE_SPACE,"")
                                     .replace(regex_remove_rules.REMOVE_TODOIST_DURATION,"") //remove duration
 
-                                    // if(this.plugin.settings.debugMode){console.log(`TaskContent is ${TaskContent}`)}
         return(TaskContent)
     }
   

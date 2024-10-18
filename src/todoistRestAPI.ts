@@ -17,8 +17,8 @@ function  localDateStringToUTCDatetimeString(localDateString:string) {
             return null
           }
           
-          let localDateObj = new Date(localDateString);
-          let ISOString = localDateObj.toISOString()
+          const localDateObj = new Date(localDateString);
+          const ISOString = localDateObj.toISOString()
           return(ISOString);
         } catch (error) {
           console.error(`Error extracting date from string '${localDateString}': ${error}`);
@@ -44,7 +44,7 @@ export class TodoistRestAPI  {
         return(api)
     }
 
-    async AddTask({ projectId, content, parentId = null, dueDate, dueTime, dueDatetime,labels, description,priority,duration,duration_unit }: { projectId: string, content: string, parentId?: string , dueDate?: string, dueTime?: string, dueDatetime?: string, labels?: Array<string>, description?: string,priority?:number, duration?: number,duration_unit?: string }) {
+    async AddTask({ projectId, content, parentId, dueDate, dueTime, dueDatetime,labels, description,priority,duration,duration_unit }: { projectId: string, content: string, parentId?: string , dueDate?: string, dueTime?: string, dueDatetime?: string, labels?: Array<string>, description?: string,priority?:number, duration?: number,duration_unit?: string }) {
         const api = await this.initializeAPI()
         try {
           
@@ -87,7 +87,7 @@ export class TodoistRestAPI  {
             taskData.dueDatetime = dueDatetime
           }
 
-          console.log(`taskData = ${JSON.stringify(taskData)}`)
+          // console.log(`taskData = ${JSON.stringify(taskData)}`)
           
 
           const newTask = await api.addTask(taskData);
@@ -133,7 +133,8 @@ export class TodoistRestAPI  {
             const dueDateAndTimeMerge = updates.dueDate + "T" + updates.dueTime;
             updates.dueDatetime = localDateStringToUTCDatetimeString(dueDateAndTimeMerge) || undefined;
             // TODO need to delete due date?
-            updates.dueDate = null
+            // updates.dueDate = null
+            delete updates.dueDate
             // console.log("value of updates.dueDatime =" + updates.dueDatetime)
           }  
           // if(updates.dueDate && !updates.dueTime){
@@ -150,7 +151,7 @@ export class TodoistRestAPI  {
           // console.log(`updates.duration = ${updates.duration} and updates.duration_unit = ${updates.duration_unit}`)
 
           // TODO The content still logs with whitespaces after so it keep looping trying to update the content
-          console.log(`updates = ${JSON.stringify(updates)}`)
+          if(this.plugin.settings.debugMode){console.log(`updates = ${JSON.stringify(updates)}`)}
 
           
         const updatedTask = await api.updateTask(taskId, updates);

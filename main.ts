@@ -52,13 +52,6 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 		//lastLine 对象 {path:line}保存在lastLines map中
 		this.lastLines = new Map();
 
-
-
-
-
-
-
-
 		//key 事件监听，判断换行和删除
 		this.registerDomEvent(document, 'keyup', async (evt: KeyboardEvent) =>{
 			if(!this.settings.apiInitialized){
@@ -68,7 +61,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 						
 			//判断点击事件发生的区域,如果不在编辑器中，return
 			if (!(this.app.workspace.activeEditor?.editor?.hasFocus())) {
-				(console.log(`editor is not focused`))
+				// (console.log(`editor is not focused`))
 				return
 			}
 			const view = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -551,7 +544,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 		if (!(this.checkModuleClass())) {
 			return;
 		}
-		console.log("Todoist scheduled synchronization task started at", new Date().toLocaleString());
+		// console.log("Todoist scheduled synchronization task started at", new Date().toLocaleString());
 		try {
 			if (!await this.checkAndHandleSyncLock()) return;
 			try {
@@ -609,7 +602,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			new Notice('An error occurred:', error);
 			this.syncLock = false;
 		}
-		console.log("Todoist scheduled synchronization task completed at", new Date().toLocaleString());
+		// console.log("Todoist scheduled synchronization task completed at", new Date().toLocaleString());
 	}
 
 	async checkSyncLock() {
@@ -626,12 +619,12 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 
 	async checkAndHandleSyncLock() {
 		if (this.syncLock) {
-			console.log('sync locked.');
+			// console.log('sync locked.');
 			const isSyncLockChecked = await this.checkSyncLock();
 			if (!isSyncLockChecked) {
 				return false;
 			}
-			console.log('sync unlocked.')
+			// console.log('sync unlocked.')
 		}
 		this.syncLock = true;
 		return true;

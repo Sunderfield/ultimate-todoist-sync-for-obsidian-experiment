@@ -9,13 +9,12 @@ interface MyProject {
 
 export interface UltimateTodoistSyncSettings {
     initialized:boolean;
-	//mySetting: string;
 	//todoistTasksFilePath: string;
 	todoistAPIToken: string; // replace with correct type
 	apiInitialized:boolean;
 	defaultProjectName: string;
 	defaultProjectId:string;
-	automaticSynchronizationInterval:Number;
+	automaticSynchronizationInterval:number;
 	todoistTasksData:any;
 	fileMetadata:any;
 	enableFullVaultSync: boolean;
@@ -42,7 +41,6 @@ export const DEFAULT_SETTINGS: Partial<UltimateTodoistSyncSettings> = {
 	alternativeKeywords:false,
 	customSyncTag:"#tdsync",
 	experimentalFeatures:false,
-	//mySetting: 'default',
 	//todoistTasksFilePath: 'todoistTasks.json'
 
 }
@@ -69,7 +67,7 @@ export class UltimateTodoistSyncSettingTab extends PluginSettingTab {
 		const myProjectsOptions: MyProject | undefined = this.plugin.settings.todoistTasksData?.projects?.reduce((obj, item) => {
 			obj[(item.id).toString()] = item.name;
 			return obj;
-		  }, {});	  
+}, {});	  
 
 		new Setting(containerEl)
 			.setName('Todoist API')
@@ -139,8 +137,8 @@ export class UltimateTodoistSyncSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.defaultProjectName)
 					.onChange(async (value) => {
 						try{
-							//this.plugin.cacheOperation.saveProjectsToCache()
-							const newProjectId = this.plugin.cacheOperation.getProjectIdByNameFromCache(value)
+							//this.plugin.cacheOperation?.saveProjectsToCache()
+							const newProjectId = this.plugin.cacheOperation?.getProjectIdByNameFromCache(value)
 							if(!newProjectId){
 								new Notice(`This project seems to not exist.`)
 								return
@@ -167,7 +165,7 @@ export class UltimateTodoistSyncSettingTab extends PluginSettingTab {
 						.addOptions(myProjectsOptions)
 						.onChange((value)=>{
 							this.plugin.settings.defaultProjectId = value
-							this.plugin.settings.defaultProjectName = this.plugin.cacheOperation.getProjectNameByIdFromCache(value)
+							this.plugin.settings.defaultProjectName = this.plugin.cacheOperation?.getProjectNameByIdFromCache(value)
 							this.plugin.saveSettings()
 							
 							
@@ -236,16 +234,16 @@ export class UltimateTodoistSyncSettingTab extends PluginSettingTab {
 
 				//check file metadata
 				console.log('checking file metadata')
-				await this.plugin.cacheOperation.checkFileMetadata()
+				await this.plugin.cacheOperation?.checkFileMetadata()
 				this.plugin.saveSettings()
-				const metadatas = await this.plugin.cacheOperation.getFileMetadatas()
+				const metadatas = await this.plugin.cacheOperation?.getFileMetadatas()
 				// check default project task amounts
 				try{
 					const projectId = this.plugin.settings.defaultProjectId
-					let options = {}
+					const options = {projectId:projectId}
 					options.projectId = projectId
-					const tasks = await this.plugin.todoistRestAPI.GetActiveTasks(options)
-					let length = tasks.length
+					const tasks = await this.plugin.todoistRestAPI?.GetActiveTasks(options)
+					const length = Number(tasks?.length)
 					if(length >= 300){
 						new Notice(`The number of tasks in the default project exceeds 300, reaching the upper limit. It is not possible to add more tasks. Please modify the default project.`)
 					}
@@ -270,76 +268,76 @@ export class UltimateTodoistSyncSettingTab extends PluginSettingTab {
 						let taskObject
 
 						try{
-							taskObject = await this.plugin.cacheOperation.loadTaskFromCacheyID(taskId)
+							taskObject = await this.plugin.cacheOperation?.loadTaskFromCacheyID(taskId)
 						}catch(error){
 							console.error(`An error occurred while loading task cache: ${error.message}`);
 						}
 
 						if(!taskObject){
-							console.log(`The task data of the ${taskId} is empty.`)
+							// console.log(`The task data of the ${taskId} is empty.`)
 							//get from todoist 
 							try {
-								taskObject = await this.plugin.todoistRestAPI.getTaskById(taskId);
-							  } catch (error) {
+								taskObject = await this.plugin.todoistRestAPI?.getTaskById(taskId);
+								} catch (error) {
 								if (error.message.includes('404')) {
-								  // 处理404错误
-								  console.log(`Task ${taskId} seems to not exist.`);
-								  await this.plugin.cacheOperation.deleteTaskIdFromMetadata(key,taskId)
-								  continue
+								// 处理404错误
+									// console.log(`Task ${taskId} seems to not exist.`);
+									await this.plugin.cacheOperation?.deleteTaskIdFromMetadata(key,taskId)
+									continue
 								} else {
-								  // 处理其他错误
-								  console.error(error);
-								  continue
+								// 处理其他错误
+									console.error(error);
+									continue
 								}
-							  }
+	}
 
 						}									
-					};
+					}
 
-				  }
-				  this.plugin.saveSettings()
+	}
+				this.plugin.saveSettings()
 
 
-				console.log('checking renamed files')
+				// console.log('checking renamed files')
 				try{
 					//check renamed files
 					for (const key in metadatas) {
 						const value = metadatas[key];
 						//console.log(value)
-						const newDescription = this.plugin.taskParser.getObsidianUrlFromFilepath(key)
+						const newDescription = this.plugin.taskParser?.getObsidianUrlFromFilepath(key)
 						for(const taskId of value.todoistTasks) {
 							
 							//console.log(`${taskId}`)
 							let taskObject
 							try{
-								taskObject = await this.plugin.cacheOperation.loadTaskFromCacheyID(taskId)
+								taskObject = await this.plugin.cacheOperation?.loadTaskFromCacheyID(taskId)
 							}catch(error){
-								console.error(`An error occurred while loading task ${taskId} from cache: ${error.message}`);
+								// console.error(`An error occurred while loading task ${taskId} from cache: ${error.message}`);
 								console.log(taskObject)
 							}
 							if(!taskObject){
-								console.log(`Task ${taskId} seems to not exist.`)
+								// console.log(`Task ${taskId} seems to not exist.`)
 								continue
 							}
 							if(!taskObject?.description){
-								console.log(`The description of the task ${taskId} is empty.`)
+								// console.log(`The description of the task ${taskId} is empty.`)
 							}							
 							const oldDescription = taskObject?.description ?? '';
 							if(newDescription != oldDescription){
-								console.log('Preparing to update description.')
-								console.log(oldDescription)
-								console.log(newDescription)
+								// console.log('Preparing to update description.')
+								// console.log(oldDescription)
+								// console.log(newDescription)
 								try{
-									//await this.plugin.todoistSync.updateTaskDescription(key)
+									//await this.plugin.todoistSync?.updateTaskDescription(key)
 								}catch(error){
 									console.error(`An error occurred while updating task discription: ${error.message}`);
 								}
 
 							}
 			
-						};
+						}
 
-					  }
+}
 
 					//check empty file metadata
 					
@@ -354,9 +352,9 @@ export class UltimateTodoistSyncSettingTab extends PluginSettingTab {
 						if(v.extension == "md"){
 							try{
 								//console.log(`Scanning file ${v.path}`)
-								await this.plugin.fileOperation.addTodoistLinkToFile(v.path)
+								await this.plugin.fileOperation?.addTodoistLinkToFile(v.path)
 								if(this.plugin.settings.enableFullVaultSync){
-									await this.plugin.fileOperation.addTodoistTagToFile(v.path)
+									await this.plugin.fileOperation?.addTodoistTagToFile(v.path)
 								}
 
 								
@@ -414,7 +412,7 @@ export class UltimateTodoistSyncSettingTab extends PluginSettingTab {
 						new Notice(`Please set the todoist api first`)
 						return
 					}
-					this.plugin.todoistSync.backupTodoistAllResources()
+					this.plugin.todoistSync?.backupTodoistAllResources()
 				})
 			);
 

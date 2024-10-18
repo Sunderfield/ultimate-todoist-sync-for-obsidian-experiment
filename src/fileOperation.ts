@@ -1,4 +1,4 @@
-import { App} from 'obsidian';
+import { App, TFile } from 'obsidian';
 import AnotherSimpleTodoistSync from "../main";
 export class FileOperation   {
 	app:App;
@@ -6,65 +6,35 @@ export class FileOperation   {
 
 
 	constructor(app:App, plugin:AnotherSimpleTodoistSync) {
-		//super(app,settings);
 		this.app = app;
         this.plugin = plugin;
 
 	}
-    /*
-    async getFrontMatter(file:TFile): Promise<FrontMatter | null> {
-        return new Promise((resolve) => {
-          this.app.fileManager.processFrontMatter(file, (frontMatter) => {
-            resolve(frontMatter);
-          });
-        });
-    }
-    */
-    
 
-
-
-    /*
-    async updateFrontMatter(
-    file:TFile,
-    updater: (frontMatter: FrontMatter) => void
-    ): Promise<void> {
-        //console.log(`prepare to update front matter`)
-        this.app.fileManager.processFrontMatter(file, (frontMatter) => {
-        if (frontMatter !== null) {
-        const updatedFrontMatter = { ...frontMatter } as FrontMatter;
-        updater(updatedFrontMatter);
-        this.app.fileManager.processFrontMatter(file, (newFrontMatter) => {
-            if (newFrontMatter !== null) {
-            newFrontMatter.todoistTasks = updatedFrontMatter.todoistTasks;
-            newFrontMatter.todoistCount = updatedFrontMatter.todoistCount;
-            }
-        });
-        }
-    });
-    }
-    */
-
-
-    
-          
-
-     // 完成一个任务，将其标记为已完成
+     // Complete a task to mark it as completed
     async completeTaskInTheFile(taskId: string) {
-        // 获取任务文件路径
-        const currentTask = await this.plugin.cacheOperation.loadTaskFromCacheyID(taskId)
+
+        // Get the task file path
+        const currentTask = await this.plugin.cacheOperation?.loadTaskFromCacheyID(taskId)
         const filepath = currentTask.path
     
-        // 获取文件对象并更新内容
+        // Get the file object and update the content
         const file = this.app.vault.getAbstractFileByPath(filepath)
-        const content = await this.app.vault.read(file)
-    
+
+        // Check if the returned file is a TFile
+        let content
+        if(file instanceof TFile){
+            content = await this.app.vault.read(file)
+        }else{
+            return
+        }
+ 
         const lines = content.split('\n')
         let modified = false
     
         for (let i = 0; i < lines.length; i++) {
         const line = lines[i]
-        if (line.includes(taskId) && this.plugin.taskParser.hasTodoistTag(line)) {
+        if (line.includes(taskId) && this.plugin.taskParser?.hasTodoistTag(line)) {
             lines[i] = line.replace('[ ]', '[x]')
             modified = true
             break
@@ -77,22 +47,28 @@ export class FileOperation   {
         }
     }
   
-    // uncheck 已完成的任务，
+    // uncheck Completed tasks，
     async uncompleteTaskInTheFile(taskId: string) {
-        // 获取任务文件路径
-        const currentTask = await this.plugin.cacheOperation.loadTaskFromCacheyID(taskId)
+        // Get the task file path
+        const currentTask = await this.plugin.cacheOperation?.loadTaskFromCacheyID(taskId)
         const filepath = currentTask.path
     
-        // 获取文件对象并更新内容
+        // Get the file object and update the content
         const file = this.app.vault.getAbstractFileByPath(filepath)
-        const content = await this.app.vault.read(file)
-    
+        // Check if the returned file is a TFile
+        let content
+        if(file instanceof TFile){
+            content = await this.app.vault.read(file)
+        }else{
+            return
+        }
+ 
         const lines = content.split('\n')
         let modified = false
     
         for (let i = 0; i < lines.length; i++) {
         const line = lines[i]
-        if (line.includes(taskId) && this.plugin.taskParser.hasTodoistTag(line)) {
+        if (line.includes(taskId) && this.plugin.taskParser?.hasTodoistTag(line)) {
             lines[i] = line.replace(/- \[(x|X)\]/g, '- [ ]');
             modified = true
             break
@@ -107,30 +83,33 @@ export class FileOperation   {
 
     //add #todoist at the end of task line, if full vault sync enabled
     async addTodoistTagToFile(filepath: string) {    
-        // 获取文件对象并更新内容
+        // Get the file object and update the content
         const file = this.app.vault.getAbstractFileByPath(filepath)
-        const content = await this.app.vault.read(file)
+        // Check if the returned file is a TFile
+        let content
+        if(file instanceof TFile){
+            content = await this.app.vault.read(file)
+        }else{
+            return
+        }
     
         const lines = content.split('\n')
         let modified = false
     
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i]
-            if(!this.plugin.taskParser.isMarkdownTask(line)){
+            if(!this.plugin.taskParser?.isMarkdownTask(line)){
                 //console.log(line)
                 console.log("It is not a markdown task.")
                 continue;
             }
             //if content is empty
-            if(this.plugin.taskParser.getTaskContentFromLineText(line) == ""){
+            if(this.plugin.taskParser?.getTaskContentFromLineText(line) == ""){
                 console.log("Line content is empty")
                 continue;
             }
-            if (!this.plugin.taskParser.hasTodoistId(line) && !this.plugin.taskParser.hasTodoistTag(line)) {
-                //console.log(line)
-                console.log('prepare to add todoist tag')
-                const newLine = this.plugin.taskParser.addTodoistTag(line);
-                console.log(newLine)
+            if (!this.plugin.taskParser?.hasTodoistId(line) && !this.plugin.taskParser?.hasTodoistTag(line)) {
+                const newLine = this.plugin.taskParser?.addTodoistTag(line);
                 lines[i] = newLine
                 modified = true
             }
@@ -143,9 +122,9 @@ export class FileOperation   {
             await this.app.vault.modify(file, newContent)
 
             //update filemetadate
-            const metadata = await this.plugin.cacheOperation.getFileMetadata(filepath)
+            const metadata = await this.plugin.cacheOperation?.getFileMetadata(filepath)
             if(!metadata){
-                await this.plugin.cacheOperation.newEmptyFileMetadata(filepath)
+                await this.plugin.cacheOperation?.newEmptyFileMetadata(filepath)
             }
 
         }
@@ -155,27 +134,33 @@ export class FileOperation   {
 
     //add todoist at the line
     async addTodoistLinkToFile(filepath: string) {    
-        // 获取文件对象并更新内容
+        // Get the file object and update the content
         const file = this.app.vault.getAbstractFileByPath(filepath)
-        const content = await this.app.vault.read(file)
+        // Check if the returned file is a TFile
+        let content
+        if(file instanceof TFile){
+            content = await this.app.vault.read(file)
+        }else{
+            return
+        }
     
         const lines = content.split('\n')
         let modified = false
     
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i]
-            if (this.plugin.taskParser?.hasTodoistId(line) && this.plugin.taskParser.hasTodoistTag(line)) {
-                if(this.plugin.taskParser && this.plugin.taskParser.hasTodoistLink(line)){
+            if (this.plugin.taskParser?.hasTodoistId(line) && this.plugin.taskParser?.hasTodoistTag(line)) {
+                if(this.plugin.taskParser && this.plugin.taskParser?.hasTodoistLink(line)){
                     if(this.plugin.settings.debugMode){console.log(`Todoist link already exists in line: ${line}`)}
                     return
                 }
                 if(this.plugin.settings.debugMode){console.log(`Content for line is: ${line}`)}
                 //console.log('prepare to add todoist link')
-                const taskID = this.plugin.taskParser.getTodoistIdFromLineText(line)
+                const taskID = this.plugin.taskParser?.getTodoistIdFromLineText(line)
                 const taskObject = this.plugin.cacheOperation?.loadTaskFromCacheyID(taskID)
                 const todoistLink = taskObject.url
                 const link = `[link](${todoistLink})`
-                const newLine = this.plugin.taskParser.addTodoistLink(line,link)
+                const newLine = this.plugin.taskParser?.addTodoistLink(line,link)
                 if(this.plugin.settings.debugMode){console.log(`Content for newLine is: ${newLine}`)}
                 lines[i] = newLine
                 modified = true
@@ -199,27 +184,33 @@ export class FileOperation   {
     async addTodoistTagToLine(filepath:string,lineText:string,lineNumber:number,fileContent:string) {    
         // 获取文件对象并更新内容
         const file = this.app.vault.getAbstractFileByPath(filepath)
-        const content = fileContent
+        // const content = fileContent
+        // Check if the returned file is a TFile
+        let content
+        if(file instanceof TFile){
+            content = fileContent
+        }else{
+            return
+        }
     
         const lines = content.split('\n')
         let modified = false
-    
-        
+
         const line = lineText
-        if(!this.plugin.taskParser.isMarkdownTask(line)){
+        if(!this.plugin.taskParser?.isMarkdownTask(line)){
             //console.log(line)
             //console.log("It is not a markdown task.")
             return;
         }
         //if content is empty
-        if(this.plugin.taskParser.getTaskContentFromLineText(line) == ""){
+        if(this.plugin.taskParser?.getTaskContentFromLineText(line) == ""){
             //console.log("Line content is empty")
             return;
         }
-        if (!this.plugin.taskParser.hasTodoistId(line) && !this.plugin.taskParser.hasTodoistTag(line)) {
+        if (!this.plugin.taskParser?.hasTodoistId(line) && !this.plugin.taskParser?.hasTodoistTag(line)) {
             //console.log(line)
             //console.log('prepare to add todoist tag')
-            const newLine = this.plugin.taskParser.addTodoistTag(line);
+            const newLine = this.plugin.taskParser?.addTodoistTag(line);
             //console.log(newLine)
             lines[lineNumber] = newLine
             modified = true
@@ -233,32 +224,39 @@ export class FileOperation   {
             await this.app.vault.modify(file, newContent)
 
             //update filemetadate
-            const metadata = await this.plugin.cacheOperation.getFileMetadata(filepath)
+            const metadata = await this.plugin.cacheOperation?.getFileMetadata(filepath)
             if(!metadata){
-                await this.plugin.cacheOperation.newEmptyFileMetadata(filepath)
+                await this.plugin.cacheOperation?.newEmptyFileMetadata(filepath)
             }
 
         }
     }
 
     // sync updated task content  to file
-    async syncUpdatedTaskContentToTheFile(evt:Object) {
+    async syncUpdatedTaskContentToTheFile(evt:{object_id:string,extra_data:{content:string}}) {
         const taskId = evt.object_id
         // 获取任务文件路径
-        const currentTask = await this.plugin.cacheOperation.loadTaskFromCacheyID(taskId)
+        const currentTask = await this.plugin.cacheOperation?.loadTaskFromCacheyID(taskId)
         const filepath = currentTask.path
     
         // 获取文件对象并更新内容
         const file = this.app.vault.getAbstractFileByPath(filepath)
-        const content = await this.app.vault.read(file)
+        // const content = await this.app.vault.read(file)
+
+        let content
+        if(file instanceof TFile){
+            content = await this.app.vault.read(file)
+        }else{
+            return
+        }
     
         const lines = content.split('\n')
         let modified = false
     
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i]
-            if (line.includes(taskId) && this.plugin.taskParser.hasTodoistTag(line)) {
-                const oldTaskContent = this.plugin.taskParser.getTaskContentFromLineText(line)
+            if (line.includes(taskId) && this.plugin.taskParser?.hasTodoistTag(line)) {
+                const oldTaskContent = this.plugin.taskParser?.getTaskContentFromLineText(line)
                 const newTaskContent = evt.extra_data.content
 
                 lines[i] = line.replace(oldTaskContent, newTaskContent)
@@ -276,19 +274,25 @@ export class FileOperation   {
     }
 
     // sync updated task due date  to the file
-    async syncUpdatedTaskDueDateToTheFile(evt:Object) {
+    async syncUpdatedTaskDueDateToTheFile(evt:{object_id:string,extra_data:{due_date:string}}) {
         const taskId = evt.object_id
         
         if (this.plugin.settings.debugMode){console.log("The taskID evt object value is: " + JSON.stringify(evt))}
         
 
         // 获取任务文件路径
-        const currentTask = await this.plugin.cacheOperation.loadTaskFromCacheyID(taskId)
+        const currentTask = await this.plugin.cacheOperation?.loadTaskFromCacheyID(taskId)
         const filepath = currentTask.path
     
         // 获取文件对象并更新内容
         const file = this.app.vault.getAbstractFileByPath(filepath)
-        const content = await this.app.vault.read(file)
+        // const content = await this.app.vault.read(file)
+        let content
+        if(file instanceof TFile){
+            content = await this.app.vault.read(file)
+        }else{
+            return
+        }
     
         const lines = content.split('\n')
         let modified = false
@@ -296,14 +300,14 @@ export class FileOperation   {
         for (let i = 0; i < lines.length; i++) {
         const line = lines[i]
 
-        if (line.includes(taskId) && this.plugin.taskParser.hasTodoistTag(line)) {
-            const lineTaskDueDate = this.plugin.taskParser.getDueDateFromLineText(line) || ""
-            const newTaskDueDate = this.plugin.taskParser.ISOStringToLocalDateString(evt.extra_data.due_date) || ""
+        if (line.includes(taskId) && this.plugin.taskParser?.hasTodoistTag(line)) {
+            const lineTaskDueDate = this.plugin.taskParser?.getDueDateFromLineText(line) || ""
+            const newTaskDueDate = this.plugin.taskParser?.ISOStringToLocalDateString(evt.extra_data.due_date) || ""
 
             
-            const lineTaskTime = this.plugin.taskParser.getDueTimeFromLineText(line) || ""
+            const lineTaskTime = this.plugin.taskParser?.getDueTimeFromLineText(line) || ""
             
-            const newTaskTime = this.plugin.taskParser.ISOStringToLocalClockTimeString(evt.extra_data.due_date) || ""
+            const newTaskTime = this.plugin.taskParser?.ISOStringToLocalClockTimeString(evt.extra_data.due_date) || ""
             // TODO needs to consider what to do when the task doesn't have time
             // TODO how to handle when the task has the new "timeslot" with start + finish time?
             // TODO 'trimmedlineTaskDueDate' looks just for the date, removing any other information, like hour. This very likely will break some dates sometimes, need a more inteligent solution
@@ -316,13 +320,13 @@ export class FileOperation   {
  
             if(this.plugin.taskParser && lineTaskDueDate === ""){
                 if(this.plugin.settings.debugMode){console.log("Task doesn't have a due date, it will attempt to add one.")}
-                lines[i] = this.plugin.taskParser.insertDueDateBeforeTodoist(line,newTaskDueDate)
+                lines[i] = this.plugin.taskParser?.insertDueDateBeforeTodoist(line,newTaskDueDate)
                 modified = true
             }
 
             else if(newTaskDueDate === ""){
                 //remove 日期from text
-                const regexRemoveDate = /(🗓️|📅|📆|🗓)\s?\d{4}-\d{2}-\d{2}/; //匹配日期🗓️2023-03-07"
+                const regexRemoveDate = /(🗓️|📅|📆|🗓|@)\s?\d{4}-\d{2}-\d{2}/; //匹配日期🗓️2023-03-07"
                 lines[i] = line.replace(regexRemoveDate,"")
                 modified = true
             }
@@ -359,7 +363,7 @@ export class FileOperation   {
 
 
     // sync new task note to file
-    async syncAddedTaskNoteToTheFile(evt:Object) {
+    async syncAddedTaskNoteToTheFile(evt:{parent_item_id:string,event_date:string,extra_data:{content:string,event_date:string}}) {
 
 
         if (this.plugin.settings.debugMode) {
@@ -368,21 +372,27 @@ export class FileOperation   {
 
         const taskId = evt.parent_item_id
         const note = evt.extra_data.content
-        const datetime = this.plugin.taskParser.ISOStringToLocalDatetimeString(evt.event_date)
+        const datetime = this.plugin.taskParser?.ISOStringToLocalDatetimeString(evt.event_date)
         // 获取任务文件路径
-        const currentTask = await this.plugin.cacheOperation.loadTaskFromCacheyID(taskId)
+        const currentTask = await this.plugin.cacheOperation?.loadTaskFromCacheyID(taskId)
         const filepath = currentTask.path
     
         // 获取文件对象并更新内容
         const file = this.app.vault.getAbstractFileByPath(filepath)
-        const content = await this.app.vault.read(file)
+        // const content = await this.app.vault.read(file)
+        let content
+        if(file instanceof TFile){
+            content = await this.app.vault.read(file)
+        }else{
+            return
+        }
     
         const lines = content.split('\n')
         let modified = false
     
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i]
-            if (line.includes(taskId) && this.plugin.taskParser.hasTodoistTag(line)) {
+            if (line.includes(taskId) && this.plugin.taskParser?.hasTodoistTag(line)) {
                 const indent = '\t'.repeat(line.length - line.trimStart().length + 1);
                 const noteLine = `${indent}- ${datetime} ${note}`;
                 lines.splice(i + 1, 0, noteLine);
@@ -412,7 +422,13 @@ export class FileOperation   {
     async readContentFromFilePath(filepath:string){
         try {
             const file = this.app.vault.getAbstractFileByPath(filepath);
-            const content = await this.app.vault.read(file);
+            // const content = await this.app.vault.read(file);
+            let content
+            if(file instanceof TFile){
+                content = await this.app.vault.read(file)
+            }else{
+                return
+            }
             return content
         } catch (error) {
             console.error(`Error loading content from ${filepath}: ${error}`);
@@ -421,20 +437,33 @@ export class FileOperation   {
     }
 
     //get line text from file path
-    //请使用 view.editor.getLine，read 方法有延迟
-    async getLineTextFromFilePath(filepath:string,lineNumber:string) {
+    //Please use view.editor.getLine，read Method has delay
+    async getLineTextFromFilePath(filepath:string,lineNumber:number) {
 
         const file = this.app.vault.getAbstractFileByPath(filepath)
-        const content = await this.app.vault.read(file)
+        // const content = await this.app.vault.read(file)
+        let content
+        if(file instanceof TFile){
+            content = await this.app.vault.read(file)
+        }else{
+            return
+        }
     
         const lines = content.split('\n')
         return(lines[lineNumber])
     }
   
     //search todoist_id by content
-    async searchTodoistIdFromFilePath(filepath: string, searchTerm: string): string | null {
+    async searchTodoistIdFromFilePath(filepath: string, searchTerm: string): Promise<string | null> {
         const file = this.app.vault.getAbstractFileByPath(filepath)
-        const fileContent = await this.app.vault.read(file)
+        // const fileContent = await this.app.vault.read(file)
+        // const content = await this.app.vault.read(file);
+        let fileContent
+        if(file instanceof TFile){
+            fileContent = await this.app.vault.read(file)
+        }else{
+            fileContent = ""
+        }
         const fileLines = fileContent.split('\n');
         let todoistId: string | null = null;
     
@@ -489,7 +518,7 @@ export class FileOperation   {
         let extension = filename.split('.').pop();
       
         // 将扩展名转换为小写（Markdown文件的扩展名通常是.md）
-        extension = extension.toLowerCase();
+        extension = extension?.toLowerCase();
       
         // 判断扩展名是否为.md
         if (extension === 'md') {

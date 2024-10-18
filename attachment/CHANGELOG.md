@@ -1,6 +1,14 @@
 ## CHANGELOG
 
-### 2024-10-
+### 2024-10-18
+#### 0.3.2
+- Fixed an issue with the `hasTodoistId` function where was failing.
+- Fixed more errors on files, most of the taskParser.ts is done
+- Removed most of the Console.log that were not behind the debugMode
+- 
+
+
+### 2024-10-15
 #### 0.3.1
 - Removing a lot of unused code and fixing errors, mostly on taskParser.ts
 - Fixed the issue#3 where a task without duedate, when received the date from Todoist, break
