@@ -1,4 +1,4 @@
-import { App} from 'obsidian';
+import { App, requestUrl } from 'obsidian';
 import AnotherSimpleTodoistSync from "../main";
 
 
@@ -19,18 +19,18 @@ type FilterOptions = {
   object_type?: string;
 };
 
-export class TodoistSyncAPI   {
-	app:App;
+export class TodoistSyncAPI {
+  app: App;
   plugin: AnotherSimpleTodoistSync;
 
-	constructor(app:App, plugin:AnotherSimpleTodoistSync) {
-		//super(app,settings);
-		this.app = app;
+  constructor(app: App, plugin: AnotherSimpleTodoistSync) {
+    //super(app,settings);
+    this.app = app;
     this.plugin = plugin;
-	}
+  }
 
-    //backup todoist
-    async getAllResources() { 
+  //backup todoist
+  async getAllResources() {
     const accessToken = this.plugin.settings.todoistAPIToken
     const url = 'https://api.todoist.com/sync/v9/sync';
     const options = {
@@ -44,318 +44,322 @@ export class TodoistSyncAPI   {
         resource_types: '["all"]'
       })
     };
-  
+
     try {
       const response = await fetch(url, options);
-  
+
       if (!response.ok) {
         throw new Error(`Failed to fetch all resources: ${response.status} ${response.statusText}`);
       }
-  
+
       const data = await response.json();
-  
+
       return data;
     } catch (error) {
       console.error(error);
       throw new Error('Failed to fetch all resources due to network error');
     }
-    }
+  }
 
-    //backup todoist
-    async getUserResource() { 
-      const accessToken = this.plugin.settings.todoistAPIToken
-      const url = 'https://api.todoist.com/sync/v9/sync';
-      const options = {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: new URLSearchParams({
-          sync_token: "*",
-          resource_types: '["user_plan_limits"]'
-        })
-      };
-    
-      try {
-        const response = await fetch(url, options);
-    
-        if (!response.ok) {
-          throw new Error(`Failed to fetch all resources: ${response.status} ${response.statusText}`);
-        }
-    
-        const data = await response.json();
-        console.log(data)
-        return data;
-      } catch (error) {
-        console.error(error);
-        throw new Error('Failed to fetch user resources due to network error');
-      }
-      }
-
-
-
-      //update user timezone
-      async updateUserTimezone() { 
-        const unixTimestampString: string = Math.floor(Date.now() / 1000).toString();
-        const accessToken = this.plugin.settings.todoistAPIToken
-        const url = 'https://api.todoist.com/sync/v9/sync';
-        const commands = [
-          {
-            'type': "user_update",
-            'uuid': unixTimestampString,
-            'args': { 'timezone': 'Asia/Shanghai' },
-          },
-        ];
-        const options = {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: new URLSearchParams({ commands: JSON.stringify(commands) })
-        };
-      
-        try {
-          const response = await fetch(url, options);
-      
-          if (!response.ok) {
-            throw new Error(`Failed to fetch all resources: ${response.status} ${response.statusText}`);
-          }
-      
-          const data = await response.json();
-          console.log(data)
-          return data;
-        } catch (error) {
-          console.error(error);
-          throw new Error('Failed to fetch user resources due to network error');
-        }
-        }
-  
-    //get activity logs
-    //result  {count:number,events:[]}
-    async getAllActivityEvents() {
+  //backup todoist
+  async getUserResource() {
     const accessToken = this.plugin.settings.todoistAPIToken
-      const headers = new Headers({
-        Authorization: `Bearer ${accessToken}`
-      });
-    
-      try {
-        const response = await fetch('https://api.todoist.com/sync/v9/activity/get', {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({})
-        });
-    
-        if (!response.ok) {
-          throw new Error(`API returned error status: ${response.status}`);
-        }
-    
-        const data = await response.json();
-    
-        return data;
-      } catch (error) {
-        throw error;
-      }
-    }
-
-    async getNonObsidianAllActivityEvents() {
-      try{
-        const allActivity = await this.getAllActivityEvents()
-        //console.log(allActivity)
-        const allActivityEvents = allActivity.events
-        //client中不包含obsidian 的activity
-        const filteredArray = allActivityEvents.filter(obj => !obj.extra_data.client?.includes("obsidian")); 
-        //console.log(filteredArray)
-        return(filteredArray)
-
-      }catch(err){
-        console.error('An error occurred:', err);
-      }
-
-    }
-  
-  
-
-    
-
-    filterActivityEvents(events: Event[], options: FilterOptions): Event[] {
-      return events.filter(event => 
-        (options.event_type ? event.event_type === options.event_type : true) &&
-        (options.object_type ? event.object_type === options.object_type : true)
-    
-        );
+    const url = 'https://api.todoist.com/sync/v9/sync';
+    const options = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        sync_token: "*",
+        resource_types: '["user_plan_limits"]'
+      })
     };
 
-    //get completed items activity
-    //result  {count:number,events:[]}
-    async getCompletedItemsActivity() {
-        const accessToken = this.plugin.settings.todoistAPIToken
-        const url = 'https://api.todoist.com/sync/v9/activity/get';
-        const options = {
-            method: 'POST',
-            headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: new URLSearchParams({
-            'object_type': 'item',
-            'event_type': 'completed'
-            })
-        };
-        
-        try {
-            const response = await fetch(url, options);
-        
-            if (!response.ok) {
-            throw new Error(`Failed to fetch completed items: ${response.status} ${response.statusText}`);
-            }
-        
-            const data = await response.json();
-        
-            return data;
-        } catch (error) {
-            console.error(error);
-            throw new Error('Failed to fetch completed items due to network error');
-        }
-    }
-  
-  
-  
-    //get uncompleted items activity
-    //result  {count:number,events:[]}
-    async getUncompletedItemsActivity() {
-        const accessToken = this.plugin.settings.todoistAPIToken
-        const url = 'https://api.todoist.com/sync/v9/activity/get';
-        const options = {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: new URLSearchParams({
-            'object_type': 'item',
-            'event_type': 'uncompleted'
-        })
-        };
-    
-        try {
-        const response = await fetch(url, options);
-    
-        if (!response.ok) {
-            throw new Error(`Failed to fetch uncompleted items: ${response.status} ${response.statusText}`);
-        }
-    
-        const data = await response.json();
-    
-        return data;
-        } catch (error) {
-        console.error(error);
-        throw new Error('Failed to fetch uncompleted items due to network error');
-        }
-    }
-  
-  
-    //get non-obsidian completed event
-    async getNonObsidianCompletedItemsActivity() {
-        const accessToken = this.plugin.settings.todoistAPIToken
-        const completedItemsActivity = await this.getCompletedItemsActivity()
-        const completedItemsActivityEvents = completedItemsActivity.events
-        //client中不包含obsidian 的activity
-        const filteredArray = completedItemsActivityEvents.filter(obj => !obj.extra_data.client.includes("obsidian")); 
-        return(filteredArray)     
-    }
-  
-  
-    //get non-obsidian uncompleted event
-    async  getNonObsidianUncompletedItemsActivity() {
-        const uncompletedItemsActivity = await this.getUncompletedItemsActivity()
-        const uncompletedItemsActivityEvents = uncompletedItemsActivity.events
-        //client中不包含obsidian 的activity
-        const filteredArray = uncompletedItemsActivityEvents.filter(obj => !obj.extra_data.client.includes("obsidian")); 
-        return(filteredArray) 
-    }
-  
-  
-    //get updated items activity
-    //result  {count:number,events:[]}
-    async  getUpdatedItemsActivity() {
-        const accessToken = this.plugin.settings.todoistAPIToken
-        const url = 'https://api.todoist.com/sync/v9/activity/get';
-        const options = {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: new URLSearchParams({
-            'object_type': 'item',
-            'event_type': 'updated'
-        })
-        };
-    
-        try {
-        const response = await fetch(url, options);
-    
-        if (!response.ok) {
-            throw new Error(`Failed to fetch updated items: ${response.status} ${response.statusText}`);
-        }
-    
-        const data = await response.json();
-        //console.log(data)
-        return data;
-        } catch (error) {
-        console.error(error);
-        throw new Error('Failed to fetch updated items due to network error');
-        }
-    }
-  
-  
-    //get non-obsidian updated event
-    async  getNonObsidianUpdatedItemsActivity() {
-        const updatedItemsActivity = await this.getUpdatedItemsActivity()
-        const updatedItemsActivityEvents = updatedItemsActivity.events
-        //client中不包含obsidian 的activity
-        const filteredArray = updatedItemsActivityEvents.filter(obj => {
-          const client = obj.extra_data && obj.extra_data.client;
-          return !client || !client.includes("obsidian");
-        });
-        return(filteredArray)
-    }
+    try {
+      const response = await fetch(url, options);
 
-
-        //get completed items activity
-    //result  {count:number,events:[]}
-    async getProjectsActivity() {
-      const accessToken = this.plugin.settings.todoistAPIToken
-      const url = 'https://api.todoist.com/sync/v9/activity/get';
-      const options = {
-          method: 'POST',
-          headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: new URLSearchParams({
-          'object_type': 'project'
-          })
-      };
-      
-      try {
-          const response = await fetch(url, options);
-      
-          if (!response.ok) {
-          throw new Error(`Failed to fetch  projects activities: ${response.status} ${response.statusText}`);
-          }
-      
-          const data = await response.json();
-      
-          return data;
-      } catch (error) {
-          console.error(error);
-          throw new Error('Failed to fetch projects activities due to network error');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch all resources: ${response.status} ${response.statusText}`);
       }
+
+      const data = await response.json();
+      console.log(data)
+      return data;
+    } catch (error) {
+      console.error(error);
+      throw new Error('Failed to fetch user resources due to network error');
+    }
   }
-     
+
+
+
+  //update user timezone
+  async updateUserTimezone() {
+    const unixTimestampString: string = Math.floor(Date.now() / 1000).toString();
+    const accessToken = this.plugin.settings.todoistAPIToken
+    const url = 'https://api.todoist.com/sync/v9/sync';
+    const commands = [
+      {
+        'type': "user_update",
+        'uuid': unixTimestampString,
+        'args': { 'timezone': 'Asia/Shanghai' },
+      },
+    ];
+    const options = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({ commands: JSON.stringify(commands) })
+    };
+
+    try {
+      const response = await fetch(url, options);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch all resources: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log(data)
+      return data;
+    } catch (error) {
+      console.error(error);
+      throw new Error('Failed to fetch user resources due to network error');
+    }
+  }
+
+  //get activity logs
+  //result  {count:number,events:[]}
+  async getAllActivityEvents() {
+    const accessToken = this.plugin.settings.todoistAPIToken;
+
+    try {
+      const response = await requestUrl({
+        url: 'https://api.todoist.com/sync/v9/activity/get',
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+      });
+
+      // Check if the HTTP status code indicates an error.
+      if (response.status >= 400) {
+        throw new Error(`API returned error status: ${response.status}`);
+      }
+
+      // Extract the JSON data from the response.
+      const data = response.json;
+
+      return data;
+    } catch (error) {
+      console.error('Failed to fetch data from Todoist API:', error);
+      throw new Error('Could not retrieve activity data. Please try again later.');
+    }
+  }
+
+  async getNonObsidianAllActivityEvents() {
+    try {
+      const allActivity = await this.getAllActivityEvents()
+      //console.log(allActivity)
+      const allActivityEvents = allActivity.events
+      //client中不包含obsidian 的activity
+      const filteredArray = allActivityEvents.filter((obj: Event) => !obj.extra_data.client?.includes("obsidian"));
+      //console.log(filteredArray)
+      return (filteredArray)
+
+    } catch (err) {
+      console.error('An error occurred:', err);
+    }
+
+  }
+
+
+
+
+
+  filterActivityEvents(events: Event[], options: FilterOptions): Event[] {
+    return events.filter(event =>
+      (options.event_type ? event.event_type === options.event_type : true) &&
+      (options.object_type ? event.object_type === options.object_type : true)
+
+    );
+  }
+
+  //get completed items activity
+  //result  {count:number,events:[]}
+  async getCompletedItemsActivity() {
+    const accessToken = this.plugin.settings.todoistAPIToken
+    const url = 'https://api.todoist.com/sync/v9/activity/get';
+    const options = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        'object_type': 'item',
+        'event_type': 'completed'
+      })
+    };
+
+    try {
+      const response = await fetch(url, options);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch completed items: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      return data;
+    } catch (error) {
+      console.error(error);
+      throw new Error('Failed to fetch completed items due to network error');
+    }
+  }
+
+
+
+  //get uncompleted items activity
+  //result  {count:number,events:[]}
+  async getUncompletedItemsActivity() {
+    const accessToken = this.plugin.settings.todoistAPIToken
+    const url = 'https://api.todoist.com/sync/v9/activity/get';
+    const options = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        'object_type': 'item',
+        'event_type': 'uncompleted'
+      })
+    };
+
+    try {
+      const response = await fetch(url, options);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch uncompleted items: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      return data;
+    } catch (error) {
+      console.error(error);
+      throw new Error('Failed to fetch uncompleted items due to network error');
+    }
+  }
+
+
+  //get non-obsidian completed event
+  async getNonObsidianCompletedItemsActivity() {
+    // const accessToken = this.plugin.settings.todoistAPIToken
+    const completedItemsActivity = await this.getCompletedItemsActivity()
+    const completedItemsActivityEvents = completedItemsActivity.events
+    //client中不包含obsidian 的activity
+    const filteredArray = completedItemsActivityEvents.filter((obj: { extra_data: { client: string } }) => !obj.extra_data.client.includes("obsidian"));
+    return (filteredArray)
+  }
+
+
+  //get non-obsidian uncompleted event
+  async getNonObsidianUncompletedItemsActivity() {
+    const uncompletedItemsActivity = await this.getUncompletedItemsActivity()
+    const uncompletedItemsActivityEvents = uncompletedItemsActivity.events
+    //client中不包含obsidian 的activity
+    const filteredArray = uncompletedItemsActivityEvents.filter((obj: { extra_data: { client: string } }) => !obj.extra_data.client.includes("obsidian"));
+    return (filteredArray)
+  }
+
+
+  //get updated items activity
+  //result  {count:number,events:[]}
+  async getUpdatedItemsActivity() {
+    const accessToken = this.plugin.settings.todoistAPIToken
+    const url = 'https://api.todoist.com/sync/v9/activity/get';
+    const options = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        'object_type': 'item',
+        'event_type': 'updated'
+      })
+    };
+
+    try {
+      const response = await fetch(url, options);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch updated items: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      //console.log(data)
+      return data;
+    } catch (error) {
+      console.error(error);
+      throw new Error('Failed to fetch updated items due to network error');
+    }
+  }
+
+
+  //get non-obsidian updated event
+  async getNonObsidianUpdatedItemsActivity() {
+    const updatedItemsActivity = await this.getUpdatedItemsActivity()
+    const updatedItemsActivityEvents = updatedItemsActivity.events
+    //client中不包含obsidian 的activity
+    const filteredArray = updatedItemsActivityEvents.filter((obj: { extra_data: { client?: string } }) => {
+      const client = obj.extra_data && obj.extra_data.client;
+      return !client || !client.includes("obsidian");
+    });
+    return (filteredArray)
+  }
+
+
+  //get completed items activity
+  //result  {count:number,events:[]}
+  async getProjectsActivity() {
+    const accessToken = this.plugin.settings.todoistAPIToken
+    const url = 'https://api.todoist.com/sync/v9/activity/get';
+    const options = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        'object_type': 'project'
+      })
+    };
+
+    try {
+      const response = await fetch(url, options);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch  projects activities: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      return data;
+    } catch (error) {
+      console.error(error);
+      throw new Error('Failed to fetch projects activities due to network error');
+    }
+  }
+
 }
 
 

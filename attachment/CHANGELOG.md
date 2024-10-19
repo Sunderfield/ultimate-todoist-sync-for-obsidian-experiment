@@ -1,6 +1,12 @@
 ## CHANGELOG
 
 ### 2024-10-18
+#### 0.3.3
+- Change the request method to requestURL (following [this rec](https://github.com/obsidianmd/obsidian-releases/pull/4302#issuecomment-2387574679))
+- Hunting down more lost console.logs
+- Cleaned errors on todoistSyncAPI and syncModule.ts
+
+### 2024-10-18
 #### 0.3.2
 - Fixed an issue with the `hasTodoistId` function where was failing.
 - Fixed more errors on files, most of the taskParser.ts is done
