@@ -1,8 +1,8 @@
-import { MarkdownView, Notice, Plugin ,Editor} from 'obsidian';
+import { MarkdownView, Notice, Plugin, Editor } from 'obsidian';
 
 
 //settings
-import { UltimateTodoistSyncSettings as AnotherSimpleTodoistSyncSettings,DEFAULT_SETTINGS,UltimateTodoistSyncSettingTab } from './src/settings';
+import { UltimateTodoistSyncSettings as AnotherSimpleTodoistSyncSettings, DEFAULT_SETTINGS, UltimateTodoistSyncSettingTab } from './src/settings';
 //todoist  api
 import { TodoistRestAPI } from './src/todoistRestAPI';
 import { TodoistSyncAPI } from './src/todoistSyncAPI';
@@ -22,13 +22,13 @@ import { SetDefalutProjectInTheFilepathModal } from 'src/modal';
 
 export default class AnotherSimpleTodoistSync extends Plugin {
 	settings: AnotherSimpleTodoistSyncSettings;
-    todoistRestAPI: TodoistRestAPI | undefined;
-    todoistSyncAPI: TodoistSyncAPI | undefined;
-    taskParser: TaskParser | undefined;
-    cacheOperation: CacheOperation | undefined;
-    fileOperation: FileOperation | undefined;
-    todoistSync: TodoistSync | undefined;
-	lastLines: Map<string,number>;
+	todoistRestAPI: TodoistRestAPI | undefined;
+	todoistSyncAPI: TodoistSyncAPI | undefined;
+	taskParser: TaskParser | undefined;
+	cacheOperation: CacheOperation | undefined;
+	fileOperation: FileOperation | undefined;
+	todoistSync: TodoistSync | undefined;
+	lastLines: Map<string, number>;
 	statusBar;
 	syncLock: Boolean;
 
@@ -36,7 +36,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 
 		const isSettingsLoaded = await this.loadSettings();
 
-		if(!isSettingsLoaded){
+		if (!isSettingsLoaded) {
 			new Notice('Settings failed to load.Please reload the ultimate todoist sync plugin.');
 			return;
 		}
@@ -45,7 +45,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 		if (!this.settings.todoistAPIToken) {
 			new Notice('Please enter your Todoist API.');
 			//return	   
-		}else{
+		} else {
 			await this.initializePlugin();
 		}
 
@@ -53,12 +53,12 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 		this.lastLines = new Map();
 
 		//key 事件监听，判断换行和删除
-		this.registerDomEvent(document, 'keyup', async (evt: KeyboardEvent) =>{
-			if(!this.settings.apiInitialized){
+		this.registerDomEvent(document, 'keyup', async (evt: KeyboardEvent) => {
+			if (!this.settings.apiInitialized) {
 				return
 			}
 			//console.log(`key pressed`)
-						
+
 			//判断点击事件发生的区域,如果不在编辑器中，return
 			if (!(this.app.workspace.activeEditor?.editor?.hasFocus())) {
 				// (console.log(`editor is not focused`))
@@ -66,36 +66,36 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			}
 			const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 			const editor = view?.app.workspace.activeEditor?.editor
-	
-			if (evt.key === 'ArrowUp' || evt.key === 'ArrowDown' || evt.key === 'ArrowLeft' || evt.key === 'ArrowRight' ||evt.key === 'PageUp' || evt.key === 'PageDown') {
+
+			if (evt.key === 'ArrowUp' || evt.key === 'ArrowDown' || evt.key === 'ArrowLeft' || evt.key === 'ArrowRight' || evt.key === 'PageUp' || evt.key === 'PageDown') {
 				//console.log(`${evt.key} arrow key is released`);
-				if(!( this.checkModuleClass())){
+				if (!(this.checkModuleClass())) {
 					return
 				}
 				this.lineNumberCheck()
 			}
-			if(evt.key === "Delete" || evt.key === "Backspace"){
-				try{
+			if (evt.key === "Delete" || evt.key === "Backspace") {
+				try {
 					//console.log(`${evt.key} key is released`);
-					if(!( this.checkModuleClass())){
+					if (!(this.checkModuleClass())) {
 						return
 					}
 					if (!await this.checkAndHandleSyncLock()) return;
 					await this.todoistSync.deletedTaskCheck();
 					this.syncLock = false;
-					this.saveSettings()	
-				}catch(error){
+					this.saveSettings()
+				} catch (error) {
 					console.error(`An error occurred while deleting tasks: ${error}`);
 					this.syncLock = false
 				}
-	
+
 			}
 		});
 
 		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
 		// Using this function will automatically remove the event listener when this plugin is disabled.
 		this.registerDomEvent(document, 'click', async (evt: MouseEvent) => {
-			if(!this.settings.apiInitialized){
+			if (!this.settings.apiInitialized) {
 				return
 			}
 			//console.log('click', evt);
@@ -105,14 +105,14 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 				const editor = this.app.workspace.activeEditor?.editor
 				this.lineNumberCheck()
 			}
-			else{
+			else {
 				//
 			}
 
 			const target = evt.target as HTMLInputElement;
 
 			if (target.type === "checkbox") {
-				if(!(this.checkModuleClass())){
+				if (!(this.checkModuleClass())) {
 					return
 				}
 				this.checkboxEventhandle(evt)
@@ -125,25 +125,25 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 
 
 		//hook editor-change 事件，如果当前line包含 #todoist,说明有new task
-		this.registerEvent(this.app.workspace.on('editor-change',async (editor,view:MarkdownView)=>{
-			try{
-				if(!this.settings.apiInitialized){
+		this.registerEvent(this.app.workspace.on('editor-change', async (editor, view: MarkdownView) => {
+			try {
+				if (!this.settings.apiInitialized) {
 					return
 				}
-	
+
 				this.lineNumberCheck()
-				if(!(this.checkModuleClass())){
+				if (!(this.checkModuleClass())) {
 					return
 				}
-				if(this.settings.enableFullVaultSync){
+				if (this.settings.enableFullVaultSync) {
 					return
 				}
 				if (!await this.checkAndHandleSyncLock()) return;
-				await this.todoistSync.lineContentNewTaskCheck(editor,view)
+				await this.todoistSync.lineContentNewTaskCheck(editor, view)
 				this.syncLock = false
 				this.saveSettings()
 
-			}catch(error){
+			} catch (error) {
 				console.error(`An error occurred while check new task in line: ${error.message}`);
 				this.syncLock = false
 			}
@@ -152,66 +152,66 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 
 
 
-/* 使用其他文件管理器移动，obsidian触发了删除事件，删除了所有的任务
-		//监听删除事件，当文件被删除后，读取frontMatter中的tasklist,批量删除
-		this.registerEvent(this.app.metadataCache.on('deleted', async(file,prevCache) => {
-			try{
-				if(!this.settings.apiInitialized){
-					return
-				}
-				//console.log('a new file has modified')
-				console.log(`file deleted`)
-				//读取frontMatter
-				const frontMatter = await this.cacheOperation.getFileMetadata(file.path)
-				if(frontMatter === null || frontMatter.todoistTasks === undefined){
-					console.log('There is no task in the deleted files.')
-					return
-				}
-				//判断todoistTasks是否为null
-				console.log(frontMatter.todoistTasks)
-				if(!( this.checkModuleClass())){
-						return
-				}
-				if (!await this.checkAndHandleSyncLock()) return;
-				await this.todoistSync.deleteTasksByIds(frontMatter.todoistTasks)
-				this.syncLock = false
-				this.saveSettings()
-			}catch(error){
-				console.error(`An error occurred while deleting task in the file: ${error}`);
-				this.syncLock = false
-			}
-
-			
-			
-		}));
-*/
+		/* 使用其他文件管理器移动，obsidian触发了删除事件，删除了所有的任务
+				//监听删除事件，当文件被删除后，读取frontMatter中的tasklist,批量删除
+				this.registerEvent(this.app.metadataCache.on('deleted', async(file,prevCache) => {
+					try{
+						if(!this.settings.apiInitialized){
+							return
+						}
+						//console.log('a new file has modified')
+						console.log(`file deleted`)
+						//读取frontMatter
+						const frontMatter = await this.cacheOperation.getFileMetadata(file.path)
+						if(frontMatter === null || frontMatter.todoistTasks === undefined){
+							console.log('There is no task in the deleted files.')
+							return
+						}
+						//判断todoistTasks是否为null
+						console.log(frontMatter.todoistTasks)
+						if(!( this.checkModuleClass())){
+								return
+						}
+						if (!await this.checkAndHandleSyncLock()) return;
+						await this.todoistSync.deleteTasksByIds(frontMatter.todoistTasks)
+						this.syncLock = false
+						this.saveSettings()
+					}catch(error){
+						console.error(`An error occurred while deleting task in the file: ${error}`);
+						this.syncLock = false
+					}
+		
+					
+					
+				}));
+		*/
 
 
 		//监听 rename 事件,更新 task data 中的 path
-		this.registerEvent(this.app.vault.on('rename', async (file,oldpath) => {
-			if(!this.settings.apiInitialized){
+		this.registerEvent(this.app.vault.on('rename', async (file, oldpath) => {
+			if (!this.settings.apiInitialized) {
 				return
 			}
 			// console.log(`${oldpath} is renamed`)
 			//读取frontMatter
 			//const frontMatter = await this.fileOperation.getFrontMatter(file)
-			const frontMatter =  await this.cacheOperation.getFileMetadata(oldpath)
+			const frontMatter = await this.cacheOperation.getFileMetadata(oldpath)
 			// console.log(frontMatter)
-			if(frontMatter === null || frontMatter.todoistTasks === undefined){
+			if (frontMatter === null || frontMatter.todoistTasks === undefined) {
 				//console.log('删除的文件中没有task')
 				return
 			}
-			if(!(this.checkModuleClass())){
-					return
-				}
-			await this.cacheOperation.updateRenamedFilePath(oldpath,file.path)
+			if (!(this.checkModuleClass())) {
+				return
+			}
+			await this.cacheOperation.updateRenamedFilePath(oldpath, file.path)
 			this.saveSettings()
-			
+
 			//update task description
 			if (!await this.checkAndHandleSyncLock()) return;
 			try {
 				await this.todoistSync.updateTaskDescription(file.path)
-			} catch(error) {
+			} catch (error) {
 				console.error('An error occurred in updateTaskDescription:', error);
 			}
 			this.syncLock = false;
@@ -222,28 +222,28 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 		//Listen for file modified events and execute fullTextNewTaskCheck
 		this.registerEvent(this.app.vault.on('modify', async (file) => {
 			try {
-				if(!this.settings.apiInitialized){
+				if (!this.settings.apiInitialized) {
 					return
 				}
 				const filepath = file.path
 				// console.log(`${filepath} is modified`)
 
 				//get current view
-				
+
 				const activateFile = this.app.workspace.getActiveFile()
 
 				// console.log(activateFile?.path)
 
 				//To avoid conflicts, Do not check files being edited
-				if(activateFile?.path == filepath){
+				if (activateFile?.path == filepath) {
 					return
 				}
 
 				if (!await this.checkAndHandleSyncLock()) return;
-				
+
 				await this.todoistSync.fullTextNewTaskCheck(filepath)
 				this.syncLock = false;
-			} catch(error) {
+			} catch (error) {
 				console.error(`An error occurred while modifying the file: ${error.message}`);
 				this.syncLock = false
 				// You can add further error handling logic here. For example, you may want to 
@@ -253,7 +253,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 
 		this.registerInterval(window.setInterval(async () => await this.scheduledSynchronization(), this.settings.automaticSynchronizationInterval * 1000));
 
-		this.app.workspace.on('active-leaf-change',(leaf)=>{
+		this.app.workspace.on('active-leaf-change', (leaf) => {
 			this.setStatusBarText()
 		})
 
@@ -264,12 +264,12 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			id: 'set-default-project-for-todoist-task-in-the-current-file',
 			name: 'Set default project for todoist task in the current file',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				if(!view){
+				if (!view) {
 					return
 				}
 				const filepath = view.file.path
-				new SetDefalutProjectInTheFilepathModal(this.app,this,filepath)
-				
+				new SetDefalutProjectInTheFilepathModal(this.app, this, filepath)
+
 			}
 		});
 
@@ -312,13 +312,13 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 		}
 	}
 
-	async modifyTodoistAPI(api:string){
-		await this.initializePlugin() 
+	async modifyTodoistAPI(api: string) {
+		await this.initializePlugin()
 	}
 
 	// return true of false
-	async initializePlugin(){
-		
+	async initializePlugin() {
+
 		//initialize todoist restapi 
 		this.todoistRestAPI = new TodoistRestAPI(this.app, this)
 
@@ -326,9 +326,11 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 		this.cacheOperation = new CacheOperation(this.app, this)
 		const isProjectsSaved = await this.cacheOperation.saveProjectsToCache()
 
+		const isSectionsSaved = await this.cacheOperation.saveSectionsToCache()
 
 
-		if(!isProjectsSaved){
+
+		if (!isProjectsSaved || !isSectionsSaved) {
 			this.todoistRestAPI = undefined
 			this.todoistSyncAPI = undefined
 			this.taskParser = undefined
@@ -337,29 +339,29 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			this.fileOperation = undefined
 			this.todoistSync = undefined
 			new Notice(`Ultimate Todoist Sync plugin initialization failed, please check the todoist api`)
-			return;		
+			return;
 		}
 
-		if(!this.settings.initialized){
+		if (!this.settings.initialized) {
 
 			//创建备份文件夹备份todoist 数据
-			try{
+			try {
 				//第一次启动插件，备份todoist 数据
 				this.taskParser = new TaskParser(this.app, this)
 
 				//initialize file operation
-				this.fileOperation = new FileOperation(this.app,this)
-		
+				this.fileOperation = new FileOperation(this.app, this)
+
 				//initialize todoisy sync api
-				this.todoistSyncAPI = new TodoistSyncAPI(this.app,this)
-		
+				this.todoistSyncAPI = new TodoistSyncAPI(this.app, this)
+
 				//initialize todoist sync module
-				this.todoistSync = new TodoistSync(this.app,this)
-		
+				this.todoistSync = new TodoistSync(this.app, this)
+
 				//每次启动前备份所有数据
 				this.todoistSync.backupTodoistAllResources()
 
-			}catch(error){
+			} catch (error) {
 				console.log(`error creating user data folder: ${error}`)
 				new Notice(`error creating user data folder`)
 				return;
@@ -376,42 +378,42 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 
 		this.initializeModuleClass()
 
-		
+
 		//get user plan resources
 		//const rsp = await this.todoistSyncAPI.getUserResource()
 		this.settings.apiInitialized = true
 		this.syncLock = false
 		new Notice(`Ultimate Todoist Sync loaded successfully.`)
 		return true
-		
+
 
 
 	}
 
-	async initializeModuleClass(){
+	async initializeModuleClass() {
 
 		//initialize todoist restapi 
-		this.todoistRestAPI = new TodoistRestAPI(this.app,this)
+		this.todoistRestAPI = new TodoistRestAPI(this.app, this)
 
 		//initialize data read and write object
-		this.cacheOperation = new CacheOperation(this.app,this)
-		this.taskParser = new TaskParser(this.app,this)
+		this.cacheOperation = new CacheOperation(this.app, this)
+		this.taskParser = new TaskParser(this.app, this)
 
 		//initialize file operation
-		this.fileOperation = new FileOperation(this.app,this)
+		this.fileOperation = new FileOperation(this.app, this)
 
 		//initialize todoisy sync api
-		this.todoistSyncAPI = new TodoistSyncAPI(this.app,this)
+		this.todoistSyncAPI = new TodoistSyncAPI(this.app, this)
 
 		//initialize todoist sync module
-		this.todoistSync = new TodoistSync(this.app,this)
+		this.todoistSync = new TodoistSync(this.app, this)
 
 
 	}
 
-	async lineNumberCheck(){
+	async lineNumberCheck() {
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView)
-		if(view){
+		if (view) {
 			const cursor = view.app.workspace.getActiveViewOfType(MarkdownView)?.editor.getCursor()
 			const line = cursor?.line
 			//const lineText = view.editor.getLine(line)
@@ -419,15 +421,15 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 
 			//console.log(line)
 			//const fileName = view.file?.name
-			const fileName =  view.app.workspace.getActiveViewOfType(MarkdownView)?.app.workspace.activeEditor?.file?.name
-			const filepath =  view.app.workspace.getActiveViewOfType(MarkdownView)?.app.workspace.activeEditor?.file?.path
-			if (typeof this.lastLines === 'undefined' || typeof this.lastLines.get(fileName as string) === 'undefined'){
+			const fileName = view.app.workspace.getActiveViewOfType(MarkdownView)?.app.workspace.activeEditor?.file?.name
+			const filepath = view.app.workspace.getActiveViewOfType(MarkdownView)?.app.workspace.activeEditor?.file?.path
+			if (typeof this.lastLines === 'undefined' || typeof this.lastLines.get(fileName as string) === 'undefined') {
 				this.lastLines.set(fileName as string, line as number);
 				return
 			}
 
-					//console.log(`filename is ${fileName}`)
-			if(this.lastLines.has(fileName as string) && line !== this.lastLines.get(fileName as string)){
+			//console.log(`filename is ${fileName}`)
+			if (this.lastLines.has(fileName as string) && line !== this.lastLines.get(fileName as string)) {
 				const lastLine = this.lastLines.get(fileName as string)
 				// if(this.settings.debugMode){
 				// 	console.log('Line changed!', `current line is ${line}`, `last line is ${lastLine}`);
@@ -437,35 +439,35 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 				// 执行你想要的操作
 				const lastLineText = view.editor.getLine(lastLine as number)
 				//console.log(lastLineText)
-				if(!( this.checkModuleClass())){
+				if (!(this.checkModuleClass())) {
 					return
 				}
 				this.lastLines.set(fileName as string, line as number);
-				try{
+				try {
 					if (!await this.checkAndHandleSyncLock()) return;
-					await this.todoistSync.lineModifiedTaskCheck(filepath as string,lastLineText,lastLine as number,fileContent)
+					await this.todoistSync.lineModifiedTaskCheck(filepath as string, lastLineText, lastLine as number, fileContent)
 					this.syncLock = false;
-				}catch(error){
+				} catch (error) {
 					console.error(`An error occurred while check modified task in line text: ${error}`);
 					this.syncLock = false
 				}
 
 
-				
+
 			}
-			else  {
+			else {
 				//console.log('Line not changed');				
 			}
 
 		}
 
 
-		
+
 
 	}
 
-	async checkboxEventhandle(evt:MouseEvent){
-		if(!( this.checkModuleClass())){
+	async checkboxEventhandle(evt: MouseEvent) {
+		if (!(this.checkModuleClass())) {
 			return
 		}
 		const target = evt.target as HTMLInputElement;
@@ -488,11 +490,11 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 		} else {
 			//console.log('未找到 todoist_id');
 			//开始全文搜索，检查status更新
-			try{
+			try {
 				if (!await this.checkAndHandleSyncLock()) return;
 				await this.todoistSync.fullTextModifiedTaskCheck()
 				this.syncLock = false;
-			}catch(error){
+			} catch (error) {
 				console.error(`An error occurred while check modified tasks in the file: ${error}`);
 				this.syncLock = false;
 			}
@@ -501,37 +503,37 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 	}
 
 	//return true
-	checkModuleClass(){
-		if(this.settings.apiInitialized  === true){
-			if(this.todoistRestAPI === undefined || this.todoistSyncAPI === undefined ||this.cacheOperation === undefined || this.fileOperation === undefined ||this.todoistSync === undefined ||this.taskParser === undefined){
+	checkModuleClass() {
+		if (this.settings.apiInitialized === true) {
+			if (this.todoistRestAPI === undefined || this.todoistSyncAPI === undefined || this.cacheOperation === undefined || this.fileOperation === undefined || this.todoistSync === undefined || this.taskParser === undefined) {
 				this.initializeModuleClass()
 			}
 			return true
 		}
-		else{
+		else {
 			new Notice(`Please enter the correct Todoist API token"`)
-			return(false)
+			return (false)
 		}
-		
+
 
 	}
 
-	async setStatusBarText(){
-		if(!( this.checkModuleClass())){
+	async setStatusBarText() {
+		if (!(this.checkModuleClass())) {
 			return
 		}
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView)
-		if(!view){
+		if (!view) {
 			this.statusBar.setText('');
 		}
-		else{
+		else {
 			const filepath = this.app.workspace.getActiveViewOfType(MarkdownView)?.file.path
-			if(filepath === undefined){
+			if (filepath === undefined) {
 				// console.log(`file path undefined`)
 				return
 			}
 			const defaultProjectName = await this.cacheOperation.getDefaultProjectNameForFilepath(filepath as string)
-			if(defaultProjectName === undefined){
+			if (defaultProjectName === undefined) {
 				// console.log(`projectName undefined`)
 				return
 			}
@@ -549,13 +551,13 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			if (!await this.checkAndHandleSyncLock()) return;
 			try {
 				await this.todoistSync.syncTodoistToObsidian();
-			} catch(error) {
+			} catch (error) {
 				console.error('An error occurred in syncTodoistToObsidian:', error);
 			}
 			this.syncLock = false;
 			try {
 				await this.saveSettings();
-			} catch(error) {
+			} catch (error) {
 				console.error('An error occurred in saveSettings:', error);
 			}
 
@@ -575,7 +577,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 				if (!await this.checkAndHandleSyncLock()) return;
 				try {
 					await this.todoistSync.fullTextNewTaskCheck(fileKey);
-				} catch(error) {
+				} catch (error) {
 					console.error('An error occurred in fullTextNewTaskCheck:', error);
 				}
 				this.syncLock = false;
@@ -583,7 +585,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 				if (!await this.checkAndHandleSyncLock()) return;
 				try {
 					await this.todoistSync.deletedTaskCheck(fileKey);
-				} catch(error) {
+				} catch (error) {
 					console.error('An error occurred in deletedTaskCheck:', error);
 				}
 				this.syncLock = false;
@@ -591,7 +593,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 				if (!await this.checkAndHandleSyncLock()) return;
 				try {
 					await this.todoistSync.fullTextModifiedTaskCheck(fileKey);
-				} catch(error) {
+				} catch (error) {
 					console.error('An error occurred in fullTextModifiedTaskCheck:', error);
 				}
 				this.syncLock = false;
@@ -608,11 +610,11 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 	async checkSyncLock() {
 		let checkCount = 0;
 		while (this.syncLock == true && checkCount < 10) {
-		  await new Promise(resolve => setTimeout(resolve, 1000));
-		  checkCount++;
+			await new Promise(resolve => setTimeout(resolve, 1000));
+			checkCount++;
 		}
 		if (this.syncLock == true) {
-		  return false;
+			return false;
 		}
 		return true;
 	}

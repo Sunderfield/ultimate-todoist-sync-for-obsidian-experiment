@@ -59,6 +59,8 @@ export class TaskParser {
         const dueDate = this.getDueDateFromLineText(textWithoutIndentation)
         const dueTime = this.getDueTimeFromLineText(textWithoutIndentation)
         const labels = this.getAllTagsFromLineText(textWithoutIndentation)
+        const section = this.getFirstSectionFromLineText(textWithoutIndentation)
+        let sectionId
 
         // TODO this will get the task duration
         // TODO need to add duration only if the task has a duration
@@ -66,10 +68,8 @@ export class TaskParser {
         // TODO the API can also accept "day" 
         const durationUnit = "minute"
 
-        // console.log(`durationTime is ${durationTime}`)
         const hasDuration = this.hasDuration(textWithoutIndentation);
 
-        // console.log(`hasDuration is ${hasDuration}`)
 
 
 
@@ -81,6 +81,24 @@ export class TaskParser {
 
         let projectId = this.plugin.cacheOperation?.getDefaultProjectIdForFilepath(filepath as string)
         // let projectName = this.plugin.cacheOperation?.getProjectNameByIdFromCache(projectId)
+
+
+        // If the task has seection, it tries to retrieve from cache, if don't find, create a new one and store it on cache.
+        if (section) {
+            const hasSectionOnCache = this.plugin.cacheOperation?.checkIfSectionExistOnCache(section, projectId)
+            if (hasSectionOnCache) {
+                sectionId = hasSectionOnCache
+            }
+            if (!hasSectionOnCache) {
+                // TODO creates the section on Todoist and add to the cache then assign the sectionId to the sectionID
+                const newSection = await this.plugin.todoistRestAPI?.CreateNewSection(section, projectId)
+                sectionId = newSection?.id
+                if (newSection) {
+                    this.plugin.cacheOperation?.addSectionToCache(section, newSection?.id, projectId)
+                }
+
+            }
+        }
 
         if (hasParent) {
             projectId = parentTaskObject.projectId
@@ -140,7 +158,11 @@ export class TaskParser {
             todoistTask["duration_unit"] = durationUnit
         }
 
-        // console.log(`todoistTask value is ${JSON.stringify(todoistTask)}`)
+        // If it has a section, add the sectionId to the task
+        // TODO is failing on the first try because it doesn't have the ID yet. maybe handle with just the update later?
+        if (section) {
+            todoistTask["sectionId"] = sectionId
+        }
         return todoistTask;
     }
 
@@ -328,29 +350,31 @@ export class TaskParser {
 
         const regex_remove_rules =
         {
-            REMOVE_PRIORITY: /\s!!([1-4])\s/,
-            REMOVE_TAGS: /(^|\s)(#[\w\d\u4e00-\u9fa5-]+)/g,
-            REMOVE_SPACE: /^\s+|\s+$/g,
-            REMOVE_DATE: new RegExp(`((🗓️|📅|📆|🗓|@)\\s?\\d{4}-\\d{2}-\\d{2})`),
-            REMOVE_TIME: new RegExp(`((⏰|⏲|\\$)\\s?\\d{2}:\\d{2})`),
-            REMOVE_INLINE_METADATA: /%%\[\w+::\s*\w+\]%%/,
-            REMOVE_CHECKBOX: /^(-|\*)\s+\[(x|X| )\]\s/,
-            REMOVE_CHECKBOX_WITH_INDENTATION: /^([ \t]*)?(-|\*)\s+\[(x|X| )\]\s/,
-            REMOVE_TODOIST_LINK: /\[link\]\(.*?\)/,
-            REMOVE_TODOIST_TID_LINK: /%%\[tid::\s*\[\d+\]\(https:\/\/app.todoist\.com\/app\/task\/\d+\)\]%%/,
-            REMOVE_TODOIST_DURATION: new RegExp(`(⏳|&)\\d+min`)
+            remove_priority: /\s!!([1-4])\s/,
+            remove_tags: /(^|\s)(#[\w\d\u4e00-\u9fa5-]+)/g,
+            remove_space: /^\s+|\s+$/g,
+            remove_date: new RegExp(`((🗓️|📅|📆|🗓|@)\\s?\\d{4}-\\d{2}-\\d{2})`),
+            remove_time: new RegExp(`((⏰|⏲|\\$)\\s?\\d{2}:\\d{2})`),
+            remove_inline_metada: /%%\[\w+::\s*\w+\]%%/,
+            remove_checkbox: /^(-|\*)\s+\[(x|X| )\]\s/,
+            remove_checkbox_with_indentation: /^([ \t]*)?(-|\*)\s+\[(x|X| )\]\s/,
+            // REMOVE_TODOIST_LINK: /\[link\]\(.*?\)/,
+            remove_todoist_tid_link: /%%\[tid::\s*\[\d+\]\(https:\/\/app.todoist\.com\/app\/task\/\d+\)\]%%/,
+            remove_todoist_duration: new RegExp(`(⏳|&)\\d+min`),
+            remove_todoist_section: /\/\/\/\w*/
         }
 
-        const TaskContent = lineText.replace(regex_remove_rules.REMOVE_INLINE_METADATA, "")
-            .replace(regex_remove_rules.REMOVE_TODOIST_TID_LINK, "")
-            .replace(regex_remove_rules.REMOVE_PRIORITY, " ") //priority 前后必须都有空格，
-            .replace(regex_remove_rules.REMOVE_TAGS, "")
-            .replace(regex_remove_rules.REMOVE_DATE, "")
-            .replace(regex_remove_rules.REMOVE_TIME, "")
-            .replace(regex_remove_rules.REMOVE_CHECKBOX, "")
-            .replace(regex_remove_rules.REMOVE_CHECKBOX_WITH_INDENTATION, "")
-            .replace(regex_remove_rules.REMOVE_SPACE, "")
-            .replace(regex_remove_rules.REMOVE_TODOIST_DURATION, "") //remove duration
+        const TaskContent = lineText.replace(regex_remove_rules.remove_inline_metada, "")
+            .replace(regex_remove_rules.remove_todoist_tid_link, "")
+            .replace(regex_remove_rules.remove_priority, " ") //priority 前后必须都有空格，
+            .replace(regex_remove_rules.remove_tags, "")
+            .replace(regex_remove_rules.remove_date, "")
+            .replace(regex_remove_rules.remove_time, "")
+            .replace(regex_remove_rules.remove_checkbox, "")
+            .replace(regex_remove_rules.remove_checkbox_with_indentation, "")
+            .replace(regex_remove_rules.remove_space, "")
+            .replace(regex_remove_rules.remove_todoist_duration, "") //remove duration
+            .replace(regex_remove_rules.remove_todoist_section, "") //remove section
 
         return (TaskContent)
     }
@@ -368,6 +392,16 @@ export class TaskParser {
         }
 
         return tags;
+    }
+
+    // Get the first match to user as a section
+    getFirstSectionFromLineText(linetext: string) {
+        const regex_section_search = /\/\/\/\w*/g;
+        const section = linetext.match(regex_section_search) || [];
+
+        const section_raw = section.toString().replace("///", "")
+
+        return section_raw
     }
 
     //get checkbox status
@@ -541,6 +575,18 @@ export class TaskParser {
             }
 
 
+        } else {
+            return false
+        }
+    }
+
+    async compareSection(lineTask: { sectionId: string }, todoistTask: { sectionId: string }) {
+
+        const lineTaskSectionName = this.plugin.cacheOperation?.getSectionNameByIdFromCache(lineTask.sectionId)
+        const todoistTaskSectionName = this.plugin.cacheOperation?.getSectionNameByIdFromCache(todoistTask.sectionId)
+
+        if (lineTaskSectionName !== todoistTaskSectionName) {
+            return true
         } else {
             return false
         }

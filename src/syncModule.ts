@@ -282,8 +282,6 @@ export class TodoistSync {
         }
 
         if (!content) {
-            console.error('File content is empty');
-            new Notice('File content is empty')
             return
         }
 
@@ -426,12 +424,15 @@ export class TodoistSync {
             //parent id 是否修改
             const parentIdModified = !(lineTask.parentId === savedTask.parentId)
             //check priority
+            // TODO priority is always returning 1 when should be false
             const priorityModified = !(lineTask.priority === savedTask.priority)
             // check if the reminder time has changed
             const dueTimeModified = (await this.plugin.taskParser?.compareTaskDueTime(lineTask, savedTask))
             // check if the dyration time has changed
             // will return true or false depending on the finding
             const durationTimeModified = (await this.plugin.taskParser?.compareTaskDuration(lineTask, savedTask))
+            // Using the sectionId, compares the name of both sections. Returns true if they are different
+            const sectionModified = (await this.plugin.taskParser?.compareSection(lineTask, savedTask))
 
             try {
                 let contentChanged = false;
@@ -443,8 +444,9 @@ export class TodoistSync {
                 const parentIdChanged = false;
                 let priorityChanged = false;
                 let durationChanged = false;
+                // let sectionChanged = false;
 
-                const updatedContent: { content?: string, labels?: string[], dueString?: string, dueDate?: string, dueTime?: string, projectId?: string, parentId?: string, priority?: number, duration?: string, path?: string } = {
+                const updatedContent: { content?: string, labels?: string[], dueString?: string, dueDate?: string, dueTime?: string, projectId?: string, parentId?: string, priority?: number, duration?: string, path?: string, sectionId?: string } = {
                 }
 
 
@@ -523,6 +525,13 @@ export class TodoistSync {
                     priorityChanged = true;
                 }
 
+                if (sectionModified) {
+                    console.error(`The current REST API doesn't support section updates. Section won't be updated for task ${lineTask_todoist_id}`)
+                    // console.log(`Section id modified for task ${JSON.stringify(lineTask)}`)
+                    // updatedContent.sectionId = lineTask.sectionId
+                    // sectionChanged = true;
+                }
+
 
 
                 if (contentChanged || tagsChanged || dueDateChanged || projectChanged || parentIdChanged || priorityChanged || dueTimeChanged || durationChanged) {
@@ -588,6 +597,9 @@ export class TodoistSync {
                     if (durationChanged) {
                         message += " Duration was changed.";
                     }
+                    // if (sectionChanged) {
+                    //     message += " Section was changed.";
+                    // }
 
                     console.log("Sent a Notice with the message: " + message)
                     new Notice(message);

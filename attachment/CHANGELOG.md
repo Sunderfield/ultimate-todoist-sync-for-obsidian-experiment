@@ -1,5 +1,10 @@
 ## CHANGELOG
 
+### 2024-10-??
+### 0.4.0
+- Add support for projects when creating the task
+-
+
 ### 2024-10-18
 #### 0.3.3
 - Change the request method to requestURL (following [this rec](https://github.com/obsidianmd/obsidian-releases/pull/4302#issuecomment-2387574679))
