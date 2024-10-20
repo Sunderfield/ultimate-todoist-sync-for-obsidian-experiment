@@ -1,9 +1,9 @@
 ## CHANGELOG
 
-### 2024-10-??
+### 2024-10-20
 ### 0.4.0
-- Add support for projects when creating the task
--
+- Add support for sections when creating the task
+
 
 ### 2024-10-18
 #### 0.3.3
