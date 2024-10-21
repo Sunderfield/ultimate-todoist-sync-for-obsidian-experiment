@@ -7,7 +7,7 @@ Create, edit and delete tasks from Obsidian.md to your Todoist.
 >
 > *Some features works only Todoist -> Obsidian, others by-directional. Find more details on the feature table below.*
 
-![Alt Text](/attachment/demo.gif)
+![Alt Text](/attachment/new_demo.gif)
 
 
 
@@ -48,19 +48,6 @@ Create, edit and delete tasks from Obsidian.md to your Todoist.
 > [!NOTE]
 > I'm just doing some fixes on the original plugin, it is not yet published on the Obsidian plugins page.
 
-<!-- From Obsidian v1.3.5+, you can activate this plugin within Obsidian by doing the following:
-
-1. Open Obsidian's `Settings` window
-2. Select the `Community plugins` tab on the left
-3. Make sure `Restricted mode` is **off**
-4. Click `Browse` next to `Community Plugins`
-5. Search for and click on `Ultimate Todoist Sync`
-6. Click `Install`
-7. Once installed, close the `Community Plugins` window
-8. Under `Installed Plugins`, activate the `Ultimate Todoist Sync` plugin
-
-You can update the plugin following the same procedure, clicking `Update` instead of `Install` -->
-
 ### Manually
 
 If you would rather install the plugin manually, you can do the following:
@@ -74,7 +61,7 @@ If you would rather install the plugin manually, you can do the following:
 
 1. Open Obsidian's `Settings` window
 2. Select the `Community plugins` tab on the left
-3. Under `Installed plugins`, click the gear icon next to the `Ultimate Todoist Sync` plugin
+3. Under `Installed plugins`, click the gear icon next to the `Another Simple Todoist Sync` plugin
 4. Enter your Todoist API token
 
 
@@ -83,8 +70,12 @@ If you would rather install the plugin manually, you can do the following:
 The time interval for automatic synchronization is set to 300 seconds by default, which means it runs every 5 minutes. You can modify it yourself.
 2. Default project
 New tasks will be added to the default project, and you can change the default project in the settings. 
-3. Full vault sync
-By enabling this option, the plugin will automatically add `#todoist` to all tasks, which will modify all files in the vault.
+3. Sync Comments
+By default, comments on tasks are added below your task on Obsidian. With this enabled, it won't sync comments.
+4. Custom Sync Tag
+By default, sync new task with `#tdsync`, but you can change to `#todoist`
+5. Alternative Keywords
+When enabled, accept new keywords for date, due time and duration (*@,$ and &*).
 
 
 ## Usage
@@ -95,11 +86,12 @@ By enabling this option, the plugin will automatically add `#todoist` to all tas
 | --- | --- | --- |
 |#tdsync           |   Tasks marked with `#tdsync`[4] will be added to Todoist, while tasks without the `#tdsync` tag will not be processed. If you have enabled Full vault sync in the settings, `#tdsync` will be added automatically.| `- [ ] task #tdsync`|
 | 📅YYYY-MM-DD      | The date format is 📅YYYY-MM-DD, indicating the due date of a task. | `- [ ] task content 📅2025-02-05 #todoist` [1] |
-| #projectTag       | New tasks will be added to the default project (e.g: inbox), and you can change the default project in the settings or use a tag with the same name to specify a particular project. | `- [ ] taskA #todoist` will be added to inbox.<br>`- [ ] taskB #tag #testProject #todoist` will be added to testProject.|
+<!-- | #projectTag       | New tasks will be added to the default project (e.g: inbox), and you can change the default project in the settings or use a tag with the same name to specify a particular project. | `- [ ] taskA #todoist` will be added to inbox.<br>`- [ ] taskB #tag #testProject #todoist` will be added to testProject.| -->
 | #tag              | Note that all tags without a project of the same name are treated as normal tags | `- [ ] task #tagA #tagB #tagC #todoist` |
 |   `!!<number>`    | The priority of the task between 1 and 4. [2] | `- [ ] task !!1 #todoist` |
 |⏰HH:MM             |This sets the time of the task. If none is given, the default is 08:00|`- [ ] task ⏰23:59`[3]|
 |⏳MMmin | This sets the duration of the task|`- [ ] task ⏳30min`[[5]] |
+|///<section_name> | This adds the task to a section with <section_name>|`- [ ] task ///section_name`[7]|
 
 <details>
 <summary>Usage footnotes</summary>
@@ -110,6 +102,7 @@ By enabling this option, the plugin will automatically add `#todoist` to all tas
 - [4] On the original plugin, this tag was `#todoist`, but on this fork was changed to avoid conflicts.
 - [5] Supports the following characters/emojis: ⏳, & [6]
 - [6] Alternative characters are enabled via "Alternative Keywords" on plugin settings page
+- [7] The section cannot be updated via Obsidian after is set because the current REST API doesn't have support for it.
 
 </details>
 

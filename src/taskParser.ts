@@ -396,7 +396,7 @@ export class TaskParser {
 
     // Get the first match to user as a section
     getFirstSectionFromLineText(linetext: string) {
-        const regex_section_search = /\/\/\/\w*/g;
+        const regex_section_search = /[///\w+]|[///\u4E00-\u9FFF]/g;
         const section = linetext.match(regex_section_search) || [];
 
         const section_raw = section.toString().replace("///", "")

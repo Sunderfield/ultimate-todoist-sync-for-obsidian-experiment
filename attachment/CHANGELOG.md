@@ -1,7 +1,12 @@
 ## CHANGELOG
 
+### 2024-10-??
+#### 0.4.1
+- Updated the README with details about the section, changed the main GIF;
+- Cleaned up more errors;
+
 ### 2024-10-20
-### 0.4.0
+#### 0.4.0
 - Add support for sections when creating the task
 
 
