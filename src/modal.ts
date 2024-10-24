@@ -1,20 +1,20 @@
-import { App, Modal ,Setting } from "obsidian";
-import  AnotherSimpleTodoistSync  from "../main"
+import { App, Modal, Setting } from "obsidian";
+import AnotherSimpleTodoistSync from "../main"
 
 
 interface ModalInterface {
-	id: string;
-	name: string;
-  }
+  id: string;
+  name: string;
+}
 
 export class SetDefalutProjectInTheFilepathModal extends Modal {
   defaultProjectId: string
   defaultProjectName: string
-  filepath:string
-  plugin:AnotherSimpleTodoistSync
+  filepath: string
+  plugin: AnotherSimpleTodoistSync
 
-    
-  constructor(app: App,plugin:AnotherSimpleTodoistSync, filepath:string) {
+
+  constructor(app: App, plugin: AnotherSimpleTodoistSync, filepath: string) {
     super(app);
     this.filepath = filepath
     this.plugin = plugin
@@ -24,47 +24,41 @@ export class SetDefalutProjectInTheFilepathModal extends Modal {
   async onOpen() {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.createEl('h5', { text: 'Set default project for todoist tasks in the current file' });
+    contentEl.createEl('h5', { text: 'Set default project for Todoist tasks in the current file' });
 
-    this.defaultProjectId = await this.plugin.cacheOperation.getDefaultProjectIdForFilepath(this.filepath)
-    this.defaultProjectName = await this.plugin.cacheOperation.getProjectNameByIdFromCache(this.defaultProjectId)
-    console.log(this.defaultProjectId)
-    console.log(this.defaultProjectName)
-    const myProjectsOptions: ModalInterface | undefined = this.plugin.settings.todoistTasksData?.projects?.reduce((obj, item) => {
-        obj[(item.id).toString()] = item.name;
-        return obj;
-        }, {}
+    this.defaultProjectId = await this.plugin.cacheOperation?.getDefaultProjectIdForFilepath(this.filepath)
+    this.defaultProjectName = await this.plugin.cacheOperation?.getProjectNameByIdFromCache(this.defaultProjectId)
+    const myProjectsOptions: ModalInterface | undefined = this.plugin.settings.todoistTasksData?.projects?.reduce((obj:any, item:any) => {
+      obj[(item.id).toString()] = item.name;
+      return obj;
+    }, {}
     );
-      
-    
+
+
 
     new Setting(contentEl)
-    .setName('Default project')
-    //.setDesc('Set default project for todoist tasks in the current file')
-    .addDropdown(component => 
+      .setName('Default project')
+      //.setDesc('Set default project for Todoist tasks in the current file')
+      .addDropdown(component =>
         component
-                .addOption(this.defaultProjectId,this.defaultProjectName)
-                .addOptions(myProjectsOptions)
-                .onChange((value)=>{
-                    console.log(`project id  is ${value}`)
-                    //this.plugin.settings.defaultProjectId = this.result
-                    //this.plugin.settings.defaultProjectName = this.plugin.cacheOperation.getProjectNameByIdFromCache(this.result)
-                    //this.plugin.saveSettings()
-                    this.plugin.cacheOperation.setDefaultProjectIdForFilepath(this.filepath,value)
-                    this.plugin.setStatusBarText()
-                    this.close();
-                    
-                })
-                
-        )
+          .addOption(this.defaultProjectId, this.defaultProjectName)
+          .addOptions(myProjectsOptions)
+          .onChange((value) => {
+            this.plugin.cacheOperation?.setDefaultProjectIdForFilepath(this.filepath, value)
+            this.plugin.setStatusBarText()
+            this.close();
+
+          })
+
+      )
 
 
-  
+
 
   }
 
   onClose() {
-    let { contentEl } = this;
+    const { contentEl } = this;
     contentEl.empty();
   }
 }

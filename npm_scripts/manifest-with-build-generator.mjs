@@ -23,26 +23,32 @@ const writeJsonFile = (filePath, data) => {
 };
 
 // Function to update the version
-const updateVersion = (currentVersion, major, minor, patch) => {
+const updateVersion = (currentVersion, major, minor, patch, build) => {
 	const [baseVersion] = currentVersion.split("+");
-	const [majorVersion, minorVersion, patchVersion] = baseVersion
+	const [majorVersion, minorVersion, patchVersion, buildVersion] = baseVersion
 		.split(".")
 		.map(Number);
 
 	const newMajor = major !== undefined ? majorVersion + major : majorVersion;
 	const newMinor = minor !== undefined ? minorVersion + minor : minorVersion;
 	const newPatch = patch !== undefined ? patchVersion + patch : patchVersion;
+	let newBuild = build !== undefined ? buildVersion + build : buildVersion;
+	if (newBuild == undefined) {
+		newBuild = 0;
+	}
+	newBuild = newBuild + 1;
 
-	const newBaseVersion = `${newMajor}.${newMinor}.${newPatch}`;
+	const newBaseVersion = `${newMajor}.${newMinor}.${newPatch}.${newBuild}`;
 	const newBuildMetadata = new Date()
 		.toISOString()
 		.replace(/[-:T]/g, "")
-		.slice(0, 12);
+		.slice(2, 12);
 
 	console.log("newBaseVersion = " + newBaseVersion);
 	console.log("newBuildMetadata = " + newBuildMetadata);
+	console.log("newBuild = " + newBuild);
 
-	return `${newBaseVersion}+${newBuildMetadata}`;
+	return `${newBaseVersion}+${newBuildMetadata}+${newBuild}`;
 };
 
 // Main function
@@ -60,11 +66,17 @@ const main = () => {
 	const manifest = readJsonFile(manifestPath);
 	// const versions = readJsonFile(versionsPath);
 
-	const [, , major, minor, patch] = process.argv.map((arg) =>
+	const [, , major, minor, patch, build] = process.argv.map((arg) =>
 		arg !== undefined ? parseInt(arg, 10) : undefined
 	);
 
-	const newVersion = updateVersion(manifest.version, major, minor, patch);
+	const newVersion = updateVersion(
+		manifest.version,
+		major,
+		minor,
+		patch,
+		build
+	);
 
 	manifest.version = newVersion;
 	writeJsonFile(manifestPath, manifest);

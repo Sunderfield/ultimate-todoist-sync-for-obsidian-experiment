@@ -86,12 +86,13 @@ When enabled, accept new keywords for date, due time and duration (*@,$ and &*).
 | --- | --- | --- |
 |#tdsync           |   Tasks marked with `#tdsync`[4] will be added to Todoist, while tasks without the `#tdsync` tag will not be processed. If you have enabled Full vault sync in the settings, `#tdsync` will be added automatically.| `- [ ] task #tdsync`|
 | 📅YYYY-MM-DD      | The date format is 📅YYYY-MM-DD, indicating the due date of a task. | `- [ ] task content 📅2025-02-05 #todoist` [1] |
-<!-- | #projectTag       | New tasks will be added to the default project (e.g: inbox), and you can change the default project in the settings or use a tag with the same name to specify a particular project. | `- [ ] taskA #todoist` will be added to inbox.<br>`- [ ] taskB #tag #testProject #todoist` will be added to testProject.| -->
 | #tag              | Note that all tags without a project of the same name are treated as normal tags | `- [ ] task #tagA #tagB #tagC #todoist` |
 |   `!!<number>`    | The priority of the task between 1 and 4. [2] | `- [ ] task !!1 #todoist` |
 |⏰HH:MM             |This sets the time of the task. If none is given, the default is 08:00|`- [ ] task ⏰23:59`[3]|
 |⏳MMmin | This sets the duration of the task|`- [ ] task ⏳30min`[[5]] |
 |///<section_name> | This adds the task to a section with <section_name>|`- [ ] task ///section_name`[7]|
+
+<!-- | #projectTag       | New tasks will be added to the default project (e.g: inbox), and you can change the default project in the settings or use a tag with the same name to specify a particular project. | `- [ ] taskA #todoist` will be added to inbox.<br>`- [ ] taskB #tag #testProject #todoist` will be added to testProject.| -->
 
 <details>
 <summary>Usage footnotes</summary>
@@ -108,7 +109,7 @@ When enabled, accept new keywords for date, due time and duration (*@,$ and &*).
 
 ###  Set a default project for each file separately
 
-The default project in the setting applies to all files. You can set a separate default project for each file using the comand `Set default project for todoist task in the current file` from the command menu. 
+The default project in the setting applies to all files. You can set a separate default project for each file using the comand `Set default project for Todoist task in the current file` from the command menu. 
 
 <img src="/attachment/command-set-default-project-for-file.png" width="500">
 <img src="/attachment/default-project-for-file-modal.png" width="500">

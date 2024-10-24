@@ -40,7 +40,6 @@ const updateVersion = (currentVersion, major, minor, patch) => {
 	// 	.slice(0, 12);
 
 	console.log("newBaseVersion = " + newBaseVersion);
-	// console.log("newBuildMetadata = " + newBuildMetadata);
 
 	return `${newBaseVersion}`;
 };

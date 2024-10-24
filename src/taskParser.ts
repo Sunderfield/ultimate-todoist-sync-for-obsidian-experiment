@@ -17,14 +17,12 @@ export class TaskParser {
 
     //convert line text to a task object
     async convertTextToTodoistTaskObject(lineText: string, filepath: string, lineNumber?: number, fileContent?: string) {
-        //console.log(`linetext is:${lineText}`)
 
         let hasParent = false
         let parentId = null
         let parentTaskObject = null
         let textWithoutIndentation = lineText
         // TODO need to remove any empty spaces from the task
-        // console.log(`textwithoutindentation is ${textWithoutIndentation}`)
         if (this.getTabIndentation(lineText) > 0) {
             textWithoutIndentation = this.removeTaskIndentation(lineText)
             const lines = fileContent?.split('\n') || ""
@@ -35,15 +33,12 @@ export class TaskParser {
                     break
                 }
                 if (this.getTabIndentation(line) >= this.getTabIndentation(lineText)) {
-                    //console.log(`缩进为 ${this.getTabIndentation(line)}`)
                     continue
                 }
                 if ((this.getTabIndentation(line) < this.getTabIndentation(lineText))) {
-                    //console.log(`缩进为 ${this.getTabIndentation(line)}`)
                     if (this.hasTodoistId(line)) {
                         parentId = this.getTodoistIdFromLineText(line)
                         hasParent = true
-                        //console.log(`parent id is ${parentId}`)
                         parentTaskObject = this.plugin.cacheOperation?.loadTaskFromCacheyID(parentId)
                         break
                     }
@@ -102,21 +97,16 @@ export class TaskParser {
 
         if (hasParent) {
             projectId = parentTaskObject.projectId
-            // projectName =this.plugin.cacheOperation?.getProjectNameByIdFromCache(projectId)
         }
         if (!hasParent && labels) {
             //匹配 tag 和 peoject
             for (const label of labels) {
 
-                //console.log(label)
                 const labelName = label.replace(/#/g, "");
-                // console.log("labelName value = " + labelName)
                 const hasProjectId = this.plugin.cacheOperation?.getProjectIdByNameFromCache(labelName)
                 if (!hasProjectId) {
                     continue
                 }
-                // projectName = labelName
-                //console.log(`project is ${projectName} ${label}`)
                 projectId = hasProjectId
                 break
             }
@@ -151,7 +141,6 @@ export class TaskParser {
             hasParent: hasParent,
             priority: priority
         };
-        //console.log(`converted task `)
 
         if (hasDuration) {
             todoistTask["duration"] = durationTime
@@ -170,9 +159,6 @@ export class TaskParser {
         if (text === "TODOIST_TAG") {
 
             const customSyncTagValue = this.plugin.settings.customSyncTag;
-
-            // if(this.plugin.settings.debugMode){console.log("customSyncTag value: " + customSyncTagValue)}
-
 
             return customSyncTagValue
         }
@@ -203,12 +189,10 @@ export class TaskParser {
 
     }
 
-    //   Return true or false if the text has a todoist tag
+    //   Return true or false if the text has a Todoist tag
     hasTodoistTag(text: string) {
 
         const regex_test = new RegExp(`^[\\s]*[-] \\[[x ]\\] [\\s\\S]*${this.keywords_function("TODOIST_TAG")}[\\s\\S]*$`, "i");
-
-        // console.log("Value of regex_test = " + regex_test)
 
         return (regex_test.test(text))
 
@@ -221,7 +205,7 @@ export class TaskParser {
     }
 
 
-    //   Return true or false if the text has a todoist id
+    //   Return true or false if the text has a Todoist id
     hasTodoistId(text: string) {
         if (text === "") {
             return null
@@ -266,8 +250,9 @@ export class TaskParser {
         if (extract_duration_number === null) {
             return null
         }
+        // The duration is more than 24 hours. It will be ignored.
         if (extract_duration_number && extract_duration_number > 1440) {
-            console.log("The duration is more than 24 hours. It will be ignored.")
+            console.error('Duration above 24 hours is ignored.')
             return null
         } else {
             return extract_duration_number
@@ -314,7 +299,7 @@ export class TaskParser {
     //         return result ? result[1] : null;
     //     }
 
-    //   Get the todoist id from the text
+    //   Get the Todoist id from the text
     getTodoistIdFromLineText(text: string) {
         // if(this.plugin.settings.debugMode){console.log(`getTodoistIdFromLineText text is ${text}`)}
 
@@ -323,11 +308,6 @@ export class TaskParser {
 
         if (search_for_tid_id === null) { return null }
         const strip_tid_for_number_id = search_for_tid_id.toString().replace(/\D/g, "")
-
-
-        // console.log(`getTodoistIdFromLineText result is ${search_for_tid_id}`)
-        // console.log(`strip_tid_for_number_id: ${strip_tid_for_number_id}`)
-        // return result ? result[1] : null;
 
         return strip_tid_for_number_id ? strip_tid_for_number_id : null;
     }
@@ -396,7 +376,7 @@ export class TaskParser {
 
     // Get the first match to user as a section
     getFirstSectionFromLineText(linetext: string) {
-        const regex_section_search = /[///\w+]|[///\u4E00-\u9FFF]/g;
+        const regex_section_search = /\/\/\/[\w\u4e00-\u9fa5-]+/g;
         const section = linetext.match(regex_section_search) || [];
 
         const section_raw = section.toString().replace("///", "")
@@ -414,21 +394,16 @@ export class TaskParser {
     //task content compare
     taskContentCompare(lineTask: { content: string }, todoistTask: { content: string }) {
         const lineTaskContent = lineTask.content
-        //console.log(dataviewTaskContent)
 
         const todoistTaskContent = todoistTask.content
-        //console.log(todoistTask.content)
 
-        // console.log(`lineTaskContent is ${lineTaskContent} and todoistTaskContent is ${todoistTaskContent}`)
         // TODO remove all spaces and compare both strings without any spaces
 
         const lineContentWithoutSpaces = lineTaskContent.replace(/\s/g, "")
         const todoistContentWithoutSpaces = todoistTaskContent.replace(/\s/g, "")
 
-        // console.log(`lineContentWithoutSpaces is ${lineContentWithoutSpaces} and todoistContentWithoutSpaces is ${todoistContentWithoutSpaces}`)
 
         if (lineContentWithoutSpaces === todoistContentWithoutSpaces) {
-            // console.log("The content on the comparisson is the same")
             // If the content is the same, return true
             return true
         } else {
@@ -447,10 +422,8 @@ export class TaskParser {
 
 
         const lineTaskTags = lineTask.labels
-        //console.log(dataviewTaskTags)
 
         const todoistTaskTags = todoistTask.labels
-        //console.log(todoistTaskTags)
 
         //content 是否修改
         const tagsModified = lineTaskTags.length === todoistTaskTags.length && lineTaskTags.sort().every((val, index) => val === todoistTaskTags.sort()[index]);
@@ -461,8 +434,6 @@ export class TaskParser {
     taskStatusCompare(lineTask: { isCompleted: boolean }, todoistTask: { isCompleted: boolean }) {
         //status 是否修改
         const statusModified = (lineTask.isCompleted === todoistTask.isCompleted)
-        //console.log(lineTask)
-        //console.log(todoistTask)
         return (statusModified)
     }
 
@@ -489,24 +460,20 @@ export class TaskParser {
 
         // if any falue is empty, return false as you can't compare
         if ((lineTaskDue || todoistTaskDueDate) === "") {
-            // if(this.plugin.settings.debugMode){console.log("One of the dates had empty values, so the comparison will fail.")}
             return false;
         }
 
         // if both values are the same, return false because there is no change
         if (lineTaskDue == todoistTaskDueDate) {
-            // if(this.plugin.settings.debugMode){console.log('lineTaskDue == todoistTaskDueDate, returning false on compareTaskDueDate')}
             return false;
         }
 
         // If any has a invvalid date, return false as you can't compare
         else if (lineTaskDue.toString() === "Invalid Date" || todoistTaskDue.toString() === "Invalid Date") {
-            // if(this.plugin.settings.debugMode){console.log('invalid date on compareTaskDueDate')}
             return false;
         }
         // If everything above is false, than return true because the dates are different
         else {
-            // if(this.plugin.settings.debugMode){console.log('Something is different in the dates, so returning true on compareTaskDueDate')}
             return true;
         }
     }
@@ -519,8 +486,6 @@ export class TaskParser {
         const lineTaskDueTime = JSON.stringify(lineTask.dueTime)
         const todoistTaskDue = todoistTask.due ?? "";
 
-        // console.log(`lineTaskDueTime is ${lineTaskDueTime} and todoistTaskDue is ${todoistTaskDue}`)
-
         // TODO is stupid but works. If the task is created without any date, it saves as empty string on the cache but is a empty string on the lineTask
         if (lineTaskDueTime === "\"\"" && todoistTaskDue === null || todoistTaskDue === "") {
             return false
@@ -530,20 +495,17 @@ export class TaskParser {
 
         // if any value is empty, return false as you can't compare
         if ((lineTaskDueTime || todoistTaskDueTimeLocalClock) === "") {
-            // if(this.plugin.settings.debugMode){console.log("One of the times had empty values, so the comparison will fail.")}
             return false;
         }
 
         // if both values are the same, return false because there is no change
         if (lineTaskDueTime == todoistTaskDueTimeLocalClock) {
-            // if(this.plugin.settings.debugMode){console.log('lineTaskDueTime == todoistTaskDueTimeLocalClock, returning false on compareTaskDueTime')}
             return false;
         }
 
         // TODO For some reason the empty DueTime lenght is 2, so I need a better way to check this one in the future
         // If the lineTask is empty and the todoistTask has only the date, return false because both don't have duetime
         if (lineTaskDueTime.length === 2 && todoistTaskDue.string && todoistTaskDue.string.length === 10) {
-            // console.log(`The task has no due time and todoisttask object has only the date, not duetime. It will return false because both don't have duetime`)
             return false
         }
 
@@ -556,7 +518,6 @@ export class TaskParser {
     async compareTaskDuration(lineTask: { duration: { amount: number } }, todoistTask: { duration: { amount: number } }): Promise<boolean> {
 
         if (lineTask.duration && todoistTask.duration?.amount === undefined) {
-            console.log("The task has a duration, but Todoist does not. It will return true")
             return true
         }
 
@@ -567,10 +528,8 @@ export class TaskParser {
             const todoistCacheTaskDuration = Number(todoistTask.duration.amount);
 
             if (lineTaskDuration === todoistCacheTaskDuration) {
-                // console.log("The task duration is the same. It will return false")
                 return false
             } else {
-                // console.log("The task duration is different. It will return true")
                 return true
             }
 
@@ -585,6 +544,11 @@ export class TaskParser {
         const lineTaskSectionName = this.plugin.cacheOperation?.getSectionNameByIdFromCache(lineTask.sectionId)
         const todoistTaskSectionName = this.plugin.cacheOperation?.getSectionNameByIdFromCache(todoistTask.sectionId)
 
+        // If there is no section defined on the task, should not try to compare
+        if (lineTaskSectionName === "") {
+            return false
+        }
+
         if (lineTaskSectionName !== todoistTaskSectionName) {
             return true
         } else {
@@ -596,8 +560,6 @@ export class TaskParser {
     //task project id compare
     async taskProjectCompare(lineTask: { projectId: number }, todoistTask: { projectId: number }) {
         //project 是否修改
-        //console.log(dataviewTaskProjectId)
-        //console.log(todoistTask.projectId)
         return (lineTask.projectId === todoistTask.projectId)
     }
 
@@ -608,17 +570,12 @@ export class TaskParser {
         // TASK_INDENTATION: /^(\s{2,}|\t)(-|\*)\s+\[(x|X| )\]/,
         const check_indentation = /^(\s{2,}|\t)(-|\*)\s+\[(x|X| )\]/;
 
-        // if(this.plugin.settings.debugMode){
-        //     console.log("Checking if the task is indented. Return value should be: " + check_indentation.test(text))
-        // }
 
         return (check_indentation.test(text));
     }
 
 
     //判断制表符的数量
-    //console.log(getTabIndentation("\t\t- [x] This is a task with two tabs")); // 2
-    //console.log(getTabIndentation("  - [x] This is a task without tabs")); // 0
     getTabIndentation(lineText: string) {
         // TAB_INDENTATION: /^(\t+)/,
         const tab_indentation_search = /^(\t+)/;
@@ -682,16 +639,12 @@ export class TaskParser {
         // const regex = new RegExp(`(${keywords.TODOIST_TAG})`)
         const tag_to_look_for = this.keywords_function("TODOIST_TAG")
 
-        // if(this.plugin.settings.debugMode){console.log(`The tag to look for is: ${tag_to_look_for}`)}
 
         return text.replace(tag_to_look_for, `📅 ${dueDate} ${tag_to_look_for}`);
     }
 
     //extra date from obsidian event
     // 使用示例
-    //const str = "2023-03-27T15:59:59.000000Z";
-    //const dateStr = ISOStringToLocalDateString(str);
-    //console.log(dateStr); // 输出 2023-03-27
     ISOStringToLocalDateString(utcTimeString: string) {
         try {
             if (utcTimeString === null) {
@@ -699,8 +652,6 @@ export class TaskParser {
             }
             const utcDateString = utcTimeString;
             const dateObj = new Date(utcDateString); // 将UTC格式字符串转换为Date对象
-
-            if (this.plugin.settings.debugMode) { console.log("Inside taskParser.ts the dateObj now is: " + JSON.stringify(dateObj)) }
 
             const year = dateObj.getFullYear();
             const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
@@ -760,9 +711,6 @@ export class TaskParser {
 
     //extra date from obsidian event
     // 使用示例
-    //const str = "2023-03-27T15:59:59.000000Z";
-    //const dateStr = ISOStringToLocalDatetimeString(str);
-    //console.log(dateStr); // 输出 Mon Mar 27 2023 23:59:59 GMT+0800 (China Standard Time)
     ISOStringToLocalDatetimeString(utcTimeString: string) {
         try {
             if (utcTimeString === null) {
@@ -782,9 +730,6 @@ export class TaskParser {
 
     //convert date from obsidian event
     // 使用示例
-    //const str = "2023-03-27";
-    //const utcStr = localDateStringToUTCDatetimeString(str);
-    //console.log(dateStr); // 输出 2023-03-27T00:00:00.000Z
     localDateStringToUTCDatetimeString(localDatetimeString: string) {
         try {
             if (localDatetimeString === null) {
@@ -802,9 +747,6 @@ export class TaskParser {
 
     //convert date from obsidian event
     // 使用示例
-    //const str = "2023-03-27";
-    //const utcStr = localDateStringToUTCDateString(str);
-    //console.log(dateStr); // 输出 2023-03-27
     localDateStringToUTCDateString(localDateString: string) {
         try {
             if (localDateString === null) {
@@ -844,7 +786,6 @@ export class TaskParser {
         // Looks for #todoist to identify where to put the link.
         // TODO let the user choose which tag to use
         const regex = new RegExp(this.keywords_function("TODOIST_TAG"), "g");
-        // console.log("regex is " + regex)
         // TODO check if already has a link, to prevent from adding multiple links
         return linetext.replace(regex, ' ' + '$&' + ' ' + todoistLink);
     }

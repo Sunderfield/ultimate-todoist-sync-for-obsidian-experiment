@@ -1,16 +1,8 @@
 import { TodoistApi } from "@doist/todoist-api-typescript"
 import { App } from 'obsidian';
 import AnotherSimpleTodoistSync from "../main";
-//convert date from obsidian event
-// 使用示例
-//const str = "2023-03-27";
-//const utcStr = localDateStringToUTCDatetimeString(str);
-//console.log(dateStr); // 输出 2023-03-27T00:00:00.000Z
 
 function localDateStringToUTCDatetimeString(localDateString: string) {
-
-  // Let's see what this function is receiving
-  // console.log("Here it receives localDateString: " + localDateString)
 
   try {
     if (localDateString === null) {
@@ -32,7 +24,6 @@ export class TodoistRestAPI {
   plugin: AnotherSimpleTodoistSync;
 
   constructor(app: App, plugin: AnotherSimpleTodoistSync) {
-    //super(app,settings);
     this.app = app;
     this.plugin = plugin;
   }
@@ -48,8 +39,6 @@ export class TodoistRestAPI {
     const api = await this.initializeAPI()
     try {
 
-      // console.log(`dueDate = ${dueDate} and dueTime = ${dueTime} and dueDatetime = ${dueDatetime}`)
-
       const taskData: any = {
         projectId,
         content,
@@ -62,7 +51,6 @@ export class TodoistRestAPI {
 
       // Check if duration is a number, not null and not a NaN. Case it doesn't, the duration is not provided to the request
       if (duration !== null && typeof duration === 'number' && !isNaN(duration)) {
-        // console.log("The task has a valid duration")
         taskData.duration = duration;
         taskData.duration_unit = duration_unit;
       }
@@ -70,17 +58,11 @@ export class TodoistRestAPI {
 
       // If there is a dueTime, merge dueDate and dueTime and convert it to UTC, if not, returns only the date
       if (dueTime) {
-        // if(this.plugin.settings.debugMode){
-        //   console.log("dueDate = " + dueDate)
-        //   console.log("dueTime = " + dueTime)
-        // }
 
         const dueDateAndTimeMerge = dueDate + "T" + dueTime
 
-        // if(this.plugin.settings.debugMode){console.log("dueDateAndTimeMerge = " + dueDateAndTimeMerge)}
 
         dueDatetime = localDateStringToUTCDatetimeString(dueDateAndTimeMerge) || undefined
-        // if(this.plugin.settings.debugMode){console.log("dueDateTime after transformation to UTCDateTimeString = " + dueDatetime)}
         dueDate = undefined
 
         taskData.dueDate = dueDate
@@ -90,9 +72,6 @@ export class TodoistRestAPI {
       if (sectionId) {
         taskData.sectionId = sectionId
       }
-
-      // console.log(`taskData = ${JSON.stringify(taskData)}`)
-
 
       const newTask = await api.addTask(taskData);
 
@@ -137,28 +116,16 @@ export class TodoistRestAPI {
         const dueDateAndTimeMerge = updates.dueDate + "T" + updates.dueTime;
         updates.dueDatetime = localDateStringToUTCDatetimeString(dueDateAndTimeMerge) || undefined;
         // TODO need to delete due date?
-        // updates.dueDate = null
         delete updates.dueDate
-        // console.log("value of updates.dueDatime =" + updates.dueDatetime)
       }
-      // if(updates.dueDate && !updates.dueTime){
-      //   const dueDateAndTimeMerge = updates.dueDate + "T00:00:00";
-      //   updates.dueDatetime = localDateStringToUTCDatetimeString(dueDateAndTimeMerge) || undefined;
-      // }
 
       if (updates.duration) {
-        // updates.duration = `"duration":{"duration":${updates.duration},"unit":"minute"}`;
-        // console.log("updates.duration = " + updates.duration)
         updates.duration_unit = "minute";
       }
 
-      // console.log(`updates.duration = ${updates.duration} and updates.duration_unit = ${updates.duration_unit}`)
-
       // TODO The content still logs with whitespaces after so it keep looping trying to update the content
-      if (this.plugin.settings.debugMode) { console.log(`updates = ${JSON.stringify(updates)}`) }
+      if (this.plugin.settings.debugMode) { console.log(`Updates queued = ${JSON.stringify(updates)}`) }
 
-
-      console.log(`taskId = ${taskId} and updates = ${JSON.stringify(updates)}`)
       const updatedTask = await api.updateTask(taskId, updates);
       return updatedTask;
     } catch (error) {
@@ -172,7 +139,6 @@ export class TodoistRestAPI {
     try {
 
       const isSuccess = await api.reopenTask(taskId);
-      // console.log(`Task ${taskId} is reopend`)
       return (isSuccess)
 
     } catch (error) {
@@ -186,7 +152,6 @@ export class TodoistRestAPI {
     const api = await this.initializeAPI()
     try {
       const isSuccess = await api.closeTask(taskId);
-      // if(this.plugin.settings.debugMode){console.log(`Task ${taskId} is closed`)}
       return isSuccess;
     } catch (error) {
       console.error('Error closing task:', error);

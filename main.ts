@@ -2,8 +2,8 @@ import { MarkdownView, Notice, Plugin, Editor } from 'obsidian';
 
 
 //settings
-import { UltimateTodoistSyncSettings as AnotherSimpleTodoistSyncSettings, DEFAULT_SETTINGS, UltimateTodoistSyncSettingTab } from './src/settings';
-//todoist  api
+import { UltimateTodoistSyncSettings as AnotherSimpleTodoistSyncSettings, DEFAULT_SETTINGS, AnotherTodoistSyncPluginSettingTab as AnotherTodoistSyncPluginSettingTab } from './src/settings';
+//Todoist  api
 import { TodoistRestAPI } from './src/todoistRestAPI';
 import { TodoistSyncAPI } from './src/todoistSyncAPI';
 //task parser 
@@ -29,19 +29,19 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 	fileOperation: FileOperation | undefined;
 	todoistSync: TodoistSync | undefined;
 	lastLines: Map<string, number>;
-	statusBar;
-	syncLock: Boolean;
+	statusBar: any;
+	syncLock: boolean;
 
 	async onload() {
 
 		const isSettingsLoaded = await this.loadSettings();
 
 		if (!isSettingsLoaded) {
-			new Notice('Settings failed to load.Please reload the ultimate todoist sync plugin.');
+			new Notice('Settings failed to load. Please reload the Another Simple Todoist Sync plugin.');
 			return;
 		}
 		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new UltimateTodoistSyncSettingTab(this.app, this));
+		this.addSettingTab(new AnotherTodoistSyncPluginSettingTab(this.app, this));
 		if (!this.settings.todoistAPIToken) {
 			new Notice('Please enter your Todoist API.');
 			//return	   
@@ -59,29 +59,25 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			}
 			//console.log(`key pressed`)
 
-			//判断点击事件发生的区域,如果不在编辑器中，return
+			//Determine the area where the click event occurs. If it is not in the editor，return
 			if (!(this.app.workspace.activeEditor?.editor?.hasFocus())) {
-				// (console.log(`editor is not focused`))
 				return
 			}
-			const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-			const editor = view?.app.workspace.activeEditor?.editor
 
-			if (evt.key === 'ArrowUp' || evt.key === 'ArrowDown' || evt.key === 'ArrowLeft' || evt.key === 'ArrowRight' || evt.key === 'PageUp' || evt.key === 'PageDown') {
-				//console.log(`${evt.key} arrow key is released`);
-				if (!(this.checkModuleClass())) {
-					return
-				}
-				this.lineNumberCheck()
-			}
+			// TODO If 'Enter' is pressed, check if there is a new task
+			// if(evt.key === "Enter"){
+			// }
+
 			if (evt.key === "Delete" || evt.key === "Backspace") {
 				try {
-					//console.log(`${evt.key} key is released`);
 					if (!(this.checkModuleClass())) {
 						return
 					}
 					if (!await this.checkAndHandleSyncLock()) return;
-					await this.todoistSync.deletedTaskCheck();
+					const file_path = this.app.workspace.getActiveViewOfType(MarkdownView)?.file?.path
+					if (file_path) {
+						await this.todoistSync?.deletedTaskCheck(file_path);
+					}
 					this.syncLock = false;
 					this.saveSettings()
 				} catch (error) {
@@ -98,11 +94,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			if (!this.settings.apiInitialized) {
 				return
 			}
-			//console.log('click', evt);
 			if (this.app.workspace.activeEditor?.editor?.hasFocus()) {
-				//console.log('Click event: editor is focused');
-				const view = this.app.workspace.getActiveViewOfType(MarkdownView)
-				const editor = this.app.workspace.activeEditor?.editor
 				this.lineNumberCheck()
 			}
 			else {
@@ -122,95 +114,27 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 
 		});
 
-
-
-		//hook editor-change 事件，如果当前line包含 #todoist,说明有new task
-		this.registerEvent(this.app.workspace.on('editor-change', async (editor, view: MarkdownView) => {
-			try {
-				if (!this.settings.apiInitialized) {
-					return
-				}
-
-				this.lineNumberCheck()
-				if (!(this.checkModuleClass())) {
-					return
-				}
-				if (this.settings.enableFullVaultSync) {
-					return
-				}
-				if (!await this.checkAndHandleSyncLock()) return;
-				await this.todoistSync.lineContentNewTaskCheck(editor, view)
-				this.syncLock = false
-				this.saveSettings()
-
-			} catch (error) {
-				console.error(`An error occurred while check new task in line: ${error.message}`);
-				this.syncLock = false
-			}
-
-		}))
-
-
-
-		/* 使用其他文件管理器移动，obsidian触发了删除事件，删除了所有的任务
-				//监听删除事件，当文件被删除后，读取frontMatter中的tasklist,批量删除
-				this.registerEvent(this.app.metadataCache.on('deleted', async(file,prevCache) => {
-					try{
-						if(!this.settings.apiInitialized){
-							return
-						}
-						//console.log('a new file has modified')
-						console.log(`file deleted`)
-						//读取frontMatter
-						const frontMatter = await this.cacheOperation.getFileMetadata(file.path)
-						if(frontMatter === null || frontMatter.todoistTasks === undefined){
-							console.log('There is no task in the deleted files.')
-							return
-						}
-						//判断todoistTasks是否为null
-						console.log(frontMatter.todoistTasks)
-						if(!( this.checkModuleClass())){
-								return
-						}
-						if (!await this.checkAndHandleSyncLock()) return;
-						await this.todoistSync.deleteTasksByIds(frontMatter.todoistTasks)
-						this.syncLock = false
-						this.saveSettings()
-					}catch(error){
-						console.error(`An error occurred while deleting task in the file: ${error}`);
-						this.syncLock = false
-					}
-		
-					
-					
-				}));
-		*/
-
-
 		//监听 rename 事件,更新 task data 中的 path
 		this.registerEvent(this.app.vault.on('rename', async (file, oldpath) => {
 			if (!this.settings.apiInitialized) {
 				return
 			}
-			// console.log(`${oldpath} is renamed`)
 			//读取frontMatter
 			//const frontMatter = await this.fileOperation.getFrontMatter(file)
-			const frontMatter = await this.cacheOperation.getFileMetadata(oldpath)
-			// console.log(frontMatter)
+			const frontMatter = await this.cacheOperation?.getFileMetadata(oldpath)
 			if (frontMatter === null || frontMatter.todoistTasks === undefined) {
-				//console.log('删除的文件中没有task')
 				return
 			}
 			if (!(this.checkModuleClass())) {
 				return
 			}
-			await this.cacheOperation.updateRenamedFilePath(oldpath, file.path)
+			await this.cacheOperation?.updateRenamedFilePath(oldpath, file.path)
 			this.saveSettings()
 
 			//update task description
 			if (!await this.checkAndHandleSyncLock()) return;
 			try {
-				await this.todoistSync.updateTaskDescription(file.path)
+				await this.todoistSync?.updateTaskDescription(file.path)
 			} catch (error) {
 				console.error('An error occurred in updateTaskDescription:', error);
 			}
@@ -226,13 +150,10 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 					return
 				}
 				const filepath = file.path
-				// console.log(`${filepath} is modified`)
 
 				//get current view
 
 				const activateFile = this.app.workspace.getActiveFile()
-
-				// console.log(activateFile?.path)
 
 				//To avoid conflicts, Do not check files being edited
 				if (activateFile?.path == filepath) {
@@ -241,7 +162,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 
 				if (!await this.checkAndHandleSyncLock()) return;
 
-				await this.todoistSync.fullTextNewTaskCheck(filepath)
+				await this.todoistSync?.fullTextNewTaskCheck(filepath)
 				this.syncLock = false;
 			} catch (error) {
 				console.error(`An error occurred while modifying the file: ${error.message}`);
@@ -258,17 +179,20 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 		})
 
 
-		// set default  project for todoist task in the current file
+		// set default  project for Todoist task in the current file
 		// This adds an editor command that can perform some operation on the current editor instance
 		this.addCommand({
 			id: 'set-default-project-for-todoist-task-in-the-current-file',
-			name: 'Set default project for todoist task in the current file',
+			name: 'Set default project for Todoist task in the current file',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				if (!view) {
 					return
 				}
-				const filepath = view.file.path
-				new SetDefalutProjectInTheFilepathModal(this.app, this, filepath)
+				let filepath
+				if (view.file) {
+					filepath = view.file.path
+					new SetDefalutProjectInTheFilepathModal(this.app, this, filepath)
+				}
 
 			}
 		});
@@ -282,7 +206,6 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 
 
 	async onunload() {
-		// console.log(`Ultimate Todoist Sync for Obsidian id unloaded!`)
 		await this.saveSettings()
 
 	}
@@ -319,7 +242,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 	// return true of false
 	async initializePlugin() {
 
-		//initialize todoist restapi 
+		//initialize Todoist restapi 
 		this.todoistRestAPI = new TodoistRestAPI(this.app, this)
 
 		//initialize data read and write object
@@ -338,7 +261,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			this.cacheOperation = undefined
 			this.fileOperation = undefined
 			this.todoistSync = undefined
-			new Notice(`Ultimate Todoist Sync plugin initialization failed, please check the todoist api`)
+			new Notice(`Another Simple Todoist Sync plugin initialization failed, please check the Todoist api`)
 			return;
 		}
 
@@ -355,7 +278,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 				//initialize todoisy sync api
 				this.todoistSyncAPI = new TodoistSyncAPI(this.app, this)
 
-				//initialize todoist sync module
+				//initialize Todoist sync module
 				this.todoistSync = new TodoistSync(this.app, this)
 
 				//每次启动前备份所有数据
@@ -371,7 +294,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			//初始化settings
 			this.settings.initialized = true
 			this.saveSettings()
-			new Notice(`Ultimate Todoist Sync initialization successful. Todoist data has been backed up.`)
+			new Notice(`Another Simple Todoist Sync initialization successful. Todoist data has been backed up.`)
 
 		}
 
@@ -383,7 +306,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 		//const rsp = await this.todoistSyncAPI.getUserResource()
 		this.settings.apiInitialized = true
 		this.syncLock = false
-		new Notice(`Ultimate Todoist Sync loaded successfully.`)
+		new Notice(`Another Simple Todoist Sync loaded successfully.`)
 		return true
 
 
@@ -392,7 +315,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 
 	async initializeModuleClass() {
 
-		//initialize todoist restapi 
+		//initialize Todoist restapi 
 		this.todoistRestAPI = new TodoistRestAPI(this.app, this)
 
 		//initialize data read and write object
@@ -405,11 +328,13 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 		//initialize todoisy sync api
 		this.todoistSyncAPI = new TodoistSyncAPI(this.app, this)
 
-		//initialize todoist sync module
+		//initialize Todoist sync module
 		this.todoistSync = new TodoistSync(this.app, this)
 
 
+		if(this.settings.debugMode){console.log(`Another Simple Todoist Sync plugin: version ${this.manifest.version} (requires obsidian ${this.manifest.minAppVersion})`);}
 	}
+
 
 	async lineNumberCheck() {
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView)
@@ -445,7 +370,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 				this.lastLines.set(fileName as string, line as number);
 				try {
 					if (!await this.checkAndHandleSyncLock()) return;
-					await this.todoistSync.lineModifiedTaskCheck(filepath as string, lastLineText, lastLine as number, fileContent)
+					await this.todoistSync?.lineModifiedTaskCheck(filepath as string, lastLineText, lastLine as number, fileContent)
 					this.syncLock = false;
 				} catch (error) {
 					console.error(`An error occurred while check modified task in line text: ${error}`);
@@ -483,16 +408,19 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			//console.log(taskId)
 			//const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 			if (target.checked) {
-				this.todoistSync.closeTask(taskId);
+				this.todoistSync?.closeTask(taskId);
 			} else {
-				this.todoistSync.repoenTask(taskId);
+				this.todoistSync?.repoenTask(taskId);
 			}
 		} else {
 			//console.log('未找到 todoist_id');
 			//开始全文搜索，检查status更新
 			try {
 				if (!await this.checkAndHandleSyncLock()) return;
-				await this.todoistSync.fullTextModifiedTaskCheck()
+				const file_path = this.app.workspace.getActiveViewOfType(MarkdownView)?.file?.path
+				if (file_path) {
+					await this.todoistSync?.fullTextModifiedTaskCheck(file_path)
+				}
 				this.syncLock = false;
 			} catch (error) {
 				console.error(`An error occurred while check modified tasks in the file: ${error}`);
@@ -527,14 +455,14 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			this.statusBar.setText('');
 		}
 		else {
-			const filepath = this.app.workspace.getActiveViewOfType(MarkdownView)?.file.path
+
+			const filepath = this.app.workspace.getActiveViewOfType(MarkdownView)?.file?.path
+
 			if (filepath === undefined) {
-				// console.log(`file path undefined`)
 				return
 			}
-			const defaultProjectName = await this.cacheOperation.getDefaultProjectNameForFilepath(filepath as string)
+			const defaultProjectName = await this.cacheOperation?.getDefaultProjectNameForFilepath(filepath as string)
 			if (defaultProjectName === undefined) {
-				// console.log(`projectName undefined`)
 				return
 			}
 			this.statusBar.setText(defaultProjectName)
@@ -546,11 +474,11 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 		if (!(this.checkModuleClass())) {
 			return;
 		}
-		// console.log("Todoist scheduled synchronization task started at", new Date().toLocaleString());
+		// {console.log("Todoist scheduled synchronization task started at", new Date().toLocaleString());}
 		try {
 			if (!await this.checkAndHandleSyncLock()) return;
 			try {
-				await this.todoistSync.syncTodoistToObsidian();
+				await this.todoistSync?.syncTodoistToObsidian();
 			} catch (error) {
 				console.error('An error occurred in syncTodoistToObsidian:', error);
 			}
@@ -569,14 +497,14 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			// 	console.log(`filesToSync are ${JSON.stringify(filesToSync)}`)
 			// }
 
-			for (let fileKey in filesToSync) {
+			for (const fileKey in filesToSync) {
 				// if(this.settings.debugMode){
 				// 	console.log(`fileKey is ${fileKey}`)
 				// }
 
 				if (!await this.checkAndHandleSyncLock()) return;
 				try {
-					await this.todoistSync.fullTextNewTaskCheck(fileKey);
+					await this.todoistSync?.fullTextNewTaskCheck(fileKey);
 				} catch (error) {
 					console.error('An error occurred in fullTextNewTaskCheck:', error);
 				}
@@ -584,7 +512,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 
 				if (!await this.checkAndHandleSyncLock()) return;
 				try {
-					await this.todoistSync.deletedTaskCheck(fileKey);
+					await this.todoistSync?.deletedTaskCheck(fileKey);
 				} catch (error) {
 					console.error('An error occurred in deletedTaskCheck:', error);
 				}
@@ -592,7 +520,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 
 				if (!await this.checkAndHandleSyncLock()) return;
 				try {
-					await this.todoistSync.fullTextModifiedTaskCheck(fileKey);
+					await this.todoistSync?.fullTextModifiedTaskCheck(fileKey);
 				} catch (error) {
 					console.error('An error occurred in fullTextModifiedTaskCheck:', error);
 				}

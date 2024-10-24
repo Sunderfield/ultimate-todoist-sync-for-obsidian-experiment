@@ -99,13 +99,10 @@ export class FileOperation {
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i]
             if (!this.plugin.taskParser?.isMarkdownTask(line)) {
-                //console.log(line)
-                console.log("It is not a markdown task.")
                 continue;
             }
             //if content is empty
             if (this.plugin.taskParser?.getTaskContentFromLineText(line) == "") {
-                console.log("Line content is empty")
                 continue;
             }
             if (!this.plugin.taskParser?.hasTodoistId(line) && !this.plugin.taskParser?.hasTodoistTag(line)) {
@@ -116,7 +113,6 @@ export class FileOperation {
         }
 
         if (modified) {
-            console.log(`New task found in files ${filepath}`)
             const newContent = lines.join('\n')
             //console.log(newContent)
             await this.app.vault.modify(file, newContent)
@@ -132,7 +128,7 @@ export class FileOperation {
 
 
 
-    //add todoist at the line
+    //add Todoist at the line
     async addTodoistLinkToFile(filepath: string) {
         // Get the file object and update the content
         const file = this.app.vault.getAbstractFileByPath(filepath)
@@ -151,17 +147,13 @@ export class FileOperation {
             const line = lines[i]
             if (this.plugin.taskParser?.hasTodoistId(line) && this.plugin.taskParser?.hasTodoistTag(line)) {
                 if (this.plugin.taskParser && this.plugin.taskParser?.hasTodoistLink(line)) {
-                    if (this.plugin.settings.debugMode) { console.log(`Todoist link already exists in line: ${line}`) }
                     return
                 }
-                if (this.plugin.settings.debugMode) { console.log(`Content for line is: ${line}`) }
-                //console.log('prepare to add todoist link')
                 const taskID = this.plugin.taskParser?.getTodoistIdFromLineText(line)
                 const taskObject = this.plugin.cacheOperation?.loadTaskFromCacheyID(taskID)
                 const todoistLink = taskObject.url
                 const link = `[link](${todoistLink})`
                 const newLine = this.plugin.taskParser?.addTodoistLink(line, link)
-                if (this.plugin.settings.debugMode) { console.log(`Content for newLine is: ${newLine}`) }
                 lines[i] = newLine
                 modified = true
             } else {
@@ -171,7 +163,6 @@ export class FileOperation {
 
         if (modified) {
             const newContent = lines.join('\n')
-            //console.log(newContent)
             await this.app.vault.modify(file, newContent)
 
 
@@ -198,29 +189,21 @@ export class FileOperation {
 
         const line = lineText
         if (!this.plugin.taskParser?.isMarkdownTask(line)) {
-            //console.log(line)
-            //console.log("It is not a markdown task.")
             return;
         }
         //if content is empty
         if (this.plugin.taskParser?.getTaskContentFromLineText(line) == "") {
-            //console.log("Line content is empty")
             return;
         }
         if (!this.plugin.taskParser?.hasTodoistId(line) && !this.plugin.taskParser?.hasTodoistTag(line)) {
-            //console.log(line)
-            //console.log('prepare to add todoist tag')
             const newLine = this.plugin.taskParser?.addTodoistTag(line);
-            //console.log(newLine)
             lines[lineNumber] = newLine
             modified = true
         }
 
 
         if (modified) {
-            console.log(`New task found in files ${filepath}`)
             const newContent = lines.join('\n')
-            console.log(newContent)
             await this.app.vault.modify(file, newContent)
 
             //update filemetadate
@@ -267,7 +250,6 @@ export class FileOperation {
 
         if (modified) {
             const newContent = lines.join('\n')
-            //console.log(newContent)
             await this.app.vault.modify(file, newContent)
         }
 
@@ -311,13 +293,7 @@ export class FileOperation {
                 // TODO 'trimmedlineTaskDueDate' looks just for the date, removing any other information, like hour. This very likely will break some dates sometimes, need a more inteligent solution
                 const trimmedlineTaskDueDate = lineTaskDueDate.slice(0, 10)
 
-                // if(this.plugin.settings.debugMode){
-                //             console.log(`lineTaskDueDate: ${lineTaskDueDate} and newTaskDueDate: ${newTaskDueDate}`)
-                //             console.log(`lineTaskTime: ${lineTaskTime} and newTaskTime: ${newTaskTime}`)
-                // }
-
                 if (this.plugin.taskParser && lineTaskDueDate === "") {
-                    if (this.plugin.settings.debugMode) { console.log("Task doesn't have a due date, it will attempt to add one.") }
                     lines[i] = this.plugin.taskParser?.insertDueDateBeforeTodoist(line, newTaskDueDate)
                     modified = true
                 }
@@ -353,7 +329,6 @@ export class FileOperation {
 
         if (modified) {
             const newContent = lines.join('\n')
-            //console.log(newContent)
             await this.app.vault.modify(file, newContent)
         }
 
@@ -362,11 +337,6 @@ export class FileOperation {
 
     // sync new task note to file
     async syncAddedTaskNoteToTheFile(evt: { parent_item_id: string, event_date: string, extra_data: { content: string, event_date: string } }) {
-
-
-        if (this.plugin.settings.debugMode) {
-            console.log("This is the evt object value: " + JSON.stringify(evt))
-        }
 
         const taskId = evt.parent_item_id
         const note = evt.extra_data.content
@@ -401,16 +371,10 @@ export class FileOperation {
 
         if (modified) {
             if (this.plugin.settings.commentsSync) {
-                if (this.plugin.settings.debugMode) { console.log("New comments from the task " + taskId) }
-
                 const newContent = lines.join('\n')
                 //console.log(newContent)
                 await this.app.vault.modify(file, newContent)
             }
-            else {
-                if (this.plugin.settings.debugMode) { console.log("There is new comments on task " + taskId + " but those were not added because the commentsSync settings is disabled.") }
-            }
-
         }
 
     }
@@ -491,7 +455,6 @@ export class FileOperation {
 
     //search filepath by taskid in vault
     async searchFilepathsByTaskidInVault(taskId: string) {
-        console.log(`preprare to search task ${taskId}`)
         const files = await this.getAllFilesInTheVault()
         //console.log(files)
         const tasks = files.map(async (file) => {

@@ -1,7 +1,6 @@
 import { App, requestUrl } from 'obsidian';
 import AnotherSimpleTodoistSync from "../main";
 
-
 type Event = {
   id: string;
   object_type: string;
@@ -29,7 +28,7 @@ export class TodoistSyncAPI {
     this.plugin = plugin;
   }
 
-  //backup todoist
+  //backup Todoist
   async getAllResources() {
     const accessToken = this.plugin.settings.todoistAPIToken
     const url = 'https://api.todoist.com/sync/v9/sync';
@@ -46,22 +45,30 @@ export class TodoistSyncAPI {
     };
 
     try {
-      const response = await fetch(url, options);
+      const response = await requestUrl({
+        url: `${url}`,
+        method: `${options.method}`,
+        headers: {
+          Authorization: `${options.headers.Authorization}`,
+          'Content-Type': `${options.headers['Content-Type']}`
+        },
+        body: `${options.body}`
+      })
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch all resources: ${response.status} ${response.statusText}`);
+      if (response.status >= 400) {
+        throw new Error(`API returned error status: ${response.status}`)
       }
 
-      const data = await response.json();
+      const data = response.json;
 
-      return data;
+      return data
     } catch (error) {
-      console.error(error);
-      throw new Error('Failed to fetch all resources due to network error');
+      console.error(error)
+      throw new Error(`Could not create a backup from Todoist. Please try again later.`)
     }
   }
 
-  //backup todoist
+  //backup Todoist
   async getUserResource() {
     const accessToken = this.plugin.settings.todoistAPIToken
     const url = 'https://api.todoist.com/sync/v9/sync';
@@ -78,18 +85,24 @@ export class TodoistSyncAPI {
     };
 
     try {
-      const response = await fetch(url, options);
+      const response = await requestUrl({
+        url: `${url}`,
+        method: `${options.method}`,
+        headers: {
+          Authorization: `${options.headers.Authorization}`,
+          'Content-Type': `${options.headers['Content-Type']}`
+        },
+        body: `${options.body}`
+      })
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch all resources: ${response.status} ${response.statusText}`);
+      if (response.status >= 400) {
+        throw new Error(`API returned error status: ${response.status}`)
       }
-
-      const data = await response.json();
-      console.log(data)
-      return data;
+      const data = response.json
+      return data
     } catch (error) {
-      console.error(error);
-      throw new Error('Failed to fetch user resources due to network error');
+      console.error('Failed to fetch user resources from Todoist API:', error)
+      throw new Error('Could not retrieve user resources. Please try again later.')
     }
   }
 
@@ -117,18 +130,25 @@ export class TodoistSyncAPI {
     };
 
     try {
-      const response = await fetch(url, options);
+      const response = await requestUrl({
+        url: `${url}`,
+        method: `${options.method}`,
+        headers:{
+          Authorization: `${options.headers.Authorization}`,
+          'Content-Type': `${options.headers['Content-Type']}`
+        },
+        body: `${options.body}`
+      })
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch all resources: ${response.status} ${response.statusText}`);
+      if(response.status >= 400) {
+        throw new Error(`API returned error status: ${response.status}`)
       }
 
-      const data = await response.json();
-      console.log(data)
-      return data;
-    } catch (error) {
-      console.error(error);
-      throw new Error('Failed to fetch user resources due to network error');
+      const data = response.json
+      return data
+    } catch(error){
+      console.error(`Failed to update user timezone on Todoist API:`, error)
+      throw new Error(`Could not update the user timezone, please try again later.`)
     }
   }
 
@@ -209,18 +229,25 @@ export class TodoistSyncAPI {
     };
 
     try {
-      const response = await fetch(url, options);
+      const response = await requestUrl({
+        url: `${url}`,
+        method: `${options.method}`,
+        headers:{
+          Authorization: `${options.headers.Authorization}`,
+          'Content-Type': `${options.headers['Content-Type']}`
+        },
+        body: `${options.body}`
+      })
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch completed items: ${response.status} ${response.statusText}`);
+      if(response.status >= 400) {
+        throw new Error(`API returned error status: ${response.status}`)
       }
 
-      const data = await response.json();
-
-      return data;
-    } catch (error) {
-      console.error(error);
-      throw new Error('Failed to fetch completed items due to network error');
+      const data = response.json
+      return data
+    }catch(error){
+      console.error(`Failed to get all completed activities from Todoist API:`, error)
+      throw new Error(`Could not fetch all completed activities, please try again later.`)
     }
   }
 
@@ -244,18 +271,25 @@ export class TodoistSyncAPI {
     };
 
     try {
-      const response = await fetch(url, options);
+      const response = await requestUrl({
+        url: `${url}`,
+        method: `${options.method}`,
+        headers:{
+          Authorization: `${options.headers.Authorization}`,
+          'Content-Type': `${options.headers['Content-Type']}`
+        },
+        body: `${options.body}`
+      })
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch uncompleted items: ${response.status} ${response.statusText}`);
+      if(response.status >= 400) {
+        throw new Error(`API returned error status: ${response.status}`)
       }
 
-      const data = await response.json();
-
-      return data;
-    } catch (error) {
-      console.error(error);
-      throw new Error('Failed to fetch uncompleted items due to network error');
+      const data = response.json
+      return data
+    } catch(error){
+      console.error(`Failed to fetch uncompleted activities from Todoist API:`, error)
+      throw new Error(`Failed to fetch uncompleted activities, please try again later.`)
     }
   }
 
@@ -299,18 +333,25 @@ export class TodoistSyncAPI {
     };
 
     try {
-      const response = await fetch(url, options);
+      const response = await requestUrl({
+        url: `${url}`,
+        method: `${options.method}`,
+        headers:{
+          Authorization: `${options.headers.Authorization}`,
+          'Content-Type': `${options.headers['Content-Type']}`
+        },
+        body: `${options.body}`
+      })
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch updated items: ${response.status} ${response.statusText}`);
+      if(response.status >= 400) {
+        throw new Error(`API returned error status: ${response.status}`)
       }
 
-      const data = await response.json();
-      //console.log(data)
-      return data;
-    } catch (error) {
-      console.error(error);
-      throw new Error('Failed to fetch updated items due to network error');
+      const data = response.json
+      return data
+    } catch(error){
+      console.error(`Failed to fetch updated itens from Todoist API:`, error)
+      throw new Error(`Could not fetch updated itens, please try again later.`)
     }
   }
 
@@ -345,18 +386,25 @@ export class TodoistSyncAPI {
     };
 
     try {
-      const response = await fetch(url, options);
+      const response = await requestUrl({
+        url: `${url}`,
+        method: `${options.method}`,
+        headers:{
+          Authorization: `${options.headers.Authorization}`,
+          'Content-Type': `${options.headers['Content-Type']}`
+        },
+        body: `${options.body}`
+      })
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch  projects activities: ${response.status} ${response.statusText}`);
+      if(response.status >= 400) {
+        throw new Error(`API returned error status: ${response.status}`)
       }
 
-      const data = await response.json();
-
-      return data;
-    } catch (error) {
-      console.error(error);
-      throw new Error('Failed to fetch projects activities due to network error');
+      const data = response.json
+      return data
+    } catch(error){
+      console.error(`Failed to get project activities from Todoist API:`, error)
+      throw new Error(`Could not fetch project activities, please try again later.`)
     }
   }
 
