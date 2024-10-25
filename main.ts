@@ -66,7 +66,15 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 
 			// TODO If 'Enter' is pressed, check if there is a new task
 			// if(evt.key === "Enter"){
+			// 	console.log("Enter pressed")
 			// }
+			if (evt.key === 'ArrowUp' || evt.key === 'ArrowDown' || evt.key === 'ArrowLeft' || evt.key === 'ArrowRight' ||evt.key === 'PageUp' || evt.key === 'PageDown') {
+				//console.log(`${evt.key} arrow key is released`);
+				if(!( this.checkModuleClass())){
+					return
+				}
+				this.lineNumberCheck()
+			}
 
 			if (evt.key === "Delete" || evt.key === "Backspace") {
 				try {
@@ -113,6 +121,32 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			}
 
 		});
+
+		//hook editor-change 事件，如果当前line包含 #todoist,说明有new task
+		this.registerEvent(this.app.workspace.on('editor-change',async (editor,view:MarkdownView)=>{
+			try{
+				if(!this.settings.apiInitialized){
+					return
+				}
+	
+				this.lineNumberCheck()
+				if(!(this.checkModuleClass())){
+					return
+				}
+				if(this.settings.enableFullVaultSync){
+					return
+				}
+				if (!await this.checkAndHandleSyncLock()) return;
+				await this.todoistSync?.lineContentNewTaskCheck(editor,view)
+				this.syncLock = false
+				this.saveSettings()
+
+			}catch(error){
+				console.error(`An error occurred while check new task in line: ${error.message}`);
+				this.syncLock = false
+			}
+
+		}))
 
 		//监听 rename 事件,更新 task data 中的 path
 		this.registerEvent(this.app.vault.on('rename', async (file, oldpath) => {
@@ -474,7 +508,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 		if (!(this.checkModuleClass())) {
 			return;
 		}
-		// {console.log("Todoist scheduled synchronization task started at", new Date().toLocaleString());}
+		{{console.log("Todoist scheduled synchronization task started at", new Date().toLocaleString());}}
 		try {
 			if (!await this.checkAndHandleSyncLock()) return;
 			try {
@@ -493,15 +527,8 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			await new Promise(resolve => setTimeout(resolve, 5000));
 
 			const filesToSync = this.settings.fileMetadata;
-			// if(this.settings.debugMode){
-			// 	console.log(`filesToSync are ${JSON.stringify(filesToSync)}`)
-			// }
 
 			for (const fileKey in filesToSync) {
-				// if(this.settings.debugMode){
-				// 	console.log(`fileKey is ${fileKey}`)
-				// }
-
 				if (!await this.checkAndHandleSyncLock()) return;
 				try {
 					await this.todoistSync?.fullTextNewTaskCheck(fileKey);
@@ -532,7 +559,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			new Notice('An error occurred:', error);
 			this.syncLock = false;
 		}
-		// console.log("Todoist scheduled synchronization task completed at", new Date().toLocaleString());
+		console.log("Todoist scheduled synchronization task completed at", new Date().toLocaleString());
 	}
 
 	async checkSyncLock() {
@@ -549,12 +576,10 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 
 	async checkAndHandleSyncLock() {
 		if (this.syncLock) {
-			// console.log('sync locked.');
 			const isSyncLockChecked = await this.checkSyncLock();
 			if (!isSyncLockChecked) {
 				return false;
 			}
-			// console.log('sync unlocked.')
 		}
 		this.syncLock = true;
 		return true;

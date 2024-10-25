@@ -828,18 +828,16 @@ export class TodoistSync {
                 (objA: any) => !savedEvents.some((objB: any) => objB.id === objA.id)
             )
 
-
             const savedTasks = await this.plugin.cacheOperation?.loadTasksFromCache()
-            // 找出 task id 存在于 Obsidian 中的 task activity
+            // Find the task activity whose task id exists in Obsidian
             const result2 = result1.filter(
                 (objA: any) => savedTasks.some((objB: any) => objB.id === objA.object_id)
             )
-            // 找出 task id 存在于 Obsidian 中的 note activity
+
+            // Find the task id that exists in the note activity in Obsidian
             const result3 = result1.filter(
                 (objA: any) => savedTasks.some((objB: any) => objB.id === objA.parent_item_id)
             )
-
-
 
 
             const unsynchronized_item_completed_events = this.plugin.todoistSyncAPI?.filterActivityEvents(result2, { event_type: 'completed', object_type: 'item' })

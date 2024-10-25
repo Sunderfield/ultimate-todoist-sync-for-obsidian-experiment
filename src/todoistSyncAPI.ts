@@ -99,6 +99,7 @@ export class TodoistSyncAPI {
         throw new Error(`API returned error status: ${response.status}`)
       }
       const data = response.json
+      console.log(`getUserResource is ${JSON.stringify(data)}`)
       return data
     } catch (error) {
       console.error('Failed to fetch user resources from Todoist API:', error)
@@ -175,7 +176,6 @@ export class TodoistSyncAPI {
 
       // Extract the JSON data from the response.
       const data = response.json;
-
       return data;
     } catch (error) {
       console.error('Failed to fetch data from Todoist API:', error);
@@ -190,7 +190,6 @@ export class TodoistSyncAPI {
       const allActivityEvents = allActivity.events
       //client中不包含obsidian 的activity
       const filteredArray = allActivityEvents.filter((obj: Event) => !obj.extra_data.client?.includes("obsidian"));
-      //console.log(filteredArray)
       return (filteredArray)
 
     } catch (err) {
@@ -348,6 +347,7 @@ export class TodoistSyncAPI {
       }
 
       const data = response.json
+      console.log(`getUpdatedItemsActivity is : ${JSON.stringify(data)}`)
       return data
     } catch(error){
       console.error(`Failed to fetch updated itens from Todoist API:`, error)
@@ -401,6 +401,7 @@ export class TodoistSyncAPI {
       }
 
       const data = response.json
+      console.log(`getProjectsActivity is: ${JSON.stringify(data)}`)
       return data
     } catch(error){
       console.error(`Failed to get project activities from Todoist API:`, error)

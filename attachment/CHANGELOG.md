@@ -1,5 +1,11 @@
 ## CHANGELOG
 
+## 2024-10-24
+
+### 0.4.3
+
+-   Had to move back the "quick check for new tasks" as without it, breaks the logic for new tasks in some cases.
+
 ### 2024-10-24
 
 #### 0.4.2
