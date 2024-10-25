@@ -69,6 +69,8 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			// 	console.log("Enter pressed")
 			// }
 			if (evt.key === 'ArrowUp' || evt.key === 'ArrowDown' || evt.key === 'ArrowLeft' || evt.key === 'ArrowRight' ||evt.key === 'PageUp' || evt.key === 'PageDown') {
+				// TODO for some reason, in some cases, without this wait, the task is deleted just after the task is created. Still didnt found why
+				await new Promise(resolve => setTimeout(resolve, 10000));
 				//console.log(`${evt.key} arrow key is released`);
 				if(!( this.checkModuleClass())){
 					return
@@ -124,6 +126,8 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 
 		//hook editor-change 事件，如果当前line包含 #todoist,说明有new task
 		this.registerEvent(this.app.workspace.on('editor-change',async (editor,view:MarkdownView)=>{
+			// TODO for some reason, in some cases, without this wait, the task is deleted just after the task is created. Still didnt found why
+			await new Promise(resolve => setTimeout(resolve, 10000));
 			try{
 				if(!this.settings.apiInitialized){
 					return

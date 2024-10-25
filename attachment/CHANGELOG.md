@@ -2,11 +2,13 @@
 
 ## 2024-10-24
 
+### 0.4.4
+
+-   Added a "sleep" on the new task check to avoid deleting the task before is registerd. Still not the final solution, is has a bug still.
+
 ### 0.4.3
 
 -   Had to move back the "quick check for new tasks" as without it, breaks the logic for new tasks in some cases.
-
-### 2024-10-24
 
 #### 0.4.2
 
