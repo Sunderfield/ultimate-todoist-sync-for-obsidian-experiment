@@ -64,10 +64,6 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 				return
 			}
 
-			// TODO If 'Enter' is pressed, check if there is a new task
-			// if(evt.key === "Enter"){
-			// 	console.log("Enter pressed")
-			// }
 			if (evt.key === 'ArrowUp' || evt.key === 'ArrowDown' || evt.key === 'ArrowLeft' || evt.key === 'ArrowRight' ||evt.key === 'PageUp' || evt.key === 'PageDown') {
 				// TODO for some reason, in some cases, without this wait, the task is deleted just after the task is created. Still didnt found why
 				await new Promise(resolve => setTimeout(resolve, 10000));

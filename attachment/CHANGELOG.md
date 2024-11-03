@@ -1,5 +1,12 @@
 ## CHANGELOG
 
+## 2024-11-03
+
+### 0.4.6
+
+-   Added a debounced call for saving settings for the custom synctag
+-   Added a debounced call for the Sync Interval on settings
+
 ## 2024-11-02
 
 ### 0.4.5

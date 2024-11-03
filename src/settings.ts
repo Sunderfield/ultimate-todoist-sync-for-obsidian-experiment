@@ -1,4 +1,4 @@
-import { App, Notice, PluginSettingTab, Setting } from 'obsidian';
+import { App, debounce, Notice, PluginSettingTab, Setting } from 'obsidian';
 import AnotherSimpleTodoistSync from "../main";
 
 interface MyProject {
@@ -38,7 +38,7 @@ export const DEFAULT_SETTINGS: Partial<UltimateTodoistSyncSettings> = {
 	statistics: {},
 	debugMode: false,
 	commentsSync: true,
-	alternativeKeywords: false,
+	alternativeKeywords: true,
 	customSyncTag: "#tdsync",
 	experimentalFeatures: false,
 
@@ -91,7 +91,26 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 
 			})
 
-
+			// Debouces the sync interval value, to avoid triggering while the user is still typing
+			const deboucedSyncSave = debounce((sync_interval: number) => {
+				const intervalNum = Number(sync_interval)
+				if (isNaN(intervalNum)) {
+					new Notice(`Wrong type,please enter a number.`)
+					return
+				}
+				if (intervalNum < 20) {
+					new Notice(`The synchronization interval time cannot be less than 20 seconds.`)
+					console.error(`The synchronization interval time cannot be less than 20 seconds.`)
+					return
+				}
+				if (!Number.isInteger(intervalNum)) {
+					new Notice('The synchronization interval must be an integer.');
+					return;
+				}
+				this.plugin.settings.automaticSynchronizationInterval = intervalNum;
+				this.plugin.saveSettings()
+				new Notice('Settings have been updated.');
+			}, 1000,true)
 
 
 		new Setting(containerEl)
@@ -102,23 +121,7 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 					.setPlaceholder('Sync interval')
 					.setValue(this.plugin.settings.automaticSynchronizationInterval.toString())
 					.onChange(async (value) => {
-						const intervalNum = Number(value)
-						if (isNaN(intervalNum)) {
-							new Notice(`Wrong type,please enter a number.`)
-							return
-						}
-						if (intervalNum < 20) {
-							new Notice(`The synchronization interval time cannot be less than 20 seconds.`)
-							return
-						}
-						if (!Number.isInteger(intervalNum)) {
-							new Notice('The synchronization interval must be an integer.');
-							return;
-						}
-						this.plugin.settings.automaticSynchronizationInterval = intervalNum;
-						this.plugin.saveSettings()
-						new Notice('Settings have been updated.');
-						//
+						deboucedSyncSave(Number(value))
 					})
 
 			)
@@ -337,7 +340,7 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Experimental features')
-			.setDesc('Enable experimental features. Some might not be working yet.')
+			.setDesc('Manage experimental features. Some might not be working yet or have bugs.')
 			.addToggle(component =>
 				component
 					.setValue(this.plugin.settings.experimentalFeatures)
@@ -347,23 +350,52 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 						new Notice('Experimental features have been enabled. Close this window and open again to see the experimental features.')
 					})
 			)
+			
+			// Test if the tag has #, if not, return false
+			function checkTagValue(tag:string) {
+				const tagRegexRule = /#[\w\u4e00-\u9fa5-]+/g
+				const tagRegexTest = tagRegexRule.test(tag)
+
+				if(tagRegexTest){
+					return true
+				} else {
+					return false
+				}
+			}
+
+			// Debouces the save function for 1 secon to avoid triggering multiple notices
+		const deboucedTagSave = debounce((tag:string) => {
+			this.plugin.settings.customSyncTag = tag;
+			this.plugin.saveSettings()
+			new Notice('New custom sync tag have been updated.');
+		},1000,true)
 
 		if (this.plugin.settings.experimentalFeatures) {
 			new Setting(containerEl)
 				.setName('Custom sync tag')
-				.setDesc('Set a custom tag to sync tasks with Todoist. NOTE: Using #todoist might conflict with old version of this plugin')
+				.setDesc('Set a custom tag to sync tasks with Todoist. NOTE: Using #todoist might conflict with older version of this plugin')
 				.addText((text) => text.setPlaceholder('Enter custom tag')
 					.setValue(this.plugin.settings.customSyncTag).onChange(async (value) => {
-						this.plugin.settings.customSyncTag = value;
-						// TODO add validation on the value of 'value' to make sure is a tag with #
-						this.plugin.saveSettings()
-						new Notice('New custom sync tag have been updated.');
+						const valueCleaned = value.replace(" ","")
+						checkTagValue(valueCleaned)
+
+						if(!checkTagValue(valueCleaned)) {
+							console.error(`The tag must contain a # symbol and at least 1 character to be considered a valid sync tag.`)
+							new Notice('The tag must contain a # symbol.')
+						}
+
+						if(checkTagValue(valueCleaned)){
+							deboucedTagSave(valueCleaned)
+						}
+
 					}));
 		}
+
+		
 		if (this.plugin.settings.experimentalFeatures) {
 			new Setting(containerEl)
 				.setName('Alternative keywords')
-				.setDesc('Enable the use of @ for settings calendar time, $ for time and & for duration.')
+				.setDesc('Enable the use of @ for settings calendar time, $ for time and & for duration. Enabled by default.')
 				.addToggle(component =>
 					component.setValue(this.plugin.settings.alternativeKeywords).onChange((value) => {
 						this.plugin.settings.alternativeKeywords = value
