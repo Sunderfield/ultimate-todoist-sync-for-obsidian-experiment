@@ -41,7 +41,7 @@ Create, edit and delete tasks from Obsidian.md to your Todoist.
 
 ## Installation
 
-> ![WARNING]
+> [!WARNING]
 > The plugin will require the _Todoist API token_, which can be found on your `Settings > Integrations > Developer` ([direct link here](https://app.todoist.com/app/settings/integrations/developer))
 
 ### From within Obsidian
@@ -50,7 +50,7 @@ Create, edit and delete tasks from Obsidian.md to your Todoist.
 2. Click `Browse` and search for `Another Todoist Sync Plugin`
 3. Back to `Community plugins`, find the `Installed Plugins` section and activate the `Another Todoist Sync Plugin`
 
-> ![NOTE]
+> [!NOTE]
 > You can update the plugin following the same procedure, clicking Update instead of Install
 
 ### Manually
