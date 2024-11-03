@@ -155,7 +155,7 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 					try {
 						await this.plugin.scheduledSynchronization()
 						this.plugin.syncLock = false
-						new Notice(`Sync completed..`)
+						new Notice(`Sync with Todoist completed.`)
 					} catch (error) {
 						new Notice(`An error occurred while syncing.:${error}`)
 						this.plugin.syncLock = false

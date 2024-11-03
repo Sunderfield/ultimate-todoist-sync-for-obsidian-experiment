@@ -78,7 +78,38 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 				this.lineNumberCheck()
 			}
 
-			if (evt.key === "Delete" || evt.key === "Backspace") {
+			if(evt.key === 'Enter'){
+				// Check if the line has a task when the user hits "enter" (to select a tag)
+				// TODO needs to modify lineContentNewTaskCheck to accept if is the current ore previous line, so when the user jumps to the next line, we can check for a task within the previous line
+				try{
+					const editor = this.app.workspace.activeEditor?.editor
+					const view = this.app.workspace.getActiveViewOfType(MarkdownView)
+
+					if(!this.settings.apiInitialized){
+						return
+					}
+		
+					this.lineNumberCheck()
+					if(!(this.checkModuleClass())){
+						return
+					}
+					if(this.settings.enableFullVaultSync){
+						return
+					}
+					if (!await this.checkAndHandleSyncLock()) return;
+					if(view){
+						await this.todoistSync?.lineContentNewTaskCheck(editor,view)
+					}
+					this.syncLock = false
+					this.saveSettings()
+	
+				}catch(error){
+					console.error(`An error occurred while check new task in line: ${error.message}`);
+					this.syncLock = false
+				}
+			}
+
+			if (evt.key === "Delete" || evt.key === "Backspace" || evt.key === "Del") {
 				try {
 					if (!(this.checkModuleClass())) {
 						return
@@ -417,9 +448,6 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 
 
 
-			}
-			else {
-				//console.log('Line not changed');				
 			}
 
 		}

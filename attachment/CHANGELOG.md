@@ -1,5 +1,12 @@
 ## CHANGELOG
 
+## 2024-11-02
+
+### 0.4.5
+
+-   Added a "checkForTasksWithoutLink" to avoid deleting tasks that don't have link yet on the syncModule.ts
+-   Updated readme to include instructions to install from within Obsidian
+
 ## 2024-10-24
 
 ### 0.4.4

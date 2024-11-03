@@ -19,8 +19,33 @@ export class TodoistSync {
 
     }
 
+    // Check if the file has "tasks" without links
+    checkForTasksWithoutLink(){
+        
+        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+        const currentFileValue = view?.data
+        const regexTags = /#tdsync/gm
+        const regexLinks = /%%\[tid::\s\[\d*\]\(https:\/\/app.todoist.com\/app\/task\/\d*\)\]%%/g
+
+        const countTags = currentFileValue?.match(regexTags)
+        const countLinks = currentFileValue?.match(regexLinks)
+
+        if(countLinks?.length === countTags?.length){
+            return false
+        } else {
+            return true
+        }
+
+    }
+
 
     async deletedTaskCheck(file_path: string): Promise<void> {
+
+        const hasEmptyTasks = this.checkForTasksWithoutLink()
+        if(hasEmptyTasks){
+            return
+        }
+        
 
         let file
         let currentFileValue
@@ -132,8 +157,6 @@ export class TodoistSync {
             console.error('File path is undefined');
             return
         }
-
-
 
         //添加task
         if ((!this.plugin.taskParser?.hasTodoistId(linetxt) && this.plugin.taskParser?.hasTodoistTag(linetxt))) {   //是否包含#todoist
