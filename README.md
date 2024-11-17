@@ -1,6 +1,6 @@
 # Another Simple Todoist Sync for Obsidian (BETA)
 
-Create, edit and delete tasks from Obsidian.md to your Todoist.
+Create, edit and delete tasks from within Obsidian.md to your Todoist.
 
 > [!WARNING]
 > This is a fork from the [Ultimate Todoist Sync plugin for Obsidian](https://github.com/HeroBlackInk/ultimate-todoist-sync-for-obsidian). I'm still working on fixing some things, but the main feature should be working. I'm considering this feature a beta. Feel free to contribute.
@@ -104,7 +104,7 @@ Create, edit and delete tasks from Obsidian.md to your Todoist.
 -   [4] On the original plugin, this tag was `#todoist`, but on this fork was changed to avoid conflicts.
 -   [5] Supports the following characters/emojis: ⏳, & [6]
 -   [6] Alternative characters are enabled via "Alternative Keywords" on plugin settings page
--   [7] The section cannot be updated via Obsidian after is set because the current REST API doesn't have support for it.
+-   [7] If the section if removed from the task content, it won't update in Todoist (yet)
 
 </details>
 
