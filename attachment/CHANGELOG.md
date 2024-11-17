@@ -1,5 +1,11 @@
 ## CHANGELOG
 
+## 2024-11-17
+
+### 0.4.7
+
+-   Tasks with modified sections are updated via SyncAPI now
+
 ## 2024-11-03
 
 ### 0.4.6

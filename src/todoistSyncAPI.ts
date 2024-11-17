@@ -1,5 +1,6 @@
 import { App, requestUrl } from 'obsidian';
 import AnotherSimpleTodoistSync from "../main";
+import {v4 as uuidv4 } from "uuid";
 
 type Event = {
   id: string;
@@ -401,7 +402,6 @@ export class TodoistSyncAPI {
       }
 
       const data = response.json
-      console.log(`getProjectsActivity is: ${JSON.stringify(data)}`)
       return data
     } catch(error){
       console.error(`Failed to get project activities from Todoist API:`, error)
@@ -409,9 +409,60 @@ export class TodoistSyncAPI {
     }
   }
 
-}
+  async generateUniqueId(): Promise<string> {
+    const uuidString = JSON.stringify(uuidv4())
+    return uuidString
+  }
 
+  async moveTaskToAnotherSection(taskId: string, newSectionId: string) {
+    const accessToken = this.plugin.settings.todoistAPIToken
+    const url = 'https://api.todoist.com/sync/v9/sync'
+    const options = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    };
 
+    // TODO generate a random UUID
+    const random_uuid =  await this.generateUniqueId()
+
+    const commands = JSON.stringify([
+      {
+        type: "item_move",
+        uuid: random_uuid,
+        args: {
+          id: taskId,
+          section_id: newSectionId,
+        },
+      },
+    ]);
+
+    try {
+      const response = await requestUrl({
+        url: `${url}`,
+        method: `${options.method}`,
+        headers:{
+          Authorization: `${options.headers.Authorization}`,
+          'Content-Type': `${options.headers['Content-Type']}`
+        },
+        body: new URLSearchParams({ commands }).toString(),
+      })
+
+      if(response.status >= 400) {
+        throw new Error(`API returned error status: ${response.status}`)
+      }
+
+      const data = response.json
+      return data
+    } catch(error){
+        console.error(`Failed to update a task section:`, error)
+      throw new Error(`Could not update a task section, please try again later.`)
+    }
+    }
+    
+  }
 
 
 

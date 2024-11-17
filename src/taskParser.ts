@@ -78,7 +78,7 @@ export class TaskParser {
         // let projectName = this.plugin.cacheOperation?.getProjectNameByIdFromCache(projectId)
 
 
-        // If the task has seection, it tries to retrieve from cache, if don't find, create a new one and store it on cache.
+        // If the task has section, it tries to retrieve from cache, if don't find, create a new one and store it on cache.
         if (section) {
             const hasSectionOnCache = this.plugin.cacheOperation?.checkIfSectionExistOnCache(section, projectId)
             if (hasSectionOnCache) {
@@ -544,7 +544,8 @@ export class TaskParser {
         const lineTaskSectionName = this.plugin.cacheOperation?.getSectionNameByIdFromCache(lineTask.sectionId)
         const todoistTaskSectionName = this.plugin.cacheOperation?.getSectionNameByIdFromCache(todoistTask.sectionId)
 
-        // If there is no section defined on the task, should not try to compare
+        // If there is no section defined on the task, should not try to compare.
+        // TODO if there was a section and it was removed, needs to remove it from that section
         if (lineTaskSectionName === "") {
             return false
         }

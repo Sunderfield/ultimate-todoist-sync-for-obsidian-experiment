@@ -496,10 +496,11 @@ export class TodoistSync {
                     priorityChanged = true;
                 }
 
+                // If the section was modified, it moves the task to the new section and update the cache
                 if (sectionModified) {
-                    console.error(`The current REST API doesn't support section updates. Section won't be updated for task ${lineTask_todoist_id}`)
-                    // updatedContent.sectionId = lineTask.sectionId
-                    // sectionChanged = true;
+                    this.plugin.todoistSyncAPI?.moveTaskToAnotherSection(lineTask.todoist_id,lineTask.sectionId)
+                    this.plugin.cacheOperation?.updateTaskSectionOnCacheById(lineTask.todoist_id,lineTask.sectionId)
+                    new Notice(`Task ${lineTask.todoist_id} moved to ${lineTask.sectionId}.`)
                 }
 
 

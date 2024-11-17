@@ -310,9 +310,28 @@ export class CacheOperation {
         }
     }
 
-    //due 的结构  {date: "2025-02-25",isRecurring: false,lang: "en",string: "2025-02-25"}
+// Update just the sectionID from a given task within the Cache
+    updateTaskSectionOnCacheById(taskId:string,newSectionId:string){
+        try {
+            const savedTasks = this.plugin.settings.todoistTasksData.tasks;
+            const taskIndex = savedTasks.findIndex((task: any) => task.id === taskId)
 
+            if(taskIndex !== -1) {
+                const updatedTask = {...savedTasks[taskIndex]}
+                if(newSectionId !== undefined){
+                    updatedTask.sectionId = newSectionId
+                }
+                savedTasks[taskIndex] = updatedTask
+                this.plugin.settings.todoistTasksData.tasks = savedTasks
+            }
+            else {
+                throw new Error(`Task with ID ${taskId} not found in cache.`)
+            }
 
+        } catch(error){
+            // Handle the error appropriately, e.g. by logging it or re-throwing it.
+        }
+    }
 
     modifyTaskToCacheByID(taskId: string, { content, due }: { content?: string, due?: Due }): void {
         try {
