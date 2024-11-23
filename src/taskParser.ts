@@ -787,8 +787,17 @@ export class TaskParser {
         // Looks for #todoist to identify where to put the link.
         // TODO let the user choose which tag to use
         const regex = new RegExp(this.keywords_function("TODOIST_TAG"), "g");
-        // TODO check if already has a link, to prevent from adding multiple links
-        return linetext.replace(regex, ' ' + '$&' + ' ' + todoistLink);
+
+        const date_regex = /(?:🗓️|📅|📆|🗓|@)\s\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])\b/;
+        const grab_regex_date = new RegExp(date_regex,"g")
+        if(date_regex.test(linetext) && this.plugin.settings.changeDateOrder) {
+            // TODO check if already has a link, to prevent from adding multiple links
+            return linetext.replace(grab_regex_date, todoistLink + ' ' + '$&');
+        } else {
+            // TODO check if already has a link, to prevent from adding multiple links
+            return linetext.replace(regex, ' ' + '$&' + ' ' + todoistLink);
+        }
+     
     }
 
 

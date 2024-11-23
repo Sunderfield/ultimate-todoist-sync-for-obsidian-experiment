@@ -24,6 +24,7 @@ export interface UltimateTodoistSyncSettings {
 	alternativeKeywords: boolean;
 	customSyncTag: string;
 	experimentalFeatures: boolean;
+	changeDateOrder:boolean;
 }
 
 
@@ -41,7 +42,7 @@ export const DEFAULT_SETTINGS: Partial<UltimateTodoistSyncSettings> = {
 	alternativeKeywords: true,
 	customSyncTag: "#tdsync",
 	experimentalFeatures: false,
-
+	changeDateOrder: false,
 }
 
 
@@ -401,6 +402,18 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 						this.plugin.settings.alternativeKeywords = value
 						this.plugin.saveSettings()
 					}));
+		}
+
+		if (this.plugin.settings.experimentalFeatures){
+			new Setting(containerEl)
+				.setName('Obsidian Tasks Integration')
+				.setDesc('In order to have this plugin properly working with Obsidian Tasks plugin, it has to reorder the link and tid comment.')
+				.addToggle(component =>
+					component.setValue(this.plugin.settings.changeDateOrder).onChange((value) =>{
+						this.plugin.settings.changeDateOrder = value
+						this.plugin.saveSettings()
+					})
+				)
 		}
 
 		// TODO need to evaluate if this feature is still working after all the new features

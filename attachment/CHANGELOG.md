@@ -1,5 +1,11 @@
 ## CHANGELOG
 
+## 2024-11-23
+
+### 0.4.8
+
+-   Included the "Task Reoder" feature within the Experimental Features.
+
 ## 2024-11-17
 
 ### 0.4.7
