@@ -152,7 +152,7 @@ export class FileOperation {
                 const taskID = this.plugin.taskParser?.getTodoistIdFromLineText(line)
                 const taskObject = this.plugin.cacheOperation?.loadTaskFromCacheyID(taskID)
                 const todoistLink = taskObject.url
-                const link = `[link](${todoistLink})`
+                const link = `%%tid:: [${taskID}](${todoistLink})%%`
                 const newLine = this.plugin.taskParser?.addTodoistLink(line, link)
                 lines[i] = newLine
                 modified = true

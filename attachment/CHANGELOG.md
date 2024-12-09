@@ -1,5 +1,12 @@
 ## CHANGELOG
 
+## 2024-12-08
+
+### 0.4.9
+
+-   Included an options to change links to todoist URI instead of brower link
+-   Fixed #8 where "Check Database" added duplicated "link" to the tasks
+
 ## 2024-11-23
 
 ### 0.4.8

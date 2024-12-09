@@ -210,10 +210,8 @@ export class TaskParser {
         if (text === "") {
             return null
         } else {
-
-            const regex_tag_test = new RegExp(/%%\[tid:: \[(\d+)\]\(https:\/\/app.todoist.com\/app\/task\/(\d+)\)\]%%/).test(text)
-
-
+            const regex_tag_test = new RegExp(/tid:: \[\d+\]\((?:https:\/\/app.todoist.com\/app\/task\/\d+|todoist:\/\/task\?id=\d+)\)/).test(text)
+            console.log(`regex_tag_test value for text ${text} is ${regex_tag_test}`)
             return (regex_tag_test)
         }
     }
@@ -340,12 +338,14 @@ export class TaskParser {
             remove_checkbox_with_indentation: /^([ \t]*)?(-|\*)\s+\[(x|X| )\]\s/,
             // REMOVE_TODOIST_LINK: /\[link\]\(.*?\)/,
             remove_todoist_tid_link: /%%\[tid::\s*\[\d+\]\(https:\/\/app.todoist\.com\/app\/task\/\d+\)\]%%/,
+            remove_todoist_tid_applink: /%%\[tid::\s*\[\d+\]\(todoist:\/\/task\?id=\d+\)\]%%/,
             remove_todoist_duration: new RegExp(`(⏳|&)\\d+min`),
             remove_todoist_section: /\/\/\/\w*/
         }
 
         const TaskContent = lineText.replace(regex_remove_rules.remove_inline_metada, "")
             .replace(regex_remove_rules.remove_todoist_tid_link, "")
+            .replace(regex_remove_rules.remove_todoist_tid_applink,"")
             .replace(regex_remove_rules.remove_priority, " ") //priority 前后必须都有空格，
             .replace(regex_remove_rules.remove_tags, "")
             .replace(regex_remove_rules.remove_date, "")
@@ -355,7 +355,8 @@ export class TaskParser {
             .replace(regex_remove_rules.remove_space, "")
             .replace(regex_remove_rules.remove_todoist_duration, "") //remove duration
             .replace(regex_remove_rules.remove_todoist_section, "") //remove section
-
+            
+            console.log(`taskContent is ${TaskContent}`)
         return (TaskContent)
     }
 
@@ -804,7 +805,9 @@ export class TaskParser {
     //检查是否包含todoist link
     hasTodoistLink(lineText: string) {
         // TODOIST_LINK:/\[link\]\(.*?\)/,
-        const regex_has_todoist_link = new RegExp(/%%\[tid::\s*\[\d+\]\(https:\/\/todoist\.com\/app\/task\/\d+\)\]%%/);
+        const regex_has_todoist_link = new RegExp(/%% \[tid::\(\d+\)\[(?:https:\/\/app.todoist.com\/app\/task\/\d+|todoist:\/\/task\?id=\d+)\]%%/);
+
+        console.log(`regex_has_todoist_link.test(lineText) value is ${regex_has_todoist_link.test(lineText)} and regex_has_todoist_link value is ${regex_has_todoist_link}`)
 
         return (regex_has_todoist_link.test(lineText))
     }

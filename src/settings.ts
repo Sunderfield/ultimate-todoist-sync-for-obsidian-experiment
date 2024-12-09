@@ -25,6 +25,7 @@ export interface UltimateTodoistSyncSettings {
 	customSyncTag: string;
 	experimentalFeatures: boolean;
 	changeDateOrder:boolean;
+	linksAppURI: boolean;
 }
 
 
@@ -43,6 +44,7 @@ export const DEFAULT_SETTINGS: Partial<UltimateTodoistSyncSettings> = {
 	customSyncTag: "#tdsync",
 	experimentalFeatures: false,
 	changeDateOrder: false,
+	linksAppURI: false,
 }
 
 
@@ -411,6 +413,18 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 				.addToggle(component =>
 					component.setValue(this.plugin.settings.changeDateOrder).onChange((value) =>{
 						this.plugin.settings.changeDateOrder = value
+						this.plugin.saveSettings()
+					})
+				)
+		}
+
+		if (this.plugin.settings.experimentalFeatures) {
+			new Setting(containerEl)
+				.setName('Change URL to app URI')
+				.setDesc('Create tasks links using app URI ("todoist://") instead of brower url ("https://app.todoist.com/") to open desktop app instead of browser.')
+				.addToggle(component =>
+					component.setValue(this.plugin.settings.linksAppURI).onChange((value) => {
+						this.plugin.settings.linksAppURI = value
 						this.plugin.saveSettings()
 					})
 				)

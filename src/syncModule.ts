@@ -25,7 +25,7 @@ export class TodoistSync {
         const view = this.app.workspace.getActiveViewOfType(MarkdownView);
         const currentFileValue = view?.data
         const regexTags = /#tdsync/gm
-        const regexLinks = /%%\[tid::\s\[\d*\]\(https:\/\/app.todoist.com\/app\/task\/\d*\)\]%%/g
+        const regexLinks = /%% \[tid::\(\d+\)\[(?:https:\/\/app.todoist.com\/app\/task\/\d+|todoist:\/\/task\?id=\d+)\]%%/g
 
         const countTags = currentFileValue?.match(regexTags)
         const countLinks = currentFileValue?.match(regexLinks)
@@ -188,9 +188,12 @@ export class TodoistSync {
 
                 //todoist id 保存到 任务后面
                 const text_with_out_link = `${linetxt}`;
-                // const text_with_out_link = `${linetxt} %%[todoist_id:: ${todoist_id}]%%`;
-                // const link = `[link](${newTask.url})`
-                const link = `%%[tid:: [${todoist_id}](${newTask.url})]%%`
+                let link;
+                    if(this.plugin.settings.linksAppURI){
+                        link = `%%[tid:: [${todoist_id}](todoist://task?id=${newTask.id})]%%`
+                    } else {
+                        link = `%%[tid:: [${todoist_id}](${newTask.url})]%%`
+                    }
                 const text = this.plugin.taskParser?.addTodoistLink(text_with_out_link, link)
                 const from = { line: cursor.line, ch: 0 };
                 const to = { line: cursor.line, ch: linetxt.length };
@@ -324,9 +327,12 @@ export class TodoistSync {
 
                     //todoist id 保存到 任务后面
                     const text_with_out_link = `${line}`;
-                    // const text_with_out_link = `${line} %%[todoist_id:: ${todoist_id}]%%`;
-                    // const link = `[link](${newTask.url})`
-                    const link = `%%[tid:: [${todoist_id}](${newTask.url})]%%`
+                    let link;
+                    if(this.plugin.settings.linksAppURI){
+                        link = `%%[tid:: [${todoist_id}](todoist://task?id=${newTask.id})]%%`
+                    } else {
+                        link = `%%[tid:: [${todoist_id}](${newTask.url})]%%`
+                    }
                     const text = this.plugin.taskParser?.addTodoistLink(text_with_out_link, link)
                     lines[i] = text;
 
