@@ -211,7 +211,6 @@ export class TaskParser {
             return null
         } else {
             const regex_tag_test = new RegExp(/tid:: \[\d+\]\((?:https:\/\/app.todoist.com\/app\/task\/\d+|todoist:\/\/task\?id=\d+)\)/).test(text)
-            console.log(`regex_tag_test value for text ${text} is ${regex_tag_test}`)
             return (regex_tag_test)
         }
     }
@@ -355,8 +354,6 @@ export class TaskParser {
             .replace(regex_remove_rules.remove_space, "")
             .replace(regex_remove_rules.remove_todoist_duration, "") //remove duration
             .replace(regex_remove_rules.remove_todoist_section, "") //remove section
-            
-            console.log(`taskContent is ${TaskContent}`)
         return (TaskContent)
     }
 
@@ -791,7 +788,7 @@ export class TaskParser {
 
         const date_regex = /(?:🗓️|📅|📆|🗓|@)\s\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])\b/;
         const grab_regex_date = new RegExp(date_regex,"g")
-        if(date_regex.test(linetext) && this.plugin.settings.changeDateOrder) {
+        if(date_regex.test(linetext) && this.plugin.settings.changeDateOrder && !this.plugin.taskParser?.hasTodoistLink) {
             // TODO check if already has a link, to prevent from adding multiple links
             return linetext.replace(grab_regex_date, todoistLink + ' ' + '$&');
         } else {
@@ -805,10 +802,7 @@ export class TaskParser {
     //检查是否包含todoist link
     hasTodoistLink(lineText: string) {
         // TODOIST_LINK:/\[link\]\(.*?\)/,
-        const regex_has_todoist_link = new RegExp(/%% \[tid::\(\d+\)\[(?:https:\/\/app.todoist.com\/app\/task\/\d+|todoist:\/\/task\?id=\d+)\]%%/);
-
-        console.log(`regex_has_todoist_link.test(lineText) value is ${regex_has_todoist_link.test(lineText)} and regex_has_todoist_link value is ${regex_has_todoist_link}`)
-
+        const regex_has_todoist_link = new RegExp(/tid:: \[\d+\]\((?:https:\/\/app.todoist.com\/app\/task\/\d+|todoist:\/\/task\?id=\d+)\)/);
         return (regex_has_todoist_link.test(lineText))
     }
 }

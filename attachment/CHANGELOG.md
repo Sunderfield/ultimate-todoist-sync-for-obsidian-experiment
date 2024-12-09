@@ -1,5 +1,11 @@
 ## CHANGELOG
 
+## 2024-12-09
+
+### 0.4.10
+
+-   There was an issue with 0.4.9 on the fix for #8.
+
 ## 2024-12-08
 
 ### 0.4.9
