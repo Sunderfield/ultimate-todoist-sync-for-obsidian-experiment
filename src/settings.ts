@@ -26,6 +26,7 @@ export interface UltimateTodoistSyncSettings {
 	experimentalFeatures: boolean;
 	changeDateOrder:boolean;
 	linksAppURI: boolean;
+	delayedSync:boolean;
 }
 
 
@@ -45,6 +46,7 @@ export const DEFAULT_SETTINGS: Partial<UltimateTodoistSyncSettings> = {
 	experimentalFeatures: false,
 	changeDateOrder: false,
 	linksAppURI: false,
+	delayedSync: false,
 }
 
 
@@ -444,6 +446,23 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 					new Notice("Full vault sync is enabled.")
 				})
 				
+			)
+		}
+
+		// Prevent plugin from any sync to prevent issues while Obsidian is indexing files
+		if(this.plugin.settings.experimentalFeatures){
+			new Setting(containerEl)
+			.setName('Delayed first Sync')
+			.setDesc('This will hold any sync for 1 minute, to give Obsidian time to sync all files.')
+			.addToggle(component =>
+				component
+				.setValue(this.plugin.settings.delayedSync)
+				.onChange((value) => {
+					this.plugin.settings.delayedSync = value
+					this.plugin.saveSettings()
+					new Notice("First sync will be delayed by 60 seconds.")
+				})
+
 			)
 		}
 

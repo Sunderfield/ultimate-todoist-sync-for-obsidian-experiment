@@ -1,5 +1,12 @@
 ## CHANGELOG
 
+## 2024-12-27
+
+### 0.4.11
+
+-   Added a manual sync option to the action menu
+-   Added a delay first sync option to the action menu
+
 ## 2024-12-09
 
 ### 0.4.10

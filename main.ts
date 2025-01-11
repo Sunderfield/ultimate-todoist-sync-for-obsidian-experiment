@@ -52,6 +52,30 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 		//lastLine 对象 {path:line}保存在lastLines map中
 		this.lastLines = new Map();
 
+		// Create a syncLock effect to prevent sync of tasks while Obsidian is still indexing files and downloading updates
+		let initialSyncIsLocked:boolean;
+
+		function runAfter60Seconds() {
+			console.log("Triggered event after 60 seconds!");
+			initialSyncIsLocked = false;
+			// Place your event code here
+		}
+				
+		function startCounter() {
+			setTimeout(() => {
+			runAfter60Seconds();
+			}, 60000); // 60 seconds
+		}
+
+		if(this.settings.delayedSync) {
+			// Start the counter
+			initialSyncIsLocked = true
+			startCounter();
+				
+		}
+
+
+
 		//key 事件监听，判断换行和删除
 		this.registerDomEvent(document, 'keyup', async (evt: KeyboardEvent) => {
 			if (!this.settings.apiInitialized) {
@@ -65,6 +89,9 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			}
 
 			if (evt.key === 'ArrowUp' || evt.key === 'ArrowDown' || evt.key === 'ArrowLeft' || evt.key === 'ArrowRight' ||evt.key === 'PageUp' || evt.key === 'PageDown') {
+				if(initialSyncIsLocked){
+					return
+				}
 				// TODO for some reason, in some cases, without this wait, the task is deleted just after the task is created. Still didnt found why
 				await new Promise(resolve => setTimeout(resolve, 10000));
 				//console.log(`${evt.key} arrow key is released`);
@@ -75,6 +102,11 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			}
 
 			if(evt.key === 'Enter'){
+
+				// if the plugin settings for sync is enabled, it won't sync for the first 60 seconds
+				if(initialSyncIsLocked){
+					return
+				}
 				// Check if the line has a task when the user hits "enter" (to select a tag)
 				// TODO needs to modify lineContentNewTaskCheck to accept if is the current ore previous line, so when the user jumps to the next line, we can check for a task within the previous line
 				try{
@@ -106,6 +138,9 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			}
 
 			if (evt.key === "Delete" || evt.key === "Backspace" || evt.key === "Del") {
+				if(initialSyncIsLocked){
+					return
+				}
 				try {
 					if (!(this.checkModuleClass())) {
 						return
@@ -261,6 +296,33 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 
 			}
 		});
+
+		// Adds an edito command to trigger the manual sync.
+		this.addCommand({
+			id: 'asts-trigger-manual-sync',
+			name: 'Trigger the Manual Sync',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				if(!view) {
+					return
+				}
+				// let filepath
+				if(view.file) {
+					// filepath = view.file.path
+					if(!this.settings.apiInitialized) {
+						new Notice('Please set the Todoist api first')
+						return
+					}
+					try{
+						this.scheduledSynchronization()
+						this.syncLock = false
+					}
+					catch(error) {
+						new Notice(`An error occurred while syncing.:${error}`)
+						this.syncLock = false
+					}
+				}
+			}
+		})
 
 		//display default project for the current file on status bar
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
@@ -536,6 +598,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 		if (!(this.checkModuleClass())) {
 			return;
 		}
+		
 		{{console.log("Todoist scheduled synchronization task started at", new Date().toLocaleString());}}
 		try {
 			if (!await this.checkAndHandleSyncLock()) return;
