@@ -467,7 +467,7 @@ export class TaskParser {
         }
 
         // If any has a invvalid date, return false as you can't compare
-        else if (lineTaskDue.toString() === "Invalid Date" || todoistTaskDue.toString() === "Invalid Date") {
+        else if (lineTaskDue.toString() === "Invalid Date" || (todoistTaskDue && todoistTaskDue.toString() === "Invalid Date")) {
             return false;
         }
         // If everything above is false, than return true because the dates are different
