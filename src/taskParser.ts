@@ -55,6 +55,7 @@ export class TaskParser {
         const dueTime = this.getDueTimeFromLineText(textWithoutIndentation)
         const labels = this.getAllTagsFromLineText(textWithoutIndentation)
         const section = this.getFirstSectionFromLineText(textWithoutIndentation)
+        const project_name = this.getProjectNameFromCommentOnLineText(textWithoutIndentation)
         let sectionId
 
         // TODO this will get the task duration
@@ -92,6 +93,20 @@ export class TaskParser {
                     this.plugin.cacheOperation?.addSectionToCache(section, newSection?.id, projectId)
                 }
 
+            }
+        }
+
+        if (project_name) {
+            const hasProjectOnCache = this.plugin.cacheOperation?.checkIfProjectExistOnCache(project_name)
+            if(hasProjectOnCache){
+                projectId = hasProjectOnCache
+            }
+            if(!hasProjectOnCache){
+                const newProject = await this.plugin.todoistRestAPI?.CreateNewProject(project_name)
+                projectId = newProject?.id
+                if(newProject){
+                    this.plugin.cacheOperation?.addProjectToCache(project_name, newProject?.id)
+                }
             }
         }
 
@@ -339,7 +354,8 @@ export class TaskParser {
             remove_todoist_tid_link: /%%\[tid::\s*\[\d+\]\(https:\/\/app.todoist\.com\/app\/task\/\d+\)\]%%/,
             remove_todoist_tid_applink: /%%\[tid::\s*\[\d+\]\(todoist:\/\/task\?id=\d+\)\]%%/,
             remove_todoist_duration: new RegExp(`(⏳|&)\\d+min`),
-            remove_todoist_section: /\/\/\/\w*/
+            remove_todoist_section: /\/\/\/\w*/,
+            remove_todoist_project_comment: /%%\[p::\s*([^\]]+?)\s*\]%%+/
         }
 
         const TaskContent = lineText.replace(regex_remove_rules.remove_inline_metada, "")
@@ -354,6 +370,7 @@ export class TaskParser {
             .replace(regex_remove_rules.remove_space, "")
             .replace(regex_remove_rules.remove_todoist_duration, "") //remove duration
             .replace(regex_remove_rules.remove_todoist_section, "") //remove section
+            .replace(regex_remove_rules.remove_todoist_project_comment, "") // remove commented project name
         return (TaskContent)
     }
 
@@ -380,6 +397,16 @@ export class TaskParser {
         const section_raw = section.toString().replace("///", "")
 
         return section_raw
+    }
+
+    // find the project name from the line text
+    getProjectNameFromCommentOnLineText(linetext: string) {
+        const regex_project_search = /%%\[p::\s*([^\]]+?)\s*\]%%+/g;
+        const project = linetext.match(regex_project_search) || [];
+
+        const project_raw = project.toString().replace("%%", "").replace("%%","").replace("[p::","").replace("]","")
+
+        return project_raw
     }
 
     //get checkbox status

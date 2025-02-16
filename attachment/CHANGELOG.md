@@ -1,5 +1,17 @@
 ## CHANGELOG
 
+## 2025-02-15
+
+### 0.4.13
+
+-   Added support for Project sync via `%%[p::]%%` syntax
+
+## 2025-01-26
+
+### 0.4.12
+
+-   Fix null due date by @AlicVB in #12
+
 ## 2024-12-27
 
 ### 0.4.11

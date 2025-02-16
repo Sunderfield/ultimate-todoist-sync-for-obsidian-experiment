@@ -232,26 +232,16 @@ export class TodoistRestAPI {
     }
   }
 
-
+  // Creates a new project, returns the newly created project object
+  async CreateNewProject(name:string) {
+    const api = await this.initializeAPI()
+    try {
+      const newProject = await api.addProject({ name });
+      return newProject;
+    } catch (error) {
+      throw new Error(`Error creating project: ${error.message}`);
+  }
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}
