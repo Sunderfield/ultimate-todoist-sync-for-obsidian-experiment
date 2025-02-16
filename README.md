@@ -33,7 +33,8 @@ Create, edit and delete tasks from within Obsidian.md to your Todoist.
 | Added-at date            | 🔜                       | 🔜                       |
 | Completed-at date        | 🔜                       | 🔜                       |
 | Task notes [2]           | 🔜                       | ✅                       |
-| Optional app link        |                          |                          |
+| Optional app link        | ✅                       | ✅                       |
+| Assign project to task   | ✅                       | 🔜                       |
 
 -   [1] Task priority only support one-way synchronization
 -   [2] Task notes/comments only support one-way synchronization from Todoist to Obsidian.
@@ -84,17 +85,17 @@ Create, edit and delete tasks from within Obsidian.md to your Todoist.
 
 ### Task format
 
-| Syntax            | Description                                                                                                                                                                                                       | Example                                        |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| #tdsync           | Tasks marked with `#tdsync`[4] will be added to Todoist, while tasks without the `#tdsync` tag will not be processed. If you have enabled Full vault sync in the settings, `#tdsync` will be added automatically. | `- [ ] task #tdsync`                           |
-| 📅YYYY-MM-DD      | The date format is 📅YYYY-MM-DD, indicating the due date of a task.                                                                                                                                               | `- [ ] task content 📅2025-02-05 #todoist` [1] |
-| #tag              | Note that all tags without a project of the same name are treated as normal tags                                                                                                                                  | `- [ ] task #tagA #tagB #tagC #todoist`        |
-| `!!<number>`      | The priority of the task between 1 and 4. [2]                                                                                                                                                                     | `- [ ] task !!1 #todoist`                      |
-| ⏰HH:MM           | This sets the time of the task. If none is given, the default is 08:00                                                                                                                                            | `- [ ] task ⏰23:59`[3]                        |
-| ⏳MMmin           | This sets the duration of the task                                                                                                                                                                                | `- [ ] task ⏳30min`[[5]]                      |
-| ///<section_name> | This adds the task to a section with <section_name>                                                                                                                                                               | `- [ ] task ///section_name`[7]                |
-
-<!-- | #projectTag       | New tasks will be added to the default project (e.g: inbox), and you can change the default project in the settings or use a tag with the same name to specify a particular project. | `- [ ] taskA #todoist` will be added to inbox.<br>`- [ ] taskB #tag #testProject #todoist` will be added to testProject.| -->
+| Syntax               | Description                                                                                                                            | Example                                        |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| #tdsync              | Tasks marked with `#tdsync`[4] will be added to Todoist. If you have enabled _Full Vault Sync_, `#tdsync` will be added automatically. | `- [ ] task #tdsync`                           |
+| 📅YYYY-MM-DD         | The date format is 📅YYYY-MM-DD, indicating the due date of a task.                                                                    | `- [ ] task content 📅2025-02-05 #todoist` [1] |
+| #tag                 | Note that all tags without a project of the same name are treated as normal tags                                                       | `- [ ] task #tagA #tagB #tagC #todoist`        |
+| `!!<number>`         | The priority of the task between 1 and 4. [2]                                                                                          | `- [ ] task !!1 #todoist`                      |
+| ⏰HH:MM              | This sets the time of the task. If none is given, the default is 08:00                                                                 | `- [ ] task ⏰23:59`[3]                        |
+| ⏳MMmin              | This sets the duration of the task                                                                                                     | `- [ ] task ⏳30min`[[5]]                      |
+| ///<section_name>    | This adds the task to a section with <section_name>                                                                                    | `- [ ] task ///section_name`[7]                |
+| #project #tag        | First hashtag assign to a project with the same name                                                                                   | `-[ ] task #project #tag1 #tag2` [8]           |
+| %%[p::ProjectName]%% | Assign task to project with hidden field                                                                                               | `%%[p::ProjectName]%%` [9]                     |
 
 <details>
 <summary>Usage footnotes</summary>
@@ -106,6 +107,8 @@ Create, edit and delete tasks from within Obsidian.md to your Todoist.
 -   [5] Supports the following characters/emojis: ⏳, & [6]
 -   [6] Alternative characters are enabled via "Alternative Keywords" on plugin settings page
 -   [7] If the section if removed from the task content, it won't update in Todoist (yet)
+-   [8] First tag will be used for project, but will also create a tag with the same name.
+-   [9] Project name is case-sensitive.
 
 </details>
 

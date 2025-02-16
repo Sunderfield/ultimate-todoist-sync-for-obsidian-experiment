@@ -275,6 +275,20 @@ export class CacheOperation {
 
         return false
     }
+
+    // Compare the string with the names of projects on the cache. If exist, returns it's ID. If not, return a null value.
+    checkIfProjectExistOnCache(projectString: string) {
+        const savedProjects = this.plugin.settings.todoistTasksData.projects
+
+        const projectExist = savedProjects.some((project: any) => project.name === projectString)
+
+        if (projectExist) {
+            const projectDetails = savedProjects.find((project: any) => project.name === projectString)
+            return projectDetails.id
+        }
+        return false
+    }
+
     addSectionToCache(name: string, sectionId: string, projectId: string) {
         // TODO get all details from the TodoistApi, then saves to cache
         try {
@@ -283,6 +297,16 @@ export class CacheOperation {
             console.error(`Error appending section to Cache: ${error}`);
         }
     }
+
+    // Add a new project to cache
+    addProjectToCache(projectString: string, projectId: string) {
+        try {
+            this.plugin.settings.todoistTasksData.projects.push({ name: projectString, id: projectId })
+        } catch (error) {
+            console.error(`Error appending project to Cache: ${error}`);
+        }   
+    }
+
     // Find the name of the section based on a given ID
     getSectionNameByIdFromCache(sectionId: string) {
         try {
