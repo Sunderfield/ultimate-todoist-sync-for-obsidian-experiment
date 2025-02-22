@@ -42,13 +42,16 @@ const updateVersion = (currentVersion, major, minor, patch, build) => {
 	const newBuildMetadata = new Date()
 		.toISOString()
 		.replace(/[-:T]/g, "")
-		.slice(2, 12);
+		.slice(0, 12);
+
+	const formattedBuildMetadata =
+		newBuildMetadata.slice(0, 8) + "-" + newBuildMetadata.slice(8, 12);
 
 	console.log("newBaseVersion = " + newBaseVersion);
-	console.log("newBuildMetadata = " + newBuildMetadata);
+	console.log("formattedBuildMetadata = " + formattedBuildMetadata);
 	console.log("newBuild = " + newBuild);
 
-	return `${newBaseVersion}+${newBuildMetadata}+${newBuild}`;
+	return `${newBaseVersion}+${formattedBuildMetadata}`;
 };
 
 // Main function

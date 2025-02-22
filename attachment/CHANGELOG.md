@@ -1,5 +1,11 @@
 ## CHANGELOG
 
+## 2025-02-20
+
+### 0.4.14
+
+-   Fixed issues where Todoist data was not being updated because it had an error on todoistSyncAPI method
+-   Fixed issue #17
 
 ## 2025-02-15
 

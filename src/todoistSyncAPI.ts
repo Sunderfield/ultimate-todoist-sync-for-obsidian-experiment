@@ -158,16 +158,16 @@ export class TodoistSyncAPI {
   //result  {count:number,events:[]}
   async getAllActivityEvents() {
     const accessToken = this.plugin.settings.todoistAPIToken;
-
+    
     try {
       const response = await requestUrl({
         url: 'https://api.todoist.com/sync/v9/activity/get',
-        method: 'POST',
+        method: 'GET',
         headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({})
+          Authorization: `Bearer ${accessToken}`
+          // 'Content-Type': 'application/json'
+        }
+        // body: JSON.stringify({})
       });
 
       // Check if the HTTP status code indicates an error.

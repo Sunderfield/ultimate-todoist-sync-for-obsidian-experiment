@@ -35,7 +35,7 @@ export const DEFAULT_SETTINGS: Partial<UltimateTodoistSyncSettings> = {
 	apiInitialized: false,
 	defaultProjectName: "Inbox",
 	automaticSynchronizationInterval: 150, //default aync interval 300s
-	todoistTasksData: { "projects": [], "tasks": [], "events": [] },
+	todoistTasksData: { "projects": [], "tasks": [], "events": [], "task_tracking": [] },
 	fileMetadata: {},
 	enableFullVaultSync: false,
 	statistics: {},

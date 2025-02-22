@@ -34,8 +34,6 @@ export class SetDefalutProjectInTheFilepathModal extends Modal {
     }, {}
     );
 
-
-
     new Setting(contentEl)
       .setName('Default project')
       //.setDesc('Set default project for Todoist tasks in the current file')
@@ -51,10 +49,6 @@ export class SetDefalutProjectInTheFilepathModal extends Modal {
           })
 
       )
-
-
-
-
   }
 
   onClose() {

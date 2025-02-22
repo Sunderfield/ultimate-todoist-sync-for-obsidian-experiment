@@ -56,7 +56,6 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 		let initialSyncIsLocked:boolean;
 
 		function runAfter60Seconds() {
-			console.log("Triggered event after 60 seconds!");
 			initialSyncIsLocked = false;
 			// Place your event code here
 		}
