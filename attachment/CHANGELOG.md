@@ -1,6 +1,13 @@
 ## CHANGELOG
 
-## 2025-02-20
+## 2025-02-22
+
+### 0.4.15
+
+-   More bug fixes on the sync from Todoist back to Obsidian #17
+    Note: It should be mostly functional, but more testing is needed.
+
+## 2025-02-21
 
 ### 0.4.14
 

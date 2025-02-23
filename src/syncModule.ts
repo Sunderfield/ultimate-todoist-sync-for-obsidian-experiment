@@ -177,6 +177,7 @@ export class TodoistSync {
                 new Notice(`New task "${newTask.content}" added. Task ID: ${newTask.id}`)
                 //newTask写入缓存
                 this.plugin.cacheOperation?.appendTaskToCache(newTask)
+                this.plugin.cacheOperation?.appendPathToTaskInCache(todoist_id,filepath)
 
                 //如果任务已完成
                 if (currentTask.isCompleted === true) {
@@ -317,6 +318,7 @@ export class TodoistSync {
                     new Notice(`New task "${newTask.content}" added. Task ID: ${newTask.id}`)
                     //newTask写入json文件
                     this.plugin.cacheOperation?.appendTaskToCache(newTask)
+                    this.plugin.cacheOperation?.appendPathToTaskInCache(todoist_id,filepath)
 
                     //如果任务已完成
                     if (currentTask.isCompleted === true) {
@@ -571,8 +573,11 @@ export class TodoistSync {
                     //     message += " Section was changed.";
                     // }
 
-                    if(this.plugin.settings.debugMode){console.log("Sent a Notice with the message: " + message)}
-                    new Notice(message);
+                    
+                    if(!lineTask_todoist_id === null) {
+                        if(this.plugin.settings.debugMode){console.log("Sent a Notice with the message: " + message)}
+                        new Notice(message);
+                    }
 
                 } 
 
@@ -777,13 +782,16 @@ export class TodoistSync {
 
             // 处理未同步的事件并等待所有处理完成
             const processedEvents = []
-            for (const e of unSynchronizedEvents) {   //如果要修改代码，让completeTaskInTheFile(e.object_id)按照顺序依次执行，可以将Promise.allSettled()方法改为使用for...of循环来处理未同步的事件。具体步骤如下：
-                if (!(typeof e.extra_data.last_due_date === 'undefined')) {
-                    await this.syncUpdatedTaskDueDateToObsidian(e)
+            for (const e of unSynchronizedEvents) {
+                //如果要修改代码，让completeTaskInTheFile(e.object_id)按照顺序依次执行，可以将Promise.allSettled()方法改为使用for...of循环来处理未同步的事件。具体步骤如下：
 
+                // TODO needs to find a better way to check if a givek task has already being updated on the processedEvents
+                if (!(typeof e.extra_data.last_due_date === 'undefined') ) {
+                    await this.syncUpdatedTaskDueDateToObsidian(e)
                 }
 
-                if (!(typeof e.extra_data.last_content === 'undefined')) {
+                // TODO needs to find a better way to check if a givek task has already being updated on the processedEvents
+                if (!(typeof e.extra_data.last_content === 'undefined') ) {
                     await this.syncUpdatedTaskContentToObsidian(e)
                 }
 
@@ -792,8 +800,6 @@ export class TodoistSync {
                 //new Notice(`Task ${e.object_id} is updated.`)
                 processedEvents.push(e)
             }
-
-
 
             // 将新事件合并到现有事件中并保存到 JSON
             //const allEvents = [...savedEvents, ...unSynchronizedEvents]
@@ -809,7 +815,9 @@ export class TodoistSync {
         this.plugin.fileOperation?.syncUpdatedTaskContentToTheFile(e)
         const content = e.extra_data.content
         this.plugin.cacheOperation?.modifyTaskToCacheByID(e.object_id, { content })
-        new Notice(`The content of Task ${e.parent_item_id} has been modified.`)
+        if(!e.parent_item_id === null){
+            new Notice(`The content of Task ${e.parent_item_id} has been modified.`)
+        }
 
     }
 
@@ -820,7 +828,9 @@ export class TodoistSync {
         if (due) {
             this.plugin.cacheOperation?.modifyTaskToCacheByID(e.object_id, { due })
         }
-        new Notice(`The due date of Task ${e.parent_item_id} has been modified.`)
+        if(!e.parent_item_id === null){
+            new Notice(`The due date of Task ${e.parent_item_id} has been modified.`)
+        }
 
     }
 

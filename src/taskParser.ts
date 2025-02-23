@@ -154,7 +154,8 @@ export class TaskParser {
             isCompleted: isCompleted,
             todoist_id: todoist_id || null,
             hasParent: hasParent,
-            priority: priority
+            priority: priority,
+            path: filepath
         };
 
         if (hasDuration) {
@@ -663,10 +664,22 @@ export class TaskParser {
     //在linetext中插入日期
     insertDueDateBeforeTodoist(text: string, dueDate: string) {
         // const regex = new RegExp(`(${keywords.TODOIST_TAG})`)
-        const tag_to_look_for = this.keywords_function("TODOIST_TAG")
+        const tagToLookFor = this.keywords_function("TODOIST_TAG")
+        return text.replace(tagToLookFor, `📅 ${dueDate} ${tagToLookFor}`);
+    }
 
+    insertDueTimeBeforeTodoistTag(text: string, dueTime: string){
+        const tagToLookFor = this.keywords_function("TODOIST_TAG")
 
-        return text.replace(tag_to_look_for, `📅 ${dueDate} ${tag_to_look_for}`);
+        return text.replace(tagToLookFor, `⏰ ${dueTime} ${tagToLookFor}`)
+    }
+
+    replaceDueDate(text: string, oldDueDate: string, newDueDate: string) {
+        return text.replace(oldDueDate,newDueDate)
+    }
+
+    replaceDueTime(text:string,oldDueTime:string, newDueTime:string){
+        return text.replace(oldDueTime,newDueTime)
     }
 
     //extra date from obsidian event

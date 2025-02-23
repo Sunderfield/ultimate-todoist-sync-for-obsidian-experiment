@@ -1,4 +1,4 @@
-import { App, TFile } from 'obsidian';
+import { App, Notice, TFile } from 'obsidian';
 import AnotherSimpleTodoistSync from "../main";
 export class FileOperation {
     app: App;
@@ -244,6 +244,7 @@ export class FileOperation {
 
                 lines[i] = line.replace(oldTaskContent, newTaskContent)
                 modified = true
+                new Notice(`Content changed for task ${taskId}.`)
                 break
             }
         }
@@ -258,7 +259,6 @@ export class FileOperation {
     // sync updated task due date  to the file
     async syncUpdatedTaskDueDateToTheFile(evt: { object_id: string, extra_data: { due_date: string } }) {
         const taskId = evt.object_id
-
 
         // 获取任务文件路径
         const currentTask = await this.plugin.cacheOperation?.loadTaskFromCacheyID(taskId)
@@ -283,45 +283,52 @@ export class FileOperation {
             if (line.includes(taskId) && this.plugin.taskParser?.hasTodoistTag(line)) {
                 const lineTaskDueDate = this.plugin.taskParser?.getDueDateFromLineText(line) || ""
                 const newTaskDueDate = this.plugin.taskParser?.ISOStringToLocalDateString(evt.extra_data.due_date) || ""
-
-
                 const lineTaskTime = this.plugin.taskParser?.getDueTimeFromLineText(line) || ""
-
                 const newTaskTime = this.plugin.taskParser?.ISOStringToLocalClockTimeString(evt.extra_data.due_date) || ""
                 // TODO needs to consider what to do when the task doesn't have time
                 // TODO how to handle when the task has the new "timeslot" with start + finish time?
-                // TODO 'trimmedlineTaskDueDate' looks just for the date, removing any other information, like hour. This very likely will break some dates sometimes, need a more inteligent solution
-                const trimmedlineTaskDueDate = lineTaskDueDate.slice(0, 10)
 
                 if (this.plugin.taskParser && lineTaskDueDate === "") {
-                    lines[i] = this.plugin.taskParser?.insertDueDateBeforeTodoist(line, newTaskDueDate)
+                    const userDefinedTag = this.plugin.taskParser?.keywords_function("TODOIST_TAG")
+                    const tagWithDateAndSymbol = " 🗓️"+newTaskDueDate+" "+userDefinedTag
+                    lines[i] = lines[i].replace(userDefinedTag,tagWithDateAndSymbol)
                     modified = true
+                    new Notice(`New due date found for ${taskId}.`)
+                }
+                
+                // TODO when a task is created without dueTime, while trying to convert from ISO to local time, it will return 23:59, which is not the best option. So for now this will work
+                if (lineTaskTime === "" && newTaskTime !== "") {
+                    const userDefinedTag = this.plugin.taskParser?.keywords_function("TODOIST_TAG")
+                    const tagWithTimeAndSymbol = " ⏰"+newTaskTime+" "+userDefinedTag
+                    lines[i] = lines[i].replace(userDefinedTag,tagWithTimeAndSymbol)
+                    modified = true
+                    new Notice(`Due datetime included for ${taskId}.`)
                 }
 
-                else if (newTaskDueDate === "") {
+
+
+                if (newTaskDueDate === "") {
                     //remove 日期from text
                     const regexRemoveDate = /(🗓️|📅|📆|🗓|@)\s?\d{4}-\d{2}-\d{2}/; //匹配日期🗓️2023-03-07"
                     lines[i] = line.replace(regexRemoveDate, "")
                     modified = true
+                    new Notice(`Due date removed from ${taskId}.`)
                 }
-                else if (newTaskDueDate !== trimmedlineTaskDueDate) {
-                    lines[i] = line.replace(trimmedlineTaskDueDate, newTaskDueDate)
+
+                if (lineTaskDueDate !== "" && lineTaskDueDate !== newTaskDueDate) {
+                    lines[i] = lines[i].replace(lineTaskDueDate.trim(),newTaskDueDate.trim())
                     modified = true
+                    new Notice(`Due date for ${taskId} changed to ${newTaskDueDate}.`)
                 }
 
-                // TODO when a task is created without dueTime, while trying to convert from ISO to local time, it will return 23:59, which is not the best option. So for now this will work
-                else if (lineTaskTime === "" && newTaskTime !== "" && newTaskTime !== "23:59") {
-                    const newDateWithTime = newTaskDueDate + " ⏰" + newTaskTime;
-                    lines[i] = line.replace(newTaskDueDate, newDateWithTime)
+
+
+                if (lineTaskTime !== "" && lineTaskTime !== newTaskTime && newTaskTime !== "23:59") {
+                    lines[i] = lines[i].replace(lineTaskTime.trim(),newTaskTime.trim())
+                    lines[i] = lines[i].replace(lineTaskDueDate.trim(),newTaskDueDate.trim())
                     modified = true
+                    new Notice(`Due datetime for ${taskId} changed to ${newTaskTime}.`)
                 }
-
-                else if (lineTaskTime !== newTaskTime && newTaskTime !== "23:59") {
-                    lines[i] = line.replace(lineTaskTime, newTaskTime)
-                    modified = true
-                }
-
-
 
                 break
             }

@@ -35,7 +35,7 @@ export class TodoistRestAPI {
     return (api)
   }
 
-  async AddTask({ projectId, content, parentId, dueDate, dueTime, dueDatetime, labels, description, priority, duration, duration_unit, sectionId }: { projectId: string, content: string, parentId?: string, dueDate?: string, dueTime?: string, dueDatetime?: string, labels?: Array<string>, description?: string, priority?: number, duration?: number, duration_unit?: string, sectionId?: string }) {
+  async AddTask({ projectId, content, parentId, dueDate, dueTime, dueDatetime, labels, description, priority, duration, duration_unit, sectionId, path }: { projectId: string, content: string, parentId?: string, dueDate?: string, dueTime?: string, dueDatetime?: string, labels?: Array<string>, description?: string, priority?: number, duration?: number, duration_unit?: string, sectionId?: string, path?: string }) {
     const api = await this.initializeAPI()
     try {
 
@@ -46,7 +46,8 @@ export class TodoistRestAPI {
         dueDate,
         labels,
         description,
-        priority
+        priority,
+        path
       };
 
       // Check if duration is a number, not null and not a NaN. Case it doesn't, the duration is not provided to the request

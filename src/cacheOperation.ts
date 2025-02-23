@@ -241,6 +241,19 @@ export class CacheOperation {
         }
     }
 
+    // As Todoist default object doesn't contain the filepath, this helps ensure we know where each task is located for future sync updateds
+    appendPathToTaskInCache(taskId: any,filepath: string){
+
+        const findObject = this.plugin.settings.todoistTasksData.tasks.find((task:any) => task.id === taskId )
+
+        if(findObject) {
+            (findObject as any)["path"] = filepath
+        } else {
+            console.error(`Object with ID ${taskId} not found on cache to append it's path.`)
+        }
+
+    }
+
     //读取指定id的任务
     loadTaskFromCacheyID(taskId: any) {
         try {
