@@ -436,12 +436,6 @@ export class CacheOperation {
 
 	//覆盖update指定id的task
 	updateTaskToCacheByID(task: Task) {
-		console.log(
-			"updateTaskToCacheByID called with task:",
-			task.due_datetime,
-			task.due_date,
-			task.due?.string,
-		);
 		try {
 			//删除就的task
 			this.deleteTaskFromCache(task.id);

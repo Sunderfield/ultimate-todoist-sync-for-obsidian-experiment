@@ -60,16 +60,16 @@ export class TaskParser {
 			dueDateVsDatetime = "datetime";
 		}
 		if (
-			!this.hasDueDate(textWithoutIndentation) &&
-			this.hasDueDateTime(textWithoutIndentation)
-		) {
-			dueDateVsDatetime = "time";
-		}
-		if (
 			this.hasDueDate(textWithoutIndentation) &&
 			!this.hasDueDateTime(textWithoutIndentation)
 		) {
 			dueDateVsDatetime = "date";
+		}
+		if (
+			!this.hasDueDate(textWithoutIndentation) &&
+			this.hasDueTime(textWithoutIndentation)
+		) {
+			dueDateVsDatetime = "time";
 		}
 
 		let dueDate = "";
@@ -84,6 +84,12 @@ export class TaskParser {
 			dueTime = this.getDueTimeFromLineText(textWithoutIndentation) ?? "";
 			const currentDate = new Date().toISOString().split("T")[0];
 			dueDatetime = `${currentDate}T${dueTime}:00`;
+			this.plugin.fileOperation?.addCurrentDateToTask(
+				lineNumber ?? 0,
+				filepath,
+				currentDate,
+				dueTime,
+			);
 		}
 		if (dueDateVsDatetime === "date") {
 			dueDate = this.getDueDateFromLineText(textWithoutIndentation) ?? "";

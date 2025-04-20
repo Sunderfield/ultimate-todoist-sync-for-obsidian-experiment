@@ -685,6 +685,8 @@ export class TodoistSync {
 
 				if (this.plugin.settings.debugMode) {
 					console.log(
+						"Task change status: task id:",
+						lineTask.id,
 						"contentChanged is:",
 						contentChanged,
 						"tagsChanged is:",
@@ -720,7 +722,12 @@ export class TodoistSync {
 					durationChanged ||
 					sectionChanged
 				) {
-					// Here it calls the updateTask in todoistRestAPI with the content
+					if (this.plugin.settings.debugMode) {
+						console.log(
+							"The updates to be sent to Todoist and Cache are:",
+							updatedContent,
+						);
+					}
 					const updatedTask = await this.plugin.todoistNewAPI?.updateTask(
 						lineTask.id,
 						{

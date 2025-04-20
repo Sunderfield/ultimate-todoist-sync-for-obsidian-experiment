@@ -243,7 +243,7 @@ export class TodoistNewAPI {
 		const token = this.plugin.settings.todoistAPIToken;
 		try {
 			const response = await requestUrl({
-				url: "https://api.todoist.com/api/v1/sync",
+				url: "https://todoist.com/api/v1/sync",
 				method: "POST",
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -402,7 +402,7 @@ export class TodoistNewAPI {
 
 		try {
 			const response = await requestUrl({
-				url: `https://api.todoist.com/api/v1/tasks/${taskId}/close`,
+				url: `https://todoist.com/api/v1/tasks/${taskId}/close`,
 				method: "POST",
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -464,7 +464,7 @@ export class TodoistNewAPI {
 
 		try {
 			const response = await requestUrl({
-				url: `https://api.todoist.com/api/v1/tasks/${taskId}/reopen`,
+				url: `https://todoist.com/api/v1/tasks/${taskId}/reopen`,
 				method: "POST",
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -491,7 +491,7 @@ export class TodoistNewAPI {
 
 		try {
 			const response = await requestUrl({
-				url: `https://api.todoist.com/api/v1/tasks/${taskId}`,
+				url: `https://todoist.com/api/v1/tasks/${taskId}`,
 				method: "GET",
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -652,25 +652,7 @@ export class TodoistNewAPI {
 		}
 	}
 
-	// All Old API functions from the todoistRestAPI.ts file
-
-	// async AddTask({ projectId, content, parentId, dueDate, dueTime, dueDatetime, labels, description, priority, duration, duration_unit, sectionId, path }: { projectId: string, content: string,
-	// async GetActiveTasks(options: { projectId?: string, sectionId?: string, label?: string, filter?: string, lang?: string, ids?: Array<string> }) {
-	// async UpdateTask(taskId: string, updates: { content?: string, description?: string, labels?: Array<string>, dueDate?: string, dueTime?: string, dueDatetime?: string, dueString?: string, parentId?
-	// async OpenTask(taskId: string) {
-	// async CloseTask(taskId: string): Promise<boolean> {
-	// async getTaskById(taskId: string) {
-	// async getTaskDueById(taskId: string) {
-	// async GetAllProjects() {
-	// async GetAllSections() {
-	// async CreateNewSection(name: string, projectId: string) {
-	// async CreateNewProject(name:string) {
-
-	// All OLD Api functions from the todoistSyncAPI.ts file
-	// async getAllResources() {
-	//   async getUserResource() {
-	//   async updateUserTimezone() {
-	//   async getAllActivityEvents() {
+	// All OLD Api functions from the todoistSyncAPI.ts file that were not refactored yet
 	//   async getNonObsidianAllActivityEvents() {
 	//   async getCompletedItemsActivity() {
 	//   async getUncompletedItemsActivity() {
@@ -680,7 +662,6 @@ export class TodoistNewAPI {
 	//   async getNonObsidianUpdatedItemsActivity() {
 	//   async getProjectsActivity() {
 	//   async generateUniqueId(): Promise<string> {
-	//   async moveTaskToAnotherSection(taskId: string, newSectionId: string) {
 
 	async getUserResource() {
 		const token = this.plugin.settings.todoistAPIToken;

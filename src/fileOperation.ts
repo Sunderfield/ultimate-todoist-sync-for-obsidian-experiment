@@ -176,6 +176,26 @@ export class FileOperation {
 		}
 	}
 
+	async addCurrentDateToTask(
+		taskLine: number,
+		filepath: string,
+		currentDate: string,
+		dueTime: string,
+	) {
+		const file = this.app.vault.getAbstractFileByPath(filepath);
+		if (file instanceof TFile) {
+			const content = await this.app.vault.read(file);
+			const lines = content.split("\n");
+			lines[taskLine] = lines[taskLine]
+				.replace("⏰", "")
+				.replace("⏲", "")
+				.replace("$", "")
+				.replace(`${dueTime}`, `🗓️${currentDate} ⏰${dueTime}`);
+			const newContent = lines.join("\n");
+			await this.app.vault.modify(file, newContent);
+		}
+	}
+
 	//add #todoist at the end of task line, if full vault sync enabled
 	async addTodoistTagToLine(
 		filepath: string,
