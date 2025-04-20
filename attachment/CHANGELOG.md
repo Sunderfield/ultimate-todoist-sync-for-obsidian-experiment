@@ -1,6 +1,14 @@
 ## CHANGELOG
 
-## 2025-02-22
+## 2025-04-18
+
+### 0.5.0
+
+-   Fixed the issue #24
+-   Added support for Todoist's new API (Moved from the old Rest API and Sync API to the Unified API)
+-   Most of the app was rewritten, so this is still being tested.
+
+## 2025-02-23
 
 ### 0.4.15
 

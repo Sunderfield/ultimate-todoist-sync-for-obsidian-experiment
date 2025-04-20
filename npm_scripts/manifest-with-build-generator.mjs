@@ -1,7 +1,7 @@
 // Script under constructions - Non-functional yet.
 
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 
 // Helper function to read JSON file
 const readJsonFile = (filePath) => {
@@ -33,23 +33,25 @@ const updateVersion = (currentVersion, major, minor, patch, build) => {
 	const newMinor = minor !== undefined ? minorVersion + minor : minorVersion;
 	const newPatch = patch !== undefined ? patchVersion + patch : patchVersion;
 	let newBuild = build !== undefined ? buildVersion + build : buildVersion;
-	if (newBuild == undefined) {
+	if (newBuild === undefined) {
 		newBuild = 0;
 	}
 	newBuild = newBuild + 1;
 
 	const newBaseVersion = `${newMajor}.${newMinor}.${newPatch}.${newBuild}`;
-	const newBuildMetadata = new Date()
+	const newBuildMetadata = new Date(Date.now() - 3 * 60 * 60 * 1000)
 		.toISOString()
 		.replace(/[-:T]/g, "")
 		.slice(0, 12);
 
-	const formattedBuildMetadata =
-		newBuildMetadata.slice(0, 8) + "-" + newBuildMetadata.slice(8, 12);
+	const formattedBuildMetadata = `${newBuildMetadata.slice(
+		0,
+		8
+	)}-${newBuildMetadata.slice(8, 12)}`;
 
-	console.log("newBaseVersion = " + newBaseVersion);
-	console.log("formattedBuildMetadata = " + formattedBuildMetadata);
-	console.log("newBuild = " + newBuild);
+	console.log(`newBaseVersion = ${newBaseVersion}`);
+	console.log(`formattedBuildMetadata = ${formattedBuildMetadata}`);
+	console.log(`newBuild = ${newBuild}`);
 
 	return `${newBaseVersion}+${formattedBuildMetadata}`;
 };
@@ -60,8 +62,8 @@ const main = () => {
 
 	const upperFolderPath = path.join(rootDir, "/../");
 
-	console.log("rootDir = " + rootDir);
-	console.log("upperFolderPath = " + upperFolderPath);
+	console.log(`rootDir = ${rootDir}`);
+	console.log(`upperFolderPath = ${upperFolderPath}`);
 
 	const manifestPath = path.join(upperFolderPath, "manifest.json");
 	// const versionsPath = path.join(rootDir, "versions.json");
@@ -70,7 +72,7 @@ const main = () => {
 	// const versions = readJsonFile(versionsPath);
 
 	const [, , major, minor, patch, build] = process.argv.map((arg) =>
-		arg !== undefined ? parseInt(arg, 10) : undefined
+		arg !== undefined ? Number.parseInt(arg, 10) : undefined
 	);
 
 	const newVersion = updateVersion(
