@@ -681,4 +681,28 @@ export class TodoistNewAPI {
 	//   async getProjectsActivity() {
 	//   async generateUniqueId(): Promise<string> {
 	//   async moveTaskToAnotherSection(taskId: string, newSectionId: string) {
+
+	async getUserResource() {
+		const token = this.plugin.settings.todoistAPIToken;
+		try {
+			const response = await requestUrl({
+				url: "https://todoist.com/api/v1/user",
+				method: "GET",
+				headers: {
+					Authorization: `Bearer ${token}`,
+					"Content-Type": "application/x-www-form-urlencoded",
+				},
+			});
+
+			if (response.status >= 400) {
+				throw new Error(`API returned error status: ${response.status}`);
+			}
+
+			const data = response.json;
+			return data;
+		} catch (error) {
+			console.error("Failed to fetch user resources:", error);
+			throw new Error("Failed to fetch user resources");
+		}
+	}
 }

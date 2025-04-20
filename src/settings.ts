@@ -17,6 +17,16 @@ export interface TodoistSection {
 	name: string;
 }
 
+export interface TodoistUserData {
+	email: string | undefined;
+	full_name: string | undefined;
+	lang: string | undefined;
+	tz_info: {
+		timezone: string | undefined;
+		gmt_string: string | undefined;
+	};
+}
+
 export interface FileMetadata {
 	[key: string]: {
 		todoistTasks: string[];
@@ -72,6 +82,15 @@ export interface TodoistTasksData {
 	sections?: {
 		results: TodoistSection[];
 	};
+	user_data?: {
+		email: string | undefined;
+		full_name: string | undefined;
+		lang: string | undefined;
+		tz_info: {
+			timezone: string | undefined;
+			gmt_string: string | undefined;
+		};
+	};
 }
 
 export interface AnotherTodoistSyncPluginSettings {
@@ -95,7 +114,17 @@ export interface AnotherTodoistSyncPluginSettings {
 }
 
 export const DEFAULT_SETTINGS: Partial<AnotherTodoistSyncPluginSettings> = {
-	todoistTasksData: { projects: { results: [] }, tasks: [], events: [] },
+	todoistTasksData: {
+		projects: { results: [] },
+		tasks: [],
+		events: [],
+		user_data: {
+			email: "",
+			full_name: "",
+			lang: "",
+			tz_info: { timezone: "", gmt_string: "" },
+		},
+	},
 	fileMetadata: {},
 	initialized: false,
 	apiInitialized: false,
@@ -121,7 +150,7 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
-	display(): void {
+	async display(): Promise<void> {
 		const { containerEl } = this;
 
 		containerEl.empty();
@@ -134,6 +163,8 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 				},
 				{},
 			) ?? {};
+
+		new Setting(containerEl).setHeading().setName("API & Sync Settings");
 
 		new Setting(containerEl)
 			.setName("Todoist API Token")
@@ -229,6 +260,73 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 					}),
 			);
 
+		// Test if the tag has #, if not, return false
+		function checkTagValue(tag: string) {
+			const tagRegexRule = /#[\w\u4e00-\u9fa5-]+/g;
+			const tagRegexTest = tagRegexRule.test(tag);
+
+			if (tagRegexTest) {
+				return true;
+			}
+			return false;
+		}
+
+		// Debounces the save function for 1 second to avoid triggering multiple notices
+		const debouncedTagSave = debounce(
+			(tag: string) => {
+				this.plugin.settings.customSyncTag = tag;
+				this.plugin.saveSettings();
+				new Notice("New custom sync tag have been updated.");
+			},
+			1000,
+			true,
+		);
+
+		if (this.plugin.settings.experimentalFeatures) {
+			new Setting(containerEl)
+				.setName("Custom sync tag")
+				.setDesc(
+					"Set a custom tag to sync tasks with Todoist. NOTE: Using #todoist might conflict with older version of this plugin",
+				)
+				.addText((text) =>
+					text
+						.setPlaceholder("Enter custom tag")
+						.setValue(this.plugin.settings.customSyncTag)
+						.onChange(async (value) => {
+							const valueCleaned = value.replace(" ", "");
+							checkTagValue(valueCleaned);
+
+							if (!checkTagValue(valueCleaned)) {
+								console.error(
+									"The tag must contain a # symbol and at least 1 character to be considered a valid sync tag.",
+								);
+								new Notice("The tag must contain a # symbol.");
+							}
+
+							if (checkTagValue(valueCleaned)) {
+								debouncedTagSave(valueCleaned);
+							}
+						}),
+				);
+		}
+
+		// Prevent plugin from any sync to prevent issues while Obsidian is indexing files
+		if (this.plugin.settings.experimentalFeatures) {
+			new Setting(containerEl)
+				.setName("Delayed first Sync")
+				.setDesc(
+					"This will hold any sync for 1 minute, to give Obsidian time to sync all files.",
+				)
+				.addToggle((component) =>
+					component
+						.setValue(this.plugin.settings.delayedSync)
+						.onChange((value) => {
+							this.plugin.settings.delayedSync = value;
+							this.plugin.saveSettings();
+							new Notice("First sync will be delayed by 60 seconds.");
+						}),
+				);
+		}
 		new Setting(containerEl)
 			.setName("Manual sync")
 			.setDesc("Manually perform a synchronization task.")
@@ -405,6 +503,8 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 					}),
 			);
 
+		new Setting(containerEl).setHeading().setName("Backup & Data Settings");
+
 		new Setting(containerEl)
 			.setName("Backup Todoist Data")
 			.setDesc(
@@ -420,6 +520,8 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 				}),
 			);
 
+		new Setting(containerEl).setHeading().setName("Experimental features");
+
 		new Setting(containerEl)
 			.setName("Experimental features")
 			.setDesc(
@@ -432,60 +534,11 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 						this.plugin.settings.experimentalFeatures = value;
 						this.plugin.saveSettings();
 						new Notice(
-							"Experimental features have been enabled. Close this window and open again to see the experimental features.",
+							"Experimental features have been enabled. Be careful, some might not be working yet or have bugs.",
 						);
+						this.display();
 					}),
 			);
-
-		// Test if the tag has #, if not, return false
-		function checkTagValue(tag: string) {
-			const tagRegexRule = /#[\w\u4e00-\u9fa5-]+/g;
-			const tagRegexTest = tagRegexRule.test(tag);
-
-			if (tagRegexTest) {
-				return true;
-			}
-			return false;
-		}
-
-		// Debounces the save function for 1 second to avoid triggering multiple notices
-		const debouncedTagSave = debounce(
-			(tag: string) => {
-				this.plugin.settings.customSyncTag = tag;
-				this.plugin.saveSettings();
-				new Notice("New custom sync tag have been updated.");
-			},
-			1000,
-			true,
-		);
-
-		if (this.plugin.settings.experimentalFeatures) {
-			new Setting(containerEl)
-				.setName("Custom sync tag")
-				.setDesc(
-					"Set a custom tag to sync tasks with Todoist. NOTE: Using #todoist might conflict with older version of this plugin",
-				)
-				.addText((text) =>
-					text
-						.setPlaceholder("Enter custom tag")
-						.setValue(this.plugin.settings.customSyncTag)
-						.onChange(async (value) => {
-							const valueCleaned = value.replace(" ", "");
-							checkTagValue(valueCleaned);
-
-							if (!checkTagValue(valueCleaned)) {
-								console.error(
-									"The tag must contain a # symbol and at least 1 character to be considered a valid sync tag.",
-								);
-								new Notice("The tag must contain a # symbol.");
-							}
-
-							if (checkTagValue(valueCleaned)) {
-								debouncedTagSave(valueCleaned);
-							}
-						}),
-				);
-		}
 
 		if (this.plugin.settings.experimentalFeatures) {
 			new Setting(containerEl)
@@ -540,7 +593,7 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 			new Setting(containerEl)
 				.setName("Full vault sync")
 				.setDesc(
-					"By default, only tasks marked with #todoist are synchronized. If this option is turned on, all tasks in the vault will be synchronized.",
+					"By default, only tasks marked with #tdsync are synchronized. If this option is turned on, any tasks in the vault will be synchronized.",
 				)
 				.addToggle((component) =>
 					component
@@ -553,23 +606,68 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 				);
 		}
 
-		// Prevent plugin from any sync to prevent issues while Obsidian is indexing files
-		if (this.plugin.settings.experimentalFeatures) {
-			new Setting(containerEl)
-				.setName("Delayed first Sync")
-				.setDesc(
-					"This will hold any sync for 1 minute, to give Obsidian time to sync all files.",
-				)
-				.addToggle((component) =>
-					component
-						.setValue(this.plugin.settings.delayedSync)
-						.onChange((value) => {
-							this.plugin.settings.delayedSync = value;
-							this.plugin.saveSettings();
-							new Notice("First sync will be delayed by 60 seconds.");
-						}),
-				);
+		new Setting(containerEl)
+			.setHeading()
+			.setName("User Data Settings")
+			.setDesc(
+				"For now, those settings can only be changed in your Todoist account.",
+			);
+
+		const userResource = await this.plugin.todoistNewAPI?.getUserResource();
+
+		if (!this.plugin.settings.todoistTasksData.user_data) {
+			this.plugin.settings.todoistTasksData.user_data = {
+				email: "",
+				full_name: "",
+				lang: "",
+				tz_info: { timezone: "", gmt_string: "" },
+			};
 		}
+
+		const saveUserData = async () => {
+			try {
+				this.plugin.settings.todoistTasksData.user_data = {
+					email: userResource?.email ?? "",
+					full_name: userResource?.full_name ?? "",
+					lang: userResource?.lang ?? "",
+					tz_info: {
+						timezone: userResource?.tz_info?.timezone ?? "",
+						gmt_string: userResource?.tz_info?.gmt_string ?? "",
+					},
+				};
+			} catch (error) {
+				console.error(`Error saving user data: ${error}`);
+			}
+		};
+
+		saveUserData();
+
+		new Setting(containerEl)
+			.setName(`Hello, ${userResource?.full_name}!`)
+			.setDisabled(true);
+
+		new Setting(containerEl)
+			.setName("User timezone")
+			.setDesc("Timezone set on your Todoist account.")
+			.addText((text) =>
+				text
+					.setPlaceholder("User Timezone")
+					.setValue(
+						`${userResource?.tz_info?.timezone} (${userResource?.tz_info?.gmt_string})`,
+					)
+					.setDisabled(true),
+			);
+
+		new Setting(containerEl)
+			.setName("User language")
+			.setDesc("Language set on your Todoist account.")
+			.addText((text) =>
+				text
+					.setPlaceholder("User Language")
+					.setValue(userResource?.lang)
+					.setDisabled(true),
+			);
+		new Setting(containerEl).setHeading().setName("Developer Settings");
 
 		new Setting(containerEl)
 			.setName("Debug mode")
