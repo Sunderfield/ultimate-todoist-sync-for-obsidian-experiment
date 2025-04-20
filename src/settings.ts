@@ -74,22 +74,16 @@ export interface TodoistTasksData {
 	};
 }
 
-export interface Statistics {
-	[key: string]: string | number | boolean | null | undefined;
-}
-
-export interface UltimateTodoistSyncSettings {
+export interface AnotherTodoistSyncPluginSettings {
+	todoistTasksData: TodoistTasksData;
+	fileMetadata: FileMetadata;
 	initialized: boolean;
-	//todoistTasksFilePath: string;
-	todoistAPIToken: string; // replace with correct type
 	apiInitialized: boolean;
+	todoistAPIToken: string;
 	defaultProjectName: string | false;
 	defaultProjectId: string;
 	automaticSynchronizationInterval: number;
-	todoistTasksData: TodoistTasksData;
-	fileMetadata: FileMetadata;
 	enableFullVaultSync: boolean;
-	statistics: Statistics;
 	debugMode: boolean;
 	commentsSync: boolean;
 	alternativeKeywords: boolean;
@@ -98,18 +92,17 @@ export interface UltimateTodoistSyncSettings {
 	changeDateOrder: boolean;
 	linksAppURI: boolean;
 	delayedSync: boolean;
-	syncInterval: number;
 }
 
-export const DEFAULT_SETTINGS: Partial<UltimateTodoistSyncSettings> = {
+export const DEFAULT_SETTINGS: Partial<AnotherTodoistSyncPluginSettings> = {
+	todoistTasksData: { projects: { results: [] }, tasks: [], events: [] },
+	fileMetadata: {},
 	initialized: false,
 	apiInitialized: false,
 	defaultProjectName: "Select a project",
-	automaticSynchronizationInterval: 300, //default sync interval 300s
-	todoistTasksData: { projects: { results: [] }, tasks: [], events: [] },
-	fileMetadata: {},
+	defaultProjectId: "",
+	automaticSynchronizationInterval: 150,
 	enableFullVaultSync: false,
-	statistics: {},
 	debugMode: false,
 	commentsSync: true,
 	alternativeKeywords: true,
@@ -118,7 +111,6 @@ export const DEFAULT_SETTINGS: Partial<UltimateTodoistSyncSettings> = {
 	changeDateOrder: false,
 	linksAppURI: false,
 	delayedSync: false,
-	syncInterval: 0,
 };
 
 export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
@@ -153,7 +145,6 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.todoistAPIToken = value;
 						this.plugin.settings.apiInitialized = false;
-						//
 					}),
 			)
 			.addButton((button) =>
@@ -208,7 +199,7 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 					.setValue(
 						this.plugin.settings.automaticSynchronizationInterval
 							? this.plugin.settings.automaticSynchronizationInterval.toString()
-							: "300",
+							: "150",
 					)
 					.onChange(async (value) => {
 						debouncedSyncSave(Number(value));
@@ -258,149 +249,149 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 				}),
 			);
 
-		new Setting(containerEl)
-			.setName("Check database")
-			.setDesc(
-				"Check for possible issues: sync error, file renaming not updated, or missed tasks not synchronized.",
-			)
-			.addButton((button) =>
-				button.setButtonText("Check Database").onClick(async () => {
-					if (!this.plugin.settings.apiInitialized) {
-						new Notice("Please set the Todoist api first");
-						return;
-					}
+		// new Setting(containerEl)
+		// 	.setName("Check database")
+		// 	.setDesc(
+		// 		"Check for possible issues: sync error, file renaming not updated, or missed tasks not synchronized.",
+		// 	)
+		// 	.addButton((button) =>
+		// 		button.setButtonText("Check Database").onClick(async () => {
+		// 			if (!this.plugin.settings.apiInitialized) {
+		// 				new Notice("Please set the Todoist api first");
+		// 				return;
+		// 			}
 
-					//check file metadata
-					await this.plugin.cacheOperation?.checkFileMetadata();
-					this.plugin.saveSettings();
-					const metadatas =
-						await this.plugin.cacheOperation?.getFileMetadatas();
-					// check default project task amounts
-					try {
-						const project_id = this.plugin.settings.defaultProjectId;
-						const options = { projectId: project_id };
-						const tasks =
-							await this.plugin.todoistNewAPI?.getActiveTasks(options);
-						const length = Number(tasks?.length);
-						if (length >= 300) {
-							new Notice(
-								"The number of tasks in the default project exceeds 300, reaching the upper limit. It is not possible to add more tasks. Please modify the default project.",
-							);
-						}
-					} catch (error) {
-						console.error(
-							`An error occurred while get tasks from todoist: ${error.message}`,
-						);
-					}
+		// 			//check file metadata
+		// 			await this.plugin.cacheOperation?.checkFileMetadata();
+		// 			this.plugin.saveSettings();
+		// 			const metadatas =
+		// 				await this.plugin.cacheOperation?.getFileMetadatas();
+		// 			// check default project task amounts
+		// 			try {
+		// 				const project_id = this.plugin.settings.defaultProjectId;
+		// 				const options = { projectId: project_id };
+		// 				const tasks =
+		// 					await this.plugin.todoistNewAPI?.getActiveTasks(options);
+		// 				const length = Number(tasks?.length);
+		// 				if (length >= 300) {
+		// 					new Notice(
+		// 						"The number of tasks in the default project exceeds 300, reaching the upper limit. It is not possible to add more tasks. Please modify the default project.",
+		// 					);
+		// 				}
+		// 			} catch (error) {
+		// 				console.error(
+		// 					`An error occurred while get tasks from todoist: ${error.message}`,
+		// 				);
+		// 			}
 
-					if (!(await this.plugin.checkAndHandleSyncLock())) return;
+		// 			if (!(await this.plugin.checkAndHandleSyncLock())) return;
 
-					//check empty task
-					for (const key in metadatas) {
-						const value = metadatas[key];
-						for (const taskId of value.todoistTasks) {
-							let taskObject:
-								| import("@doist/todoist-api-typescript").Task
-								| undefined;
-							try {
-								taskObject =
-									await this.plugin.cacheOperation?.loadTaskFromCacheID(taskId);
-							} catch (error) {
-								console.error(
-									`An error occurred while loading task cache: ${error.message}`,
-								);
-							}
+		// 			//check empty task
+		// 			for (const key in metadatas) {
+		// 				const value = metadatas[key];
+		// 				for (const taskId of value.todoistTasks) {
+		// 					let taskObject:
+		// 						| import("@doist/todoist-api-typescript").Task
+		// 						| undefined;
+		// 					try {
+		// 						taskObject =
+		// 							await this.plugin.cacheOperation?.loadTaskFromCacheID(taskId);
+		// 					} catch (error) {
+		// 						console.error(
+		// 							`An error occurred while loading task cache: ${error.message}`,
+		// 						);
+		// 					}
 
-							if (!taskObject) {
-								//get from Todoist
-								try {
-									taskObject =
-										await this.plugin.todoistNewAPI?.getTaskById(taskId);
-								} catch (error) {
-									if (error.message.includes("404")) {
-										// 处理404错误
-										await this.plugin.cacheOperation?.deleteTaskIdFromMetadata(
-											key,
-											taskId,
-										);
-										continue;
-									}
-									// 处理其他错误
-									console.error(error);
-								}
-							}
-						}
-					}
-					this.plugin.saveSettings();
+		// 					if (!taskObject) {
+		// 						//get from Todoist
+		// 						try {
+		// 							taskObject =
+		// 								await this.plugin.todoistNewAPI?.getTaskById(taskId);
+		// 						} catch (error) {
+		// 							if (error.message.includes("404")) {
+		// 								// 处理404错误
+		// 								await this.plugin.cacheOperation?.deleteTaskIdFromMetadata(
+		// 									key,
+		// 									taskId,
+		// 								);
+		// 								continue;
+		// 							}
+		// 							// 处理其他错误
+		// 							console.error(error);
+		// 						}
+		// 					}
+		// 				}
+		// 			}
+		// 			this.plugin.saveSettings();
 
-					try {
-						//check renamed files
-						for (const key in metadatas) {
-							const value = metadatas[key];
-							const newDescription =
-								this.plugin.taskParser?.getObsidianUrlFromFilepath(key);
-							for (const taskId of value.todoistTasks) {
-								let taskObject:
-									| import("@doist/todoist-api-typescript").Task
-									| undefined;
-								try {
-									taskObject =
-										await this.plugin.cacheOperation?.loadTaskFromCacheID(
-											taskId,
-										);
-								} catch (error) {
-									console.error(
-										`An error occurred while loading task ${taskId} from cache: ${error.message}`,
-									);
-								}
-								if (!taskObject) {
-									continue;
-								}
-								const oldDescription = taskObject?.description ?? "";
-								if (newDescription !== oldDescription) {
-									try {
-										await this.plugin.todoistSync?.updateTaskDescription(key);
-									} catch (error) {
-										console.error(
-											`An error occurred while updating task discription: ${error.message}`,
-										);
-									}
-								}
-							}
-						}
+		// 			try {
+		// 				//check renamed files
+		// 				for (const key in metadatas) {
+		// 					const value = metadatas[key];
+		// 					const newDescription =
+		// 						this.plugin.taskParser?.getObsidianUrlFromFilepath(key);
+		// 					for (const taskId of value.todoistTasks) {
+		// 						let taskObject:
+		// 							| import("@doist/todoist-api-typescript").Task
+		// 							| undefined;
+		// 						try {
+		// 							taskObject =
+		// 								await this.plugin.cacheOperation?.loadTaskFromCacheID(
+		// 									taskId,
+		// 								);
+		// 						} catch (error) {
+		// 							console.error(
+		// 								`An error occurred while loading task ${taskId} from cache: ${error.message}`,
+		// 							);
+		// 						}
+		// 						if (!taskObject) {
+		// 							continue;
+		// 						}
+		// 						const oldDescription = taskObject?.description ?? "";
+		// 						if (newDescription !== oldDescription) {
+		// 							try {
+		// 								await this.plugin.todoistSync?.updateTaskDescription(key);
+		// 							} catch (error) {
+		// 								console.error(
+		// 									`An error occurred while updating task discription: ${error.message}`,
+		// 								);
+		// 							}
+		// 						}
+		// 					}
+		// 				}
 
-						//check empty file metadata
+		// 				//check empty file metadata
 
-						//check calendar format
+		// 				//check calendar format
 
-						//check omitted tasks
-						const files = this.app.vault.getFiles();
-						files.forEach(async (v, i) => {
-							if (v.extension === "md") {
-								try {
-									await this.plugin.fileOperation?.addTodoistLinkToFile(v.path);
-									if (this.plugin.settings.enableFullVaultSync) {
-										await this.plugin.fileOperation?.addTodoistTagToFile(
-											v.path,
-										);
-									}
-								} catch (error) {
-									console.error(
-										`An error occurred while check new tasks in the file: ${v.path}, ${error.message}`,
-									);
-								}
-							}
-						});
-						this.plugin.syncLock = false;
-						new Notice("All files have been scanned.");
-					} catch (error) {
-						console.error(
-							`An error occurred while scanning the vault.:${error}`,
-						);
-						this.plugin.syncLock = false;
-					}
-				}),
-			);
+		// 				//check omitted tasks
+		// 				const files = this.app.vault.getFiles();
+		// 				files.forEach(async (v, i) => {
+		// 					if (v.extension === "md") {
+		// 						try {
+		// 							await this.plugin.fileOperation?.addTodoistLinkToFile(v.path);
+		// 							if (this.plugin.settings.enableFullVaultSync) {
+		// 								await this.plugin.fileOperation?.addTodoistTagToFile(
+		// 									v.path,
+		// 								);
+		// 							}
+		// 						} catch (error) {
+		// 							console.error(
+		// 								`An error occurred while check new tasks in the file: ${v.path}, ${error.message}`,
+		// 							);
+		// 						}
+		// 					}
+		// 				});
+		// 				this.plugin.syncLock = false;
+		// 				new Notice("All files have been scanned.");
+		// 			} catch (error) {
+		// 				console.error(
+		// 					`An error occurred while scanning the vault.:${error}`,
+		// 				);
+		// 				this.plugin.syncLock = false;
+		// 			}
+		// 		}),
+		// 	);
 
 		new Setting(containerEl)
 			.setName("Sync comments")
@@ -415,13 +406,12 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Backup Todoist data")
+			.setName("Backup Todoist Data")
 			.setDesc(
-				"Click to backup Todoist data, The backed-up files will be stored in the root directory of the Obsidian vault.",
+				"A backup file will be stored in the root directory of the Obsidian vault.",
 			)
 			.addButton((button) =>
 				button.setButtonText("Backup").onClick(() => {
-					// Add code here to handle exporting Todoist data
 					if (!this.plugin.settings.apiInitialized) {
 						new Notice("Please set the Todoist api first");
 						return;
@@ -458,8 +448,8 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 			return false;
 		}
 
-		// Debouces the save function for 1 secon to avoid triggering multiple notices
-		const deboucedTagSave = debounce(
+		// Debounces the save function for 1 second to avoid triggering multiple notices
+		const debouncedTagSave = debounce(
 			(tag: string) => {
 				this.plugin.settings.customSyncTag = tag;
 				this.plugin.saveSettings();
@@ -491,7 +481,7 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 							}
 
 							if (checkTagValue(valueCleaned)) {
-								deboucedTagSave(valueCleaned);
+								debouncedTagSave(valueCleaned);
 							}
 						}),
 				);
@@ -592,26 +582,6 @@ export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
 					this.plugin.saveSettings();
 				}),
 			);
-
-		// Replace template literals with regular strings
-		// new Setting(containerEl)
-		// 	.setName("Sync Interval")
-		// 	.setDesc("How often to sync with Todoist (in minutes)")
-		// 	.addText((text) =>
-		// 		text
-		// 			.setPlaceholder("Enter minutes")
-		// 			.setValue(String(this.plugin.settings.syncInterval))
-		// 			.onChange(
-		// 				debounce(async (value) => {
-		// 					const numValue = Number(value);
-		// 					if (Number.isNaN(numValue)) {
-		// 						return;
-		// 					}
-		// 					this.plugin.settings.syncInterval = numValue;
-		// 					await this.plugin.saveSettings();
-		// 				}, 1000),
-		// 			),
-		// 	);
 
 		// Add type for key in settings loop
 		for (const key of Object.keys(this.plugin.settings) as Array<

@@ -2,7 +2,7 @@ import { MarkdownView, Notice, Plugin, type Editor } from "obsidian";
 
 //settings
 import {
-	type UltimateTodoistSyncSettings as AnotherSimpleTodoistSyncSettings,
+	type AnotherTodoistSyncPluginSettings as AnotherSimpleTodoistSyncSettings,
 	DEFAULT_SETTINGS,
 	AnotherTodoistSyncPluginSettingTab,
 } from "./src/settings";
@@ -398,7 +398,6 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			// this.todoistSyncAPI = undefined
 			this.todoistNewAPI = undefined;
 			this.taskParser = undefined;
-			this.taskParser = undefined;
 			this.cacheOperation = undefined;
 			this.fileOperation = undefined;
 			this.todoistSync = undefined;
@@ -416,9 +415,6 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 
 				//initialize file operation
 				this.fileOperation = new FileOperation(this.app, this);
-
-				//initialize todoisy sync api
-				// this.todoistSyncAPI = new TodoistSyncAPI(this.app, this)
 
 				//initialize Todoist sync module
 				this.todoistSync = new TodoistSync(this.app, this);
@@ -450,9 +446,6 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 	}
 
 	async initializeModuleClass() {
-		//initialize Todoist restapi
-		// this.todoistRestAPI = new TodoistRestAPI(this.app, this)
-
 		// initialize Todoist New API
 		this.todoistNewAPI = new TodoistNewAPI(this.app, this);
 
@@ -462,9 +455,6 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 
 		//initialize file operation
 		this.fileOperation = new FileOperation(this.app, this);
-
-		//initialize todoisy sync api
-		// this.todoistSyncAPI = new TodoistSyncAPI(this.app, this)
 
 		//initialize Todoist sync module
 		this.todoistSync = new TodoistSync(this.app, this);
@@ -589,7 +579,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			}
 			return true;
 		}
-		new Notice('Please enter the correct Todoist API token"');
+		new Notice("Please enter the correct Todoist API token");
 		return false;
 	}
 

@@ -70,7 +70,7 @@ export class TodoistSync {
 			return;
 		}
 
-		// Get all file content, removing the fronmatter (metada)
+		// Get all file content, removing the frontmatter (metadata)
 		const currentFileValueWithOutFrontMatter = currentFileValue?.replace(
 			/^---[\s\S]*?---\n/,
 			"",
@@ -78,7 +78,7 @@ export class TodoistSync {
 		const frontMatter_todoistTasks = frontMatter.todoistTasks;
 		const frontMatter_todoistCount = frontMatter.todoistCount;
 
-		// Circle through the tasks on the fronmatter, if the current file doesn't include it, move to delection phase
+		// Circle through the tasks on the frontmatter, if the current file doesn't include it, move to deletion phase
 		const deleteTasksPromises = frontMatter_todoistTasks
 			.filter(
 				(taskId: string) =>
@@ -510,7 +510,7 @@ export class TodoistSync {
 			);
 
 			let dueDateModified = false;
-			let dueDateTimeModified = false;
+			// let dueDateTimeModified = false;
 			let dueTimeModified = false;
 
 			const hasDueDate = this.plugin.taskParser?.hasDueDate(lineText);
@@ -541,15 +541,15 @@ export class TodoistSync {
 					savedTask.due?.date ?? "",
 				));
 				if (dueDateModified && dueTimeModified) {
-					dueDateTimeModified = true;
+					// dueDateTimeModified = true;
 				}
 				if (dueDateModified && !dueTimeModified) {
-					dueDateTimeModified = false;
+					// dueDateTimeModified = false;
 					dueDateModified = true;
 					dueTimeModified = false;
 				}
 				if (!dueDateModified && dueTimeModified) {
-					dueDateTimeModified = false;
+					// dueDateTimeModified = false;
 					dueDateModified = false;
 					dueTimeModified = true;
 				}
