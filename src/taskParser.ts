@@ -1,5 +1,6 @@
 import type AnotherSimpleTodoistSync from "../main";
 import type { App } from "obsidian";
+import { Notice } from "obsidian";
 import type { Task } from "./cacheOperation";
 export class TaskParser {
 	app: App;
@@ -99,7 +100,7 @@ export class TaskParser {
 
 		const section = this.getFirstSectionFromLineText(textWithoutIndentation);
 
-		const project_name = this.getProjectNameFromCommentOnLineText(
+		let project_name = this.getProjectNameFromCommentOnLineText(
 			textWithoutIndentation,
 		);
 		let sectionId: string | undefined | null;
@@ -123,12 +124,45 @@ export class TaskParser {
 		let projectId = this.plugin.cacheOperation?.getDefaultProjectIdForFilepath(
 			filepath as string,
 		);
+		if (!projectId) {
+			console.error("projectId was not found");
+			new Notice(
+				"ProjectId was not found. Please select a default project on Settings",
+			);
+		}
 
-		// if (projectId) {
-		// 	const projectName =
-		// 		this.plugin.cacheOperation?.getProjectNameByIdFromCache(projectId);
-		// 	// console.log(`projectName is: ${projectName}`);
-		// }
+		if (!project_name && projectId) {
+			project_name =
+				this.plugin.cacheOperation?.getProjectNameByIdFromCache(projectId) ??
+				"";
+		}
+
+		if (project_name) {
+			const hasProjectOnCache =
+				this.plugin.cacheOperation?.checkIfProjectExistOnCache(project_name);
+			if (hasProjectOnCache) {
+				projectId = hasProjectOnCache.toString();
+			}
+			if (!hasProjectOnCache) {
+				const newProject =
+					await this.plugin.todoistNewAPI?.createNewProject(project_name);
+				projectId = newProject?.id;
+				if (newProject) {
+					this.plugin.cacheOperation?.addProjectToCache(
+						project_name,
+						newProject?.id,
+					);
+				}
+			}
+		}
+		if (!projectId) {
+			console.error("projectId was not found");
+		}
+		if (!project_name) {
+			console.error("project_name was not found");
+		}
+
+		console.log(`projectId is: ${projectId}`);
 
 		// If the task has section, it tries to retrieve from cache, if don't find, create a new one and store it on cache.
 		if (section) {
@@ -175,27 +209,6 @@ export class TaskParser {
 		}
 
 		// console.log(`sectionId is: ${sectionId}`);
-
-		if (project_name) {
-			const hasProjectOnCache =
-				this.plugin.cacheOperation?.checkIfProjectExistOnCache(project_name);
-			if (hasProjectOnCache) {
-				projectId = hasProjectOnCache.toString();
-			}
-			if (!hasProjectOnCache) {
-				const newProject =
-					await this.plugin.todoistNewAPI?.createNewProject(project_name);
-				projectId = newProject?.id;
-				if (newProject) {
-					this.plugin.cacheOperation?.addProjectToCache(
-						project_name,
-						newProject?.id,
-					);
-				}
-			}
-		}
-
-		// console.log(`projectId is: ${projectId}`);
 
 		if (hasParent) {
 			projectId = parentTaskObject?.project_id ?? "";

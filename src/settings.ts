@@ -32,6 +32,7 @@ export interface FileMetadata {
 		todoistTasks: string[];
 		todoistCount: number;
 		defaultProjectId?: string;
+		defaultProjectName?: string;
 	};
 }
 

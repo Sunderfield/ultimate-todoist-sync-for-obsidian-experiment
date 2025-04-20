@@ -476,7 +476,19 @@ export class TodoistSync {
 			let savedTask =
 				this.plugin.cacheOperation?.loadTaskFromCacheID(lineTask_todoist_id);
 
-			// console.log("lineModifiedTaskCheck: savedTask:", savedTask);
+			const isOldTaskId = this.plugin.cacheOperation?.checkTaskIdIsOld(
+				lineTask.id,
+			);
+
+			if (isOldTaskId) {
+				if (this.plugin.settings.debugMode) {
+					console.error(
+						`Task id is using old format (${lineTask.id}), it will not look for any updates.`,
+					);
+				}
+				return;
+			}
+
 			if (!savedTask) {
 				return;
 			}
@@ -687,6 +699,10 @@ export class TodoistSync {
 					console.log(
 						"Task change status: task id:",
 						lineTask.id,
+						" on line:",
+						lineNumber,
+						" from filepath:",
+						filepath,
 						"contentChanged is:",
 						contentChanged,
 						"tagsChanged is:",
@@ -722,6 +738,15 @@ export class TodoistSync {
 					durationChanged ||
 					sectionChanged
 				) {
+					if (this.plugin.cacheOperation?.checkTaskIdIsOld(lineTask.id)) {
+						if (this.plugin.settings.debugMode) {
+							console.error(
+								`Task id is using old format (${lineTask.id}), it will not trigger any update.`,
+							);
+						}
+						return;
+					}
+
 					if (this.plugin.settings.debugMode) {
 						console.log(
 							"The updates to be sent to Todoist and Cache are:",

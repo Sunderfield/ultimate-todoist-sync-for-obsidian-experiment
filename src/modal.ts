@@ -51,6 +51,7 @@ export class SetDefalutProjectInTheFilepathModal extends Modal {
 						this.plugin.cacheOperation?.setDefaultProjectIdForFilepath(
 							this.filepath,
 							value,
+							this.defaultProjectName,
 						);
 						this.plugin.setStatusBarText();
 						this.close();

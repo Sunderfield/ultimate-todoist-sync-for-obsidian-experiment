@@ -1,6 +1,13 @@
 ## CHANGELOG
 
-## 2025-04-18
+## 2025-04-20
+
+### 0.5.1
+
+-   Added a new option called "Clean old plugin data" to remove from cache any projects, recommended for anyone coming from 0.4.x, sections and tasks using old ID and replacing for new. This prevents the plugin from keep looking for old tasks which will not have the Id anymore
+-   Improved error handling with projects names and ids
+
+## 2025-04-19
 
 ### 0.5.0
 

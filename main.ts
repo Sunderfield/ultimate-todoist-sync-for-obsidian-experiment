@@ -334,6 +334,17 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			},
 		});
 
+		this.addCommand({
+			id: "asts-cleanup-old-plugin-version-data",
+			name: "Clean data from plugin below v0.5.0",
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				if (!view) {
+					return;
+				}
+				this.cacheOperation?.cleanupOldPluginVersionData();
+			},
+		});
+
 		//display default project for the current file on status bar
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
 		this.statusBar = this.addStatusBarItem();
@@ -378,9 +389,6 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 	async initializePlugin() {
 		// initialize Todoist API
 		this.todoistNewAPI = new TodoistNewAPI(this.app, this);
-
-		//initialize Todoist restapi
-		// this.todoistRestAPI = new TodoistRestAPI(this.app, this)
 
 		//initialize data read and write object
 		this.cacheOperation = new CacheOperation(this.app, this);

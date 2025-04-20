@@ -53,6 +53,7 @@ export interface FileMetadata {
 	todoistTasks: string[];
 	todoistCount: number;
 	defaultProjectId?: string;
+	defaultProjectName?: string;
 }
 
 interface TodoistSection {
@@ -202,15 +203,22 @@ export class CacheOperation {
 		return defaultProjectId;
 	}
 
-	setDefaultProjectIdForFilepath(filepath: string, defaultProjectId: string) {
+	setDefaultProjectIdForFilepath(
+		filepath: string,
+		defaultProjectId: string,
+		defaultProjectName: string,
+	) {
 		const metadatas = this.plugin.settings.fileMetadata;
 		if (!metadatas[filepath]) {
 			metadatas[filepath] = {
 				todoistTasks: [],
 				todoistCount: 0,
+				defaultProjectId: defaultProjectId,
+				defaultProjectName: defaultProjectName,
 			};
 		}
 		metadatas[filepath].defaultProjectId = defaultProjectId;
+		metadatas[filepath].defaultProjectName = defaultProjectName;
 
 		// 将更新后的metadatas对象保存回设置对象中
 		this.plugin.settings.fileMetadata = metadatas;
@@ -596,7 +604,7 @@ export class CacheOperation {
 			return projectName;
 		} catch (error) {
 			console.error(`Error finding project from Cache file: ${error}`);
-			return "";
+			return null;
 		}
 	}
 
@@ -657,6 +665,69 @@ export class CacheOperation {
 			this.plugin.settings.fileMetadata = fileMetadatas;
 		} catch (error) {
 			console.error(`Error updating renamed file path to cache: ${error}`);
+		}
+	}
+
+	// Needed to ignore old tasks on users cache since 0.5.1
+	checkTaskIdIsOld(taskId: string) {
+		if (/^\d{10}/.test(taskId)) {
+			return true;
+		}
+		return false;
+	}
+
+	// Needed to cleanup old tasks, sections, projects, events on users cache since 0.5.1 because the new API uses different data structure
+	async cleanupOldPluginVersionData() {
+		const savedTasks = this.plugin.settings.todoistTasksData.tasks;
+		const newSavedTasks = savedTasks.filter(
+			(t: Task) => !this.checkTaskIdIsOld(t.id),
+		);
+		this.plugin.settings.todoistTasksData.tasks = newSavedTasks;
+
+		const savedEvents = this.plugin.settings.todoistTasksData.events;
+
+		const newSavedEvents = savedEvents.filter((e: TodoistEvent) => {
+			const eventDate = new Date(e.event_date);
+			const year = eventDate.getFullYear();
+			const month = eventDate.getMonth() + 1;
+			const day = eventDate.getDate();
+			return !(
+				year === 2024 ||
+				(year === 2025 && month < 4) ||
+				(year === 2025 && month === 4 && day < 19)
+			);
+		});
+
+		this.plugin.settings.todoistTasksData.events = newSavedEvents;
+
+		const savedSections = this.plugin.settings.todoistTasksData.sections;
+		const newSavedSections = savedSections?.results;
+		if (this.plugin.settings.todoistTasksData.sections && newSavedSections) {
+			this.plugin.settings.todoistTasksData.sections.results = newSavedSections;
+		}
+
+		const savedProjects = this.plugin.settings.todoistTasksData.projects;
+		const newSavedProjects = savedProjects.results;
+		if (this.plugin.settings.todoistTasksData.projects && newSavedProjects) {
+			this.plugin.settings.todoistTasksData.projects.results = newSavedProjects;
+		}
+
+		// inside todoistTaskData.fileMetadata, delete all itens that the todoistCount is 0
+		const fileMetadatas = this.plugin.settings.fileMetadata;
+		const newFileMetadatas = Object.fromEntries(
+			Object.entries(fileMetadatas).filter(
+				([_, value]) => value.todoistCount !== 0,
+			),
+		);
+		const newFileMetadataRemovingOldTasks = Object.fromEntries(
+			Object.entries(newFileMetadatas).filter(
+				([_, value]) => value.todoistTasks[0].length !== 10,
+			),
+		);
+		this.plugin.settings.fileMetadata = newFileMetadataRemovingOldTasks;
+
+		if (this.plugin.settings?.defaultProjectId?.length === 10) {
+			console.log("defaultProjectId is old, need to select a new one");
 		}
 	}
 }
