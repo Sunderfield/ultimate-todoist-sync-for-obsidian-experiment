@@ -162,8 +162,6 @@ export class TaskParser {
 			console.error("project_name was not found");
 		}
 
-		console.log(`projectId is: ${projectId}`);
-
 		// If the task has section, it tries to retrieve from cache, if don't find, create a new one and store it on cache.
 		if (section) {
 			let hasSectionOnCache = false;
