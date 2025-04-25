@@ -173,28 +173,17 @@ export class TaskParser {
 					),
 				);
 				if (hasSectionOnCache) {
-					// sectionId = hasSectionOnCache.toString();
 					sectionId =
 						this.plugin.cacheOperation?.getSectionIdByNameFromCache(section);
 				}
 			}
 			if (!hasSectionOnCache) {
-				// TODO creates the section on Todoist and add to the cache then assign the sectionId to the sectionID
 				if (projectId) {
 					const newSection = await this.plugin.todoistNewAPI?.createNewSection(
 						section,
 						projectId,
 					);
 					sectionId = newSection?.id;
-					// console.log(
-					// 	"sectionId is: ",
-					// 	sectionId,
-					// 	" -- from createNewSection",
-					// 	" section is: ",
-					// 	section,
-					// 	" projectId is: ",
-					// 	projectId,
-					// );
 					if (newSection) {
 						this.plugin.cacheOperation?.addSectionToCache(
 							section,

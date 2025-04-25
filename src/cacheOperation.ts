@@ -438,7 +438,7 @@ export class CacheOperation {
 		const targetSection = savedSections.results.find(
 			(obj: Section) => obj.name === sectionName,
 		);
-		console.log("targetSection is: ", targetSection);
+		// console.log("targetSection is: ", targetSection);
 		return targetSection ? targetSection.id : null;
 	}
 

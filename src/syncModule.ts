@@ -695,7 +695,19 @@ export class TodoistSync {
 					new Notice(`Task ${lineTask.id} moved to ${lineTask.section_id}.`);
 				}
 
-				if (this.plugin.settings.debugMode) {
+				if (
+					this.plugin.settings.debugMode &&
+					(contentChanged ||
+						tagsChanged ||
+						dueDateChanged ||
+						dueDateTimeChanged ||
+						dueTimeChanged ||
+						projectChanged ||
+						parentIdChanged ||
+						priorityChanged ||
+						durationChanged ||
+						sectionChanged)
+				) {
 					console.log(
 						"Task change status: task id:",
 						lineTask.id,
