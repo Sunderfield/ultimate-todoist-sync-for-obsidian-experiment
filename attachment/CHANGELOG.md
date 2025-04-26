@@ -1,5 +1,18 @@
 ## CHANGELOG
 
+## 2025-04-26
+
+### 0.5.3
+
+-   Fixed issue #19 where a task with only dueDate, when changed, was replaced by its date + 23:59.
+-   Cleaned up some more outdated comments and console.logs
+
+## 2025-04-24
+
+### 0.5.2
+
+-   Improvements on the debugMode feature
+
 ## 2025-04-20
 
 ### 0.5.1
