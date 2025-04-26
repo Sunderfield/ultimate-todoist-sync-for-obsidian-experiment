@@ -19,9 +19,6 @@ export class TaskParser {
 		lineNumber?: number,
 		fileContent?: string,
 	) {
-		// console.log(
-		// 	`convertTextToTodoistTaskObject lineText is ${lineText}, filepath is ${filepath}, lineNumber is ${lineNumber}, fileContent is ${fileContent}`,
-		// );
 		let hasParent = false;
 		let parentId = null;
 		let parentTaskObject = null;
@@ -195,12 +192,9 @@ export class TaskParser {
 			}
 		}
 
-		// console.log(`sectionId is: ${sectionId}`);
-
 		if (hasParent) {
 			projectId = parentTaskObject?.project_id ?? "";
 		}
-		//console.log(`hasParent is: ${hasParent}`);
 
 		if (!hasParent && labels) {
 			//匹配 tag 和 peoject
@@ -397,7 +391,12 @@ export class TaskParser {
 		);
 
 		const current_time = regex_search_for_duetime.exec(text);
-
+		if (current_time === null) {
+			if (this.plugin.settings.debugMode) {
+				console.error("Due time not found in the line text");
+			}
+			return "";
+		}
 		// if current_time is H:MM instead of HH:MM, convert to HH:MM adding a 0 by checking the string length
 		if (current_time) {
 			if (current_time[1].length === 4) {
@@ -431,9 +430,6 @@ export class TaskParser {
 		if (match?.[1]) {
 			// The captured ID is in the first capturing group (index 1 of the match array)
 			taskId = match[1];
-			// console.log(`Extracted ID: ${taskId}`);
-		} else {
-			// console.log("ID not found in the line.");
 		}
 
 		return taskId;
@@ -450,7 +446,6 @@ export class TaskParser {
 
 	//   Remove everything that is not the task content
 	getTaskContentFromLineText(lineText: string) {
-		// 	console.log(`getTaskContentFromLineText lineText is ${lineText}`);
 		const regex_remove_rules = {
 			remove_priority: /\s!!([1-4])\s/,
 			remove_tags: /(^|\s)(#[\w\d\u4e00-\u9fa5-]+)/g,
@@ -484,7 +479,6 @@ export class TaskParser {
 			.replace(regex_remove_rules.remove_todoist_section, "")
 			.replace(regex_remove_rules.remove_todoist_project_comment, "");
 
-		// console.log("taskContent is:", TaskContent);
 		return TaskContent;
 	}
 
@@ -779,6 +773,7 @@ export class TaskParser {
 
 			const timeHour = dateObj.getHours();
 			const timeMinute = dateObj.getMinutes();
+			const timeSecond = dateObj.getSeconds();
 
 			let timeHourString: string;
 			let timeMinuteString: string;
@@ -789,11 +784,21 @@ export class TaskParser {
 				timeMinuteString = JSON.stringify(dateObj.getMinutes());
 			}
 
-			//   Fixes the issue of hour and minutes having a single digit
+			//   If the hour or minutes have a single digit, add a 0 in front of it
 			if (timeHour < 10) {
 				timeHourString = `0${JSON.stringify(dateObj.getHours())}`;
 			} else {
 				timeHourString = JSON.stringify(dateObj.getHours());
+			}
+
+			// While converting the time to local time, if the time is 23:59:59 it is very likely that it isn't a user input, and for that, default as not having time
+			if (timeHour === 23 && timeMinute === 59 && timeSecond === 59) {
+				if (this.plugin.settings.debugMode) {
+					console.error(
+						"Due time is 23:59:59, which is very likely not a user input, defaulting to not having time",
+					);
+				}
+				return "";
 			}
 
 			const localTimeString = `${timeHourString}:${timeMinuteString}`;

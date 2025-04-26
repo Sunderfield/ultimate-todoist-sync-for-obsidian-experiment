@@ -122,7 +122,6 @@ export class FileOperation {
 
 		if (modified) {
 			const newContent = lines.join("\n");
-			//console.log(newContent)
 			await this.app.vault.modify(file, newContent);
 
 			//update filemetadate
@@ -301,14 +300,14 @@ export class FileOperation {
 	}) {
 		const taskId = evt.object_id;
 
-		// 获取任务文件路径
+		// Get the task file path
 		const currentTask =
 			await this.plugin.cacheOperation?.loadTaskFromCacheID(taskId);
 		const filepath = currentTask?.path;
 		if (!filepath) return;
 		const file = this.app.vault.getAbstractFileByPath(filepath);
 
-		// 获取文件对象并更新内容
+		// Get the file object and update the content
 		let content: string | undefined;
 		if (file instanceof TFile) {
 			content = await this.app.vault.read(file);
@@ -334,11 +333,15 @@ export class FileOperation {
 					) || "";
 				const lineTaskTime =
 					this.plugin.taskParser?.getDueTimeFromLineText(line) || "";
-				const newTaskTime =
-					this.plugin.taskParser?.ISOStringToLocalClockTimeString(
-						evt.extra_data.due_date,
-					) || "";
-				// TODO needs to consider what to do when the task doesn't have time
+
+				// If the task on the file doesn't have time, doesn't need to find the new time from the cache
+				let newTaskTime = "";
+				if (lineTaskTime === "") {
+					newTaskTime =
+						this.plugin.taskParser?.ISOStringToLocalClockTimeString(
+							evt.extra_data.due_date,
+						) || "";
+				}
 				// TODO how to handle when the task has the new "timeslot" with start + finish time?
 
 				if (this.plugin.taskParser && lineTaskDueDate === "") {
@@ -350,11 +353,10 @@ export class FileOperation {
 					new Notice(`New due date found for ${taskId}.`);
 				}
 
-				// TODO when a task is created without dueTime, while trying to convert from ISO to local time, it will return 23:59, which is not the best option. So for now this will work
 				if (lineTaskTime === "" && newTaskTime !== "") {
 					const userDefinedTag =
 						this.plugin.taskParser?.keywords_function("TODOIST_TAG");
-					const tagWithTimeAndSymbol = ` ⏰${newTaskTime} ${userDefinedTag}`;
+					const tagWithTimeAndSymbol = `⏰${newTaskTime} ${userDefinedTag}`;
 					lines[i] = lines[i].replace(userDefinedTag, tagWithTimeAndSymbol);
 					modified = true;
 					new Notice(`Due datetime included for ${taskId}.`);
@@ -379,8 +381,8 @@ export class FileOperation {
 
 				if (
 					lineTaskTime !== "" &&
-					lineTaskTime !== newTaskTime &&
-					newTaskTime !== "23:59"
+					newTaskTime !== "" &&
+					lineTaskTime !== newTaskTime
 				) {
 					lines[i] = lines[i].replace(lineTaskTime.trim(), newTaskTime.trim());
 					lines[i] = lines[i].replace(
@@ -447,7 +449,6 @@ export class FileOperation {
 		if (modified) {
 			if (this.plugin.settings.commentsSync) {
 				const newContent = lines.join("\n");
-				//console.log(newContent)
 				await this.app.vault.modify(file, newContent);
 			}
 		}
@@ -531,7 +532,6 @@ export class FileOperation {
 	//search filepath by taskid in vault
 	async searchFilepathsByTaskidInVault(taskId: string) {
 		const files = await this.getAllFilesInTheVault();
-		//console.log(files)
 		const tasks = files.map(async (file) => {
 			if (!this.isMarkdownFile(file.path)) {
 				return;
