@@ -122,7 +122,10 @@ export class TodoistNewAPI {
 				taskData.duration_unit = undefined;
 			}
 
-			console.log(`Adding task to Todoist: ${JSON.stringify(taskData)}`);
+			if(this.plugin.settings.debugMode) {
+				console.log("Todoist Task data to be added: ", taskData);
+			}
+
 
 			const token = this.plugin.settings.todoistAPIToken;
 			try {
@@ -369,6 +372,10 @@ export class TodoistNewAPI {
 			if (updates.duration) {
 				taskData.duration = updates.duration;
 				taskData.duration_unit = updates.duration_unit || "minute";
+			}
+
+			if (this.plugin.settings.debugMode) {
+				console.log("Todoist Task data to be updated: ", taskData);
 			}
 
 			const response = await requestUrl({

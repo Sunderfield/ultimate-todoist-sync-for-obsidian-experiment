@@ -483,7 +483,7 @@ export class TodoistSync {
 			if (isOldTaskId) {
 				if (this.plugin.settings.debugMode) {
 					console.warn(
-						`Task id is using old format (${lineTask.id}), it will not look for any updates.`,
+						`Task id is using old format (${lineTask.id}), it will ignore this task and not look for any updates.`,
 					);
 				}
 				return;

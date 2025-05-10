@@ -206,7 +206,7 @@ export class TaskParser {
 		}
 
 		if (!hasParent && labels) {
-			//匹配 tag 和 peoject
+			// Matching tags and projects
 			for (const label of labels) {
 				const labelName = label.replace(/#/g, "");
 				const hasProjectId =
@@ -258,19 +258,30 @@ export class TaskParser {
 	}
 
 	convertDueDateToProperFormat(text:string){
-	const regex = /^(\d{2,4})-(\d{1,2})-(\d{1,2})$/;
-	const match = text.match(regex);
-	if (!match) {
-		throw new Error(`Invalid date format: ${text}`);
+		const regexCorrectFormat = /(\d{4})-(\d{2})-(\d{2})/;
+		const regex = /(\d{2,4})-(\d{1,2})-(\d{1,2})/;
+		const hasCorrectFormat = regexCorrectFormat.test(text) 
+		if(hasCorrectFormat) {
+			return text
+		}
+
+		const findAllGroups = text.match(regex)
+		
+		if (findAllGroups === null) {
+			console.error("Due date format is incorrect, task won't be created. Expected format: YYYY-MM-DD.");
+			return ""
+		}
+
+		const year = findAllGroups[1];
+		const month = findAllGroups[2];
+		const day = findAllGroups[3];
+		
+		
+		const fullYear = year.length === 2 ? `20${year}` : year;
+		const fullMonth = month.length === 1 ? `0${month}` : month;
+		const fullDay = day.length === 1 ? `0${day}` : day;
+		return `${fullYear}-${fullMonth}-${fullDay}`;
 	}
-	const year = match[1];
-	const month = match[2];
-	const day = match[3];
-	const fullYear = year.length === 2 ? `20${year}` : year;
-	const fullMonth = month.length === 1 ? `0${month}` : month;
-	const fullDay = day.length === 1 ? `0${day}` : day;
-	return `${fullYear}-${fullMonth}-${fullDay}`;
-}
 
 	keywords_function(text: string) {
 		if (text === "TODOIST_TAG") {
@@ -374,13 +385,13 @@ export class TaskParser {
 	// Get the due date from the text
 	getDueDateFromLineText(text: string) {
 		const regex_test = new RegExp(
-			`(?:${this.keywords_function("DUE_DATE")})\\s?(\\d{2}(?:\\d{2})?)-(0?[1-9]|1[0-2])-(0?[1-9]|[12]\\d|3[01])`,
+			`(?:${this.keywords_function("DUE_DATE")})\\s?(?:\\d{4}|\\d{2})-(?:0[1-9]|1[0-2]|[1-9])-(?:0[1-9]|[12]\\d|3[01]|2[1-9]|[1-9])`,
 		);
-		console.log(`regex_test is ${regex_test}`);	
 
 		const dueDateKeywords = this.keywords_function("DUE_DATE").split("|");
 
 		const due_date = regex_test.exec(text);
+
 		// If no due date is found, return null
 		if (due_date === null) {
 			return null;
@@ -390,7 +401,7 @@ export class TaskParser {
 		for (const keyword of dueDateKeywords) {
 			due_date[0] = due_date[0].replace(keyword, "");
 		}
-		const dueDateWithoutEmoji = due_date[0];
+		const dueDateWithoutEmoji = due_date[0].trim();
 
 		return dueDateWithoutEmoji;
 	}
@@ -425,7 +436,7 @@ export class TaskParser {
 		return duration_object;
 	}
 
-	// Get the duetime from the text
+	// Get the due time from the text
 	getDueTimeFromLineText(text: string) {
 		const regex_search_for_duetime = new RegExp(
 			`(?:${this.keywords_function("DUE_TIME")})\\s?(\\d{1,2}:\\d{2})`,
@@ -476,7 +487,7 @@ export class TaskParser {
 		return taskId;
 	}
 
-	// get the duedate from dataview
+	// get the due date from dataview
 	getDueDateFromDataview(dataviewTask: { due?: string }) {
 		if (!dataviewTask.due) {
 			return "";
@@ -626,7 +637,10 @@ export class TaskParser {
 		lineTaskDueDate: string,
 		todoistTaskDueDate: string,
 	): Promise<boolean> {
-		return lineTaskDueDate.slice(0, 10) === todoistTaskDueDate.slice(0, 10);
+		// remove any white spaces from the due date
+		const lineTaskDueDateWithoutSpaces = lineTaskDueDate.replace(/\s/g, "");
+		const todoistTaskDueDateWithoutSpaces = todoistTaskDueDate.replace(/\s/g, "");
+		return lineTaskDueDateWithoutSpaces.slice(0, 10) === todoistTaskDueDateWithoutSpaces.slice(0, 10);
 	}
 
 	// Compare if the due time from Obsidian is the same due time from Todoist

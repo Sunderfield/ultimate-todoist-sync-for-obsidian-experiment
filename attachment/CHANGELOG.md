@@ -2,6 +2,12 @@
 
 ## 2025-05-10
 
+### 0.5.5
+
+-   0.5.4 had some issues with REGEX (who doens't love REGEX, right?)
+
+## 2025-05-10
+
 ### 0.5.4
 
 -   Improved the support for non-conventional date formats (It should accept YY-M-D instead of just YYYY-MM-DD)
