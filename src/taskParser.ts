@@ -51,6 +51,9 @@ export class TaskParser {
 		}
 
 		let dueDateVsDatetime = "";
+		if(this.hasCalendarEmoji(textWithoutIndentation) && !this.hasDueDate(textWithoutIndentation)){
+			console.warn("Task has calendar emoji trigger, but due date seems to be missing. Please provide a valid due date.");
+		}
 		if (
 			this.hasDueDateTime(textWithoutIndentation) &&
 			this.hasDueDate(textWithoutIndentation)
@@ -69,6 +72,10 @@ export class TaskParser {
 		) {
 			dueDateVsDatetime = "time";
 		}
+		if(!this.hasDueDate(textWithoutIndentation) && this.hasDueTime(textWithoutIndentation) && this.hasCalendarEmoji(textWithoutIndentation)){
+			console.warn("Task has calendar emoji trigger and time, but due date seems to be missing. Please provide a valid due date.");
+			dueDateVsDatetime = "";
+		}
 
 		let dueDate = "";
 		let dueDatetime = "";
@@ -76,6 +83,7 @@ export class TaskParser {
 		if (dueDateVsDatetime === "datetime") {
 			dueDate = this.getDueDateFromLineText(textWithoutIndentation) ?? "";
 			dueTime = this.getDueTimeFromLineText(textWithoutIndentation) ?? "";
+			dueDate = this.convertDueDateToProperFormat(dueDate);
 			dueDatetime = `${dueDate}T${dueTime}:00`;
 		}
 		if (dueDateVsDatetime === "time") {
@@ -91,6 +99,7 @@ export class TaskParser {
 		}
 		if (dueDateVsDatetime === "date") {
 			dueDate = this.getDueDateFromLineText(textWithoutIndentation) ?? "";
+			dueDate = this.convertDueDateToProperFormat(dueDate);
 		}
 
 		const labels = this.getAllTagsFromLineText(textWithoutIndentation);
@@ -245,14 +254,23 @@ export class TaskParser {
 			url: `https://todoist.com/app/task/${todoist_id || ""}`,
 		};
 
-		// // If it has a section, add the sectionId to the task
-		// // TODO is failing on the first try because it doesn't have the ID yet. maybe handle with just the update later?
-		// if (section) {
-		// 	todoistTask.section_id = sectionId ?? "";
-		// }
-
 		return todoistTask;
 	}
+
+	convertDueDateToProperFormat(text:string){
+	const regex = /^(\d{2,4})-(\d{1,2})-(\d{1,2})$/;
+	const match = text.match(regex);
+	if (!match) {
+		throw new Error(`Invalid date format: ${text}`);
+	}
+	const year = match[1];
+	const month = match[2];
+	const day = match[3];
+	const fullYear = year.length === 2 ? `20${year}` : year;
+	const fullMonth = month.length === 1 ? `0${month}` : month;
+	const fullDay = day.length === 1 ? `0${day}` : day;
+	return `${fullYear}-${fullMonth}-${fullDay}`;
+}
 
 	keywords_function(text: string) {
 		if (text === "TODOIST_TAG") {
@@ -311,11 +329,24 @@ export class TaskParser {
 		return regex_tag_test;
 	}
 
+	hasCalendarEmoji(text:string){
+		const regex_test = new RegExp(
+			`(${this.keywords_function("DUE_DATE")})`,
+		);
+		if(regex_test){
+			return true;
+		}
+		return false;
+	}
+
 	//   Return true or false if the text has a due date
 	hasDueDate(text: string) {
 		const regex_test = new RegExp(
-			`(${this.keywords_function("DUE_DATE")})\\s?\\d{4}-\\d{2}-\\d{2}`,
+			`(${this.keywords_function("DUE_DATE")})\\s?(\\d{2}(?:\\d{2})?)-(0?[1-9]|1[0-2])-(0?[1-9]|[12]\\d|3[01])`,
 		);
+		if(this.hasCalendarEmoji(text) && !regex_test.test(text)){
+			console.warn("Task has due date trigger, but date format seems to be wrong. Please provide a valid YYYY-MM-DD format.");
+		}
 
 		return regex_test.test(text);
 	}
@@ -331,7 +362,7 @@ export class TaskParser {
 			`(${this.keywords_function("DUE_TIME")})\\s?\\d{1,2}:\\d{2}`,
 		);
 		const regex_test_datetime = new RegExp(
-			`(${this.keywords_function("DUE_DATE")})\\s?\\d{4}-\\d{2}-\\d{2}`,
+			`(?:${this.keywords_function("DUE_DATE")})\\s?(\\d{2}(?:\\d{2})?)-(0?[1-9]|1[0-2])-(0?[1-9]|[12]\\d|3[01])`,
 		);
 		if (regex_test.test(text) && regex_test_datetime.test(text)) {
 			return true;
@@ -343,18 +374,28 @@ export class TaskParser {
 	// Get the due date from the text
 	getDueDateFromLineText(text: string) {
 		const regex_test = new RegExp(
-			`(?:${this.keywords_function("DUE_DATE")})\\s?(\\d{4}-\\d{2}-\\d{2})`,
+			`(?:${this.keywords_function("DUE_DATE")})\\s?(\\d{2}(?:\\d{2})?)-(0?[1-9]|1[0-2])-(0?[1-9]|[12]\\d|3[01])`,
 		);
+		console.log(`regex_test is ${regex_test}`);	
+
+		const dueDateKeywords = this.keywords_function("DUE_DATE").split("|");
 
 		const due_date = regex_test.exec(text);
-
+		// If no due date is found, return null
 		if (due_date === null) {
 			return null;
 		}
 
-		// Return the due date value without the emoji
-		return due_date[1];
+		// Remove the emoji from the due date
+		for (const keyword of dueDateKeywords) {
+			due_date[0] = due_date[0].replace(keyword, "");
+		}
+		const dueDateWithoutEmoji = due_date[0];
+
+		return dueDateWithoutEmoji;
 	}
+
+
 
 	// Get the task duration from the text
 	getTaskDurationFromLineText(text: string) {
@@ -450,7 +491,7 @@ export class TaskParser {
 			remove_priority: /\s!!([1-4])\s/,
 			remove_tags: /(^|\s)(#[\w\d\u4e00-\u9fa5-]+)/g,
 			remove_space: /^\s+|\s+$/g,
-			remove_date: /((🗓️|📅|📆|🗓|@)\s?\d{4}-\d{2}-\d{2})/,
+			remove_date: /((🗓️|📅|📆|🗓|@)\s?\d{2,4}-\d{1,2}-\d{1,2})/,
 			remove_time: /((⏰|⏲|\$)\s?\d{2}:\d{2})/,
 			remove_inline_metada: /%%\[\w+::\s*\w+\]%%/,
 			remove_checkbox: /^(-|\*)\s+\[(x|X| )\]\s/,

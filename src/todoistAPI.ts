@@ -122,6 +122,8 @@ export class TodoistNewAPI {
 				taskData.duration_unit = undefined;
 			}
 
+			console.log(`Adding task to Todoist: ${JSON.stringify(taskData)}`);
+
 			const token = this.plugin.settings.todoistAPIToken;
 			try {
 				const response = await requestUrl({

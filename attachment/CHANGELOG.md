@@ -1,5 +1,12 @@
 ## CHANGELOG
 
+## 2025-05-10
+
+### 0.5.4
+
+-   Improved the support for non-conventional date formats (It should accept YY-M-D instead of just YYYY-MM-DD)
+-   Improved a few of the console.warn and logs for better debugging
+
 ## 2025-04-26
 
 ### 0.5.3
