@@ -51,6 +51,7 @@ export class TodoistNewAPI {
 		duration_unit,
 		section_id,
 		path,
+		deadline_date,
 	}: {
 		project_id: string;
 		content: string;
@@ -64,6 +65,7 @@ export class TodoistNewAPI {
 		duration_unit?: string;
 		section_id?: string;
 		path?: string;
+		deadline_date?: string;
 	}) {
 		try {
 			const taskData: {
@@ -79,6 +81,7 @@ export class TodoistNewAPI {
 				due_datetime?: string;
 				duration?: number;
 				duration_unit?: string;
+				deadline_date?: string;
 			} = {
 				content,
 				description,
@@ -91,6 +94,7 @@ export class TodoistNewAPI {
 				due_datetime,
 				duration,
 				duration_unit,
+				deadline_date
 			};
 
 			if (taskData.section_id === "") {
@@ -288,6 +292,7 @@ export class TodoistNewAPI {
 			duration?: number;
 			duration_unit?: string;
 			section_id?: string;
+			deadline_date?: string;
 		},
 	) {
 		const token = this.plugin.settings.todoistAPIToken;
@@ -306,7 +311,8 @@ export class TodoistNewAPI {
 			!updates.parent_id &&
 			!updates.priority &&
 			!updates.duration &&
-			!updates.section_id
+			!updates.section_id &&
+			!updates.deadline_date
 		) {
 			throw new Error("At least one update is required");
 		}
@@ -324,6 +330,7 @@ export class TodoistNewAPI {
 				due_datetime?: string;
 				duration?: number;
 				duration_unit?: string;
+				deadline_date?: string;
 			} = {};
 
 			// Handle content updates
@@ -354,6 +361,9 @@ export class TodoistNewAPI {
 			// Handle section ID updates
 			if (updates.section_id) {
 				taskData.section_id = updates.section_id;
+			}
+			if(updates.deadline_date) {
+				taskData.deadline_date = updates.deadline_date;
 			}
 
 			// Handle due date and time

@@ -229,6 +229,8 @@ export class TaskParser {
 		const todoist_id = this.getTodoistIdFromLineText(textWithoutIndentation);
 		const priority = this.getTaskPriority(textWithoutIndentation);
 
+		const deadlineDate = this.getDeadlineDateFromLineText(textWithoutIndentation);
+
 		if (filepath) {
 			const url = encodeURI(
 				`obsidian://open?vault=${this.app.vault.getName()}&file=${filepath}`,
@@ -252,6 +254,7 @@ export class TaskParser {
 			duration: durationTime,
 			duration_unit: durationUnit as "minute" | "day" | undefined,
 			url: `https://todoist.com/app/task/${todoist_id || ""}`,
+			...(deadlineDate ? { deadline_date: deadlineDate } : {}),
 		};
 
 		return todoistTask;
@@ -514,6 +517,9 @@ export class TaskParser {
 			remove_todoist_duration: /(⏳|&)\d+min/,
 			remove_todoist_section: /\/\/\/\w*/,
 			remove_todoist_project_comment: /%%\[p::\s*([^\]]+?)\s*\]%%+/,
+			remove_todoist_deadline_date_format1: /\{\{(\d{2}-\d{2})\}\}/,
+			remove_todoist_deadline_date_format2: /\{\{(\d{2}-\d{2}-\d{2})\}\}/,
+			remove_todoist_deadline_date_format3: /\{\{(\d{4}-\d{2}-\d{2})\}\}/,
 		};
 
 		const TaskContent = lineText
@@ -529,7 +535,10 @@ export class TaskParser {
 			.replace(regex_remove_rules.remove_space, "")
 			.replace(regex_remove_rules.remove_todoist_duration, "")
 			.replace(regex_remove_rules.remove_todoist_section, "")
-			.replace(regex_remove_rules.remove_todoist_project_comment, "");
+			.replace(regex_remove_rules.remove_todoist_project_comment, "")
+			.replace(regex_remove_rules.remove_todoist_deadline_date_format1, "")
+			.replace(regex_remove_rules.remove_todoist_deadline_date_format2, "")
+			.replace(regex_remove_rules.remove_todoist_deadline_date_format3, "");
 
 		return TaskContent;
 	}
@@ -598,10 +607,6 @@ export class TaskParser {
 		}
 		// If content is not the same, returns false
 		return false;
-
-		//content 是否修改
-		// const contentModified = (lineTaskContent === todoistTaskContent)
-		// return(contentModified)
 	}
 
 	//tag compare
@@ -620,6 +625,47 @@ export class TaskParser {
 				.sort()
 				.every((val, index) => val === todoistTaskTags.sort()[index]);
 		return tagsModified;
+	}
+
+	//task deadline compare
+	taskDeadlineCompare(
+		lineTask: { deadline_date: string },
+		todoistTask: { deadline_date: string },
+	) {
+		
+		const lineTaskDateFormat = this.taskDeadlineFormatCheck(lineTask.deadline_date);
+		let finalLineTaskDueDate = ""
+
+		if(lineTaskDateFormat === "YYYY-MM-DD"){
+			finalLineTaskDueDate = lineTask.deadline_date;
+		}
+		if (lineTaskDateFormat === "YY-MM-DD") {
+			finalLineTaskDueDate = `20${lineTask.deadline_date}`;
+		}
+		if (lineTaskDateFormat === "MM-DD") {
+			finalLineTaskDueDate = `${new Date().getFullYear()}-${lineTask.deadline_date}`;
+		}
+
+		const deadlineModified = finalLineTaskDueDate === todoistTask.deadline_date;
+		if(finalLineTaskDueDate === "" && todoistTask.deadline_date === "") {
+			return true;
+		}
+		return deadlineModified;
+	}
+	taskDeadlineFormatCheck(deadline_string: string){
+		const format_1 = /^\d{4}-\d{2}-\d{2}$/;
+		const format_2 = /^\d{2}-\d{2}-\d{2}$/;
+		const format_3 = /^\d{2}-\d{2}$/;
+		
+		if (format_1.test(deadline_string)) {
+			return "YYYY-MM-DD";
+		}
+		if (format_2.test(deadline_string)) {
+			return "YY-MM-DD";
+		}
+		if (format_3.test(deadline_string)) {
+			return "MM-DD";
+		}
 	}
 
 	//task status compare
@@ -965,12 +1011,43 @@ export class TaskParser {
 		return linetext.replace(regex, ` $& ${todoistLink}`);
 	}
 
-	//检查是否包含todoist link
 	hasTodoistLink(lineText: string) {
-		// TODOIST_LINK:/\[link\]\(.*?\)/,
 		const regex_has_todoist_link = new RegExp(
 			/tid:: \[\d+\]\((?:https:\/\/app.todoist.com\/app\/task\/\d+|todoist:\/\/task\?id=\d+)\)/,
 		);
 		return regex_has_todoist_link.test(lineText);
+	}
+
+	// Extract deadline_date from {{MM-DD}} and always return it as YYYY-MM-DD
+	getDeadlineDateFromLineText(text: string): string | null {
+		const match = text.match(/\{\{(?:(\d{4}|\d{2})-)?(1[0-2]|0?[1-9])-(3[01]|[12]\d|0?[1-9])\}\}/);
+
+		const hasBrackets = text.match(/\{\{.*?\}\}/);
+		if (!match && hasBrackets) {
+			console.warn(`No valid date found within brackets for: ${text}`);
+			console.warn("Date format expected for the deadline should be YYYY-MM-DD or MM-DD.");
+			new Notice("Deadline date format is incorrect, task will be created without deadline.");
+		}
+
+		if (!match) return null;
+
+		// Remove curly braces
+		const rawDate = match[0].replace("{{", "").replace("}}", "");
+		const format = this.taskDeadlineFormatCheck(rawDate);
+
+		let formatted: string;
+		if (format === "YYYY-MM-DD") {
+			formatted = rawDate;
+		} else if (format === "YY-MM-DD") {
+			formatted = `20${rawDate}`;
+		} else if (format === "MM-DD") {
+			formatted = `${new Date().getFullYear()}-${rawDate}`;
+		} else {
+			return null;
+		}
+
+		// Ensure format is YYYY-MM-DD
+		const result = formatted.match(/\d{4}-\d{2}-\d{2}/);
+		return result ? result[0] : null;
 	}
 }

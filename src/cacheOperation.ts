@@ -36,6 +36,11 @@ export interface Task {
 	duration_unit?: "minute" | "day";
 	isCompleted?: boolean;
 	path?: string;
+	deadline_date?: string;
+	deadline?: {
+		date: string;
+		lang: string;
+	}
 }
 
 interface Project {
@@ -727,7 +732,7 @@ export class CacheOperation {
 		this.plugin.settings.fileMetadata = newFileMetadataRemovingOldTasks;
 
 		if (this.plugin.settings?.defaultProjectId?.length === 10) {
-			console.log("defaultProjectId is old, need to select a new one");
+			console.warn("defaultProjectId is old, need to select a new one");
 		}
 	}
 }
