@@ -185,6 +185,7 @@ export class TodoistSync {
 					path: currentTask.path,
 					duration: currentTask.duration ?? undefined,
 					duration_unit: currentTask.duration_unit ?? undefined,
+					...(currentTask.deadline_date ? { deadline_date: currentTask.deadline_date } : {}),
 				});
 				if (!newTask) {
 					console.error("Failed to add new task");
@@ -359,6 +360,7 @@ export class TodoistSync {
 						path: currentTask.path,
 						duration: currentTask.duration ?? undefined,
 						duration_unit: currentTask.duration_unit ?? undefined,
+						...(currentTask.deadline_date ? { deadline_date: currentTask.deadline_date } : {}),
 					});
 
 					const todoist_id = newTask?.id;
@@ -521,6 +523,11 @@ export class TodoistSync {
 				{ isCompleted: savedTask.isCompleted ?? false },
 			);
 
+			const deadlineModified = !(await this.plugin.taskParser?.taskDeadlineCompare(
+				{ deadline_date: lineTask.deadline_date ?? "" },
+				{ deadline_date: savedTask.deadline?.date ?? "" },
+			));
+
 			let dueDateModified = false;
 			// let dueDateTimeModified = false;
 			let dueTimeModified = false;
@@ -567,6 +574,8 @@ export class TodoistSync {
 				}
 			}
 
+			
+
 			//parent id 是否修改
 			const parentIdModified = !(lineTask.parent_id === savedTask.parent_id);
 			//check priority
@@ -598,6 +607,7 @@ export class TodoistSync {
 				let priorityChanged = false;
 				let durationChanged = false;
 				let sectionChanged = false;
+				let deadlineChanged = false;
 
 				const updatedContent: {
 					content?: string;
@@ -612,6 +622,7 @@ export class TodoistSync {
 					duration_unit?: string;
 					path?: string;
 					section_id?: string;
+					deadline_date?: string;
 				} = {};
 
 				if (contentModified) {
@@ -695,6 +706,11 @@ export class TodoistSync {
 					new Notice(`Task ${lineTask.id} moved to ${lineTask.section_id}.`);
 				}
 
+				if (deadlineModified) {
+					updatedContent.deadline_date = lineTask.deadline_date;
+					deadlineChanged = true;
+				}
+
 				if (
 					this.plugin.settings.debugMode &&
 					(contentChanged ||
@@ -706,7 +722,8 @@ export class TodoistSync {
 						parentIdChanged ||
 						priorityChanged ||
 						durationChanged ||
-						sectionChanged)
+						sectionChanged ||
+						deadlineChanged)
 				) {
 					console.log(
 						"Task change status: task id:",
@@ -735,6 +752,8 @@ export class TodoistSync {
 						durationChanged,
 						"sectionChanged is:",
 						sectionChanged,
+						"deadlineChanged is:",
+						deadlineChanged
 					);
 				}
 
@@ -748,7 +767,8 @@ export class TodoistSync {
 					parentIdChanged ||
 					priorityChanged ||
 					durationChanged ||
-					sectionChanged
+					sectionChanged ||
+					deadlineChanged
 				) {
 					if (this.plugin.cacheOperation?.checkTaskIdIsOld(lineTask.id)) {
 						if (this.plugin.settings.debugMode) {
@@ -801,7 +821,8 @@ export class TodoistSync {
 					projectChanged ||
 					priorityChanged ||
 					durationChanged ||
-					sectionChanged
+					sectionChanged ||
+					deadlineChanged
 				) {
 					this.plugin.saveSettings();
 					let message = `Task ${lineTask_todoist_id} is updated.`;
@@ -838,6 +859,9 @@ export class TodoistSync {
 					}
 					if (dueDateChanged) {
 						message += " Due date was changed.";
+					}
+					if (deadlineChanged) {
+						message += " Deadline was changed.";
 					}
 
 					if (!lineTask_todoist_id === null) {

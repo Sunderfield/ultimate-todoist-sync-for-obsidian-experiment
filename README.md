@@ -3,10 +3,10 @@
 Create, edit, and delete tasks from within Obsidian.md to your Todoist.
 
 > [!CAUTION]
-> In early April 2025, this plugin was no longer working due to changes on the Todoist API. As a lot changed, I had to rewrite 80% of the plugin, so I don't consider this plugin as stable as it was before v0.5.0—any version before this will not work. [Check this comment for more details](https://github.com/eudennis/ultimate-todoist-sync-for-obsidian-experiment/issues/24#issuecomment-2817456870). Feel free to open bug reports.
+> In early April 2025, this plugin was no longer working due to changes on the Todoist API. [Check this comment for more details](https://github.com/eudennis/ultimate-todoist-sync-for-obsidian-experiment/issues/24#issuecomment-2817456870). Feel free to open bug reports.
 
 > [!WARNING]
-> This is a fork from the [Ultimate Todoist Sync plugin for Obsidian](https://github.com/HeroBlackInk/ultimate-todoist-sync-for-obsidian). I'm still working on fixing some things, but the main feature should be working. I'm considering this feature a beta. Feel free to contribute.
+> This is a fork from the [Ultimate Todoist Sync plugin for Obsidian](https://github.com/HeroBlackInk/ultimate-todoist-sync-for-obsidian). I consider this as a beta, but I have been using for quite some time without issues. Feel free to contribute opening bug reports if you find anything.
 >
 > _Some features works only Todoist -> Obsidian, others by-directional. Find more details on the feature table below._
 
@@ -38,6 +38,7 @@ Create, edit, and delete tasks from within Obsidian.md to your Todoist.
 | Task notes [2]           | 🔜                       | ✅                       |
 | Optional app link        | ✅                       | ✅                       |
 | Assign project to task   | ✅                       | 🔜                       |
+| Manage Deadline Date     | ✅                       | 🔜                       |
 
 -   [1] Task priority only support one-way synchronization
 -   [2] Task notes/comments only support one-way synchronization from Todoist to Obsidian.
@@ -47,7 +48,7 @@ Create, edit, and delete tasks from within Obsidian.md to your Todoist.
 ## Installation
 
 > [!WARNING]
-> The plugin will require the _Todoist API token_, which can be found on your `Settings > Integrations > Developer` ([direct link here](https://app.todoist.com/app/settings/integrations/developer))
+> The plugin will require the _Todoist API token_, which can be found on your `Settings > Integrations > Developer` ([direct link here](https://app.todoist.com/app/settings/integrations/developer)). Note that some features will work for [Todoist paid users](https://www.todoist.com/pricing).
 
 ### From within Obsidian
 
@@ -99,6 +100,7 @@ Create, edit, and delete tasks from within Obsidian.md to your Todoist.
 | ///<section_name>    | This adds the task to a section with <section_name>                                                                                    | `- [ ] task ///section_name`[7]                |
 | #project #tag        | First hashtag assign to a project with the same name                                                                                   | `-[ ] task #project #tag1 #tag2` [8]           |
 | %%[p::ProjectName]%% | Assign task to project with hidden field                                                                                               | `%%[p::ProjectName]%%` [9]                     |
+| {{YYYY-MM-DD}}       | Assign a deadline date to a task                                                                                                       | `{{YYYY-MM-DD}}` [10]                          |
 
 <details>
 <summary>Usage footnotes</summary>
@@ -112,6 +114,7 @@ Create, edit, and delete tasks from within Obsidian.md to your Todoist.
 -   [7] If the section if removed from the task content, it won't update in Todoist (yet)
 -   [8] First tag will be used for project, but will also create a tag with the same name.
 -   [9] Project name is case-sensitive.
+-   [10] It supports YY-MM-DD, and if you use MM-DD default to the current YY
 
 </details>
 

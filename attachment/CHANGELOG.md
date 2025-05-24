@@ -1,5 +1,11 @@
 ## CHANGELOG
 
+## 2025-05-24
+
+### 0.5.6
+
+-   Added support to deadline dates
+
 ## 2025-05-10
 
 ### 0.5.5
