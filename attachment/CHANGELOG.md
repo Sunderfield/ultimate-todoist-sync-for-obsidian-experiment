@@ -2,6 +2,13 @@
 
 ## 2025-05-24
 
+### 0.5.7
+
+-   Fixed a bug when updating the ask duration
+-   Several changes on old comments and improvements in functions
+
+## 2025-05-24
+
 ### 0.5.6
 
 -   Added support to deadline dates

@@ -49,7 +49,7 @@ export class FileOperation {
 	}
 
 	// uncheck Completed tasks，
-	async uncompleteTaskInTheFile(taskId: string) {
+	async incompleteTaskInTheFile(taskId: string) {
 		// Get the task file path
 		const currentTask =
 			await this.plugin.cacheOperation?.loadTaskFromCacheID(taskId);
@@ -124,9 +124,9 @@ export class FileOperation {
 			const newContent = lines.join("\n");
 			await this.app.vault.modify(file, newContent);
 
-			//update filemetadate
+			//update file metadata
 			const metadata =
-				await this.plugin.cacheOperation?.getFileMetadata(filepath);
+				await this.plugin.cacheOperation?.getFileMetadataByFilePath(filepath);
 			if (!metadata) {
 				await this.plugin.cacheOperation?.newEmptyFileMetadata(filepath);
 			}
@@ -202,7 +202,7 @@ export class FileOperation {
 		lineNumber: number,
 		fileContent: string,
 	) {
-		// 获取文件对象并更新内容
+		// Get the file object and update the content
 		const file = this.app.vault.getAbstractFileByPath(filepath);
 		// const content = fileContent
 		// Check if the returned file is a TFile
@@ -237,9 +237,9 @@ export class FileOperation {
 			const newContent = lines.join("\n");
 			await this.app.vault.modify(file, newContent);
 
-			//update filemetadate
+			//update file metadata
 			const metadata =
-				await this.plugin.cacheOperation?.getFileMetadata(filepath);
+				await this.plugin.cacheOperation?.getFileMetadataByFilePath(filepath);
 			if (!metadata) {
 				await this.plugin.cacheOperation?.newEmptyFileMetadata(filepath);
 			}
@@ -342,7 +342,7 @@ export class FileOperation {
 							evt.extra_data.due_date,
 						) || "";
 				}
-				// TODO how to handle when the task has the new "timeslot" with start + finish time?
+				// TODO how to handle when the task has the new "time slot" with start + finish time?
 
 				if (this.plugin.taskParser && lineTaskDueDate === "") {
 					const userDefinedTag =
@@ -529,8 +529,8 @@ export class FileOperation {
 		return files;
 	}
 
-	//search filepath by taskid in vault
-	async searchFilepathsByTaskidInVault(taskId: string) {
+	//search filepath by taskId in vault
+	async searchFilePathsByTaskIdInVault(taskId: string) {
 		const files = await this.getAllFilesInTheVault();
 		const tasks = files.map(async (file) => {
 			if (!this.isMarkdownFile(file.path)) {
@@ -549,13 +549,13 @@ export class FileOperation {
 	}
 
 	isMarkdownFile(filename: string) {
-		// 获取文件名的扩展名
+		// Get the file extension
 		let extension = filename.split(".").pop();
 
-		// 将扩展名转换为小写（Markdown文件的扩展名通常是.md）
+		// Convert the extension to lowercase (Markdown files usually have .md extension)
 		extension = extension?.toLowerCase();
 
-		// 判断扩展名是否为.md
+		// Check if the extension is .md
 		if (extension === "md") {
 			return true;
 		}

@@ -2,24 +2,16 @@ import { MarkdownView, Notice, Plugin, type Editor } from "obsidian";
 
 //settings
 import {
-	type AnotherTodoistSyncPluginSettings as AnotherSimpleTodoistSyncSettings,
-	DEFAULT_SETTINGS,
-	AnotherTodoistSyncPluginSettingTab,
+	type AnotherSimpleTodoistSyncSettings,
+	DefaultAppSettings,
+	AnotherSimpleTodoistSyncPluginSettingTab,
 } from "./src/settings";
-//Todoist  api
 import { TodoistNewAPI } from "src/todoistAPI";
-//task parser
 import { TaskParser } from "./src/taskParser";
-//cache task read and write
 import { CacheOperation } from "./src/cacheOperation";
-//file operation
 import { FileOperation } from "./src/fileOperation";
-
-//sync module
 import { TodoistSync } from "./src/syncModule";
-
-//import modal
-import { SetDefalutProjectInTheFilepathModal } from "src/modal";
+import { SetDefaultProjectInTheFilepathModal } from "src/modal";
 
 export default class AnotherSimpleTodoistSync extends Plugin {
 	settings: AnotherSimpleTodoistSyncSettings;
@@ -42,7 +34,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			return;
 		}
 		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new AnotherTodoistSyncPluginSettingTab(this.app, this));
+		this.addSettingTab(new AnotherSimpleTodoistSyncPluginSettingTab(this.app, this));
 		if (!this.settings.todoistAPIToken) {
 			new Notice("Please enter your Todoist API.");
 			//return
@@ -50,7 +42,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			await this.initializePlugin();
 		}
 
-		//lastLine 对象 {path:line}保存在lastLines map中
+		//lastLine object {path:line} is saved in lastLines map
 		this.lastLines = new Map();
 
 		// Create a syncLock effect to prevent sync of tasks while Obsidian is still indexing files and downloading updates
@@ -71,7 +63,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			startCounter();
 		}
 
-		//key 事件监听，判断换行和删除
+		//key event monitoring, judging line break and deletion
 		this.registerDomEvent(document, "keyup", async (evt: KeyboardEvent) => {
 			if (!this.settings.apiInitialized) {
 				return;
@@ -93,9 +85,8 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 				if (initialSyncIsLocked) {
 					return;
 				}
-				// TODO for some reason, in some cases, without this wait, the task is deleted just after the task is created. Still didnt found why
+				// TODO for some reason, in some cases, without this wait, the task is deleted just after the task is created. Still have not found why
 				await new Promise((resolve) => setTimeout(resolve, 10000));
-				//console.log(`${evt.key} arrow key is released`);
 				if (!this.checkModuleClass()) {
 					return;
 				}
@@ -183,17 +174,17 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 				if (!this.checkModuleClass()) {
 					return;
 				}
-				this.checkboxEventhandle(evt);
+				this.checkboxEventHandler(evt);
 				//this.todoistSync.fullTextModifiedTaskCheck()
 			}
 		});
 
-		//hook editor-change 事件，如果当前line包含 #todoist,说明有new task
+		//hook editor-change event, if the current line contains #tdsync, it means there is a new task
 		this.registerEvent(
 			this.app.workspace.on(
 				"editor-change",
 				async (editor, view: MarkdownView) => {
-					// TODO for some reason, in some cases, without this wait, the task is deleted just after the task is created. Still didnt found why
+					// TODO for some reason, in some cases, without this wait, the task is deleted just after the task is created. Still didn't find why
 					await new Promise((resolve) => setTimeout(resolve, 10000));
 					try {
 						if (!this.settings.apiInitialized) {
@@ -229,7 +220,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 				}
 				//读取frontMatter
 				//const frontMatter = await this.fileOperation.getFrontMatter(file)
-				const frontMatter = await this.cacheOperation?.getFileMetadata(oldpath);
+				const frontMatter = await this.cacheOperation?.getFileMetadataByFilePath(oldpath);
 				if (frontMatter === null || frontMatter?.todoistTasks === undefined) {
 					return;
 				}
@@ -303,7 +294,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 				let filepath: string;
 				if (view.file) {
 					filepath = view.file.path;
-					new SetDefalutProjectInTheFilepathModal(this.app, this, filepath);
+					new SetDefaultProjectInTheFilepathModal(this.app, this, filepath);
 				}
 			},
 		});
@@ -357,7 +348,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 	async loadSettings() {
 		try {
 			const data = await this.loadData();
-			this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
+			this.settings = Object.assign({}, DefaultAppSettings, data);
 			return true; // 返回 true 表示设置加载成功
 		} catch (error) {
 			console.error("Failed to load data:", error);
@@ -532,7 +523,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 		}
 	}
 
-	async checkboxEventhandle(evt: MouseEvent) {
+	async checkboxEventHandler(evt: MouseEvent) {
 		if (!this.checkModuleClass()) {
 			return;
 		}
@@ -551,11 +542,10 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 			if (target.checked) {
 				this.todoistSync?.closeTask(taskId);
 			} else {
-				this.todoistSync?.repoenTask(taskId);
+				this.todoistSync?.reopenTask(taskId);
 			}
 		} else {
-			//console.log('未找到 todoist_id');
-			//开始全文搜索，检查status更新
+			//Start full text search and check status update
 			try {
 				if (!(await this.checkAndHandleSyncLock())) return;
 				const file_path =
@@ -573,7 +563,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 		}
 	}
 
-	//return true
+	// Check if the module class is initialized
 	checkModuleClass() {
 		if (this.settings.apiInitialized === true) {
 			if (

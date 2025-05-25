@@ -251,7 +251,7 @@ export class TaskParser {
 			isCompleted: isCompleted,
 			priority: priority,
 			path: filepath,
-			duration: durationTime,
+			duration: durationTime || undefined,
 			duration_unit: durationUnit as "minute" | "day" | undefined,
 			url: `https://todoist.com/app/task/${todoist_id || ""}`,
 			...(deadlineDate ? { deadline_date: deadlineDate } : {}),
@@ -441,11 +441,11 @@ export class TaskParser {
 
 	// Get the due time from the text
 	getDueTimeFromLineText(text: string) {
-		const regex_search_for_duetime = new RegExp(
+		const regex_search_for_due_time = new RegExp(
 			`(?:${this.keywords_function("DUE_TIME")})\\s?(\\d{1,2}:\\d{2})`,
 		);
 
-		const current_time = regex_search_for_duetime.exec(text);
+		const current_time = regex_search_for_due_time.exec(text);
 		if (current_time === null) {
 			if (this.plugin.settings.debugMode) {
 				console.error("Due time not found in the line text");
@@ -507,12 +507,12 @@ export class TaskParser {
 			remove_space: /^\s+|\s+$/g,
 			remove_date: /((🗓️|📅|📆|🗓|@)\s?\d{2,4}-\d{1,2}-\d{1,2})/,
 			remove_time: /((⏰|⏲|\$)\s?\d{2}:\d{2})/,
-			remove_inline_metada: /%%\[\w+::\s*\w+\]%%/,
+			remove_inline_metadata: /%%\[\w+::\s*\w+\]%%/,
 			remove_checkbox: /^(-|\*)\s+\[(x|X| )\]\s/,
 			remove_checkbox_with_indentation: /^([ \t]*)?(-|\*)\s+\[(x|X| )\]\s/,
 			remove_todoist_tid_link:
 				/%%\[tid::\s\[[a-zA-Z0-9]+\]\(https:\/\/app.todoist.com\/app\/task\/[a-zA-Z0-9]+\)\]%%/,
-			remove_todoist_tid_applink:
+			remove_todoist_app_link_metadata:
 				/%%\[tid::\s\[[a-zA-Z0-9]+\]\(todoist:\/\/task\?id=[a-zA-Z0-9]+\)\]%%/,
 			remove_todoist_duration: /(⏳|&)\d+min/,
 			remove_todoist_section: /\/\/\/\w*/,
@@ -523,9 +523,9 @@ export class TaskParser {
 		};
 
 		const TaskContent = lineText
-			.replace(regex_remove_rules.remove_inline_metada, "")
+			.replace(regex_remove_rules.remove_inline_metadata, "")
 			.replace(regex_remove_rules.remove_todoist_tid_link, "")
-			.replace(regex_remove_rules.remove_todoist_tid_applink, "")
+			.replace(regex_remove_rules.remove_todoist_app_link_metadata, "")
 			.replace(regex_remove_rules.remove_priority, " ")
 			.replace(regex_remove_rules.remove_tags, "")
 			.replace(regex_remove_rules.remove_date, "")
@@ -538,7 +538,8 @@ export class TaskParser {
 			.replace(regex_remove_rules.remove_todoist_project_comment, "")
 			.replace(regex_remove_rules.remove_todoist_deadline_date_format1, "")
 			.replace(regex_remove_rules.remove_todoist_deadline_date_format2, "")
-			.replace(regex_remove_rules.remove_todoist_deadline_date_format3, "");
+			.replace(regex_remove_rules.remove_todoist_deadline_date_format3, "")
+			.trim();
 
 		return TaskContent;
 	}
@@ -557,9 +558,9 @@ export class TaskParser {
 	}
 
 	// Get the first match to user as a section
-	getFirstSectionFromLineText(linetext: string) {
+	getFirstSectionFromLineText(line_text: string) {
 		const regex_section_search = /\/\/\/[\w\u4e00-\u9fa5-]+/g;
-		const section = linetext.match(regex_section_search) || [];
+		const section = line_text.match(regex_section_search) || [];
 
 		const section_raw = section.toString().replace("///", "");
 
@@ -567,9 +568,9 @@ export class TaskParser {
 	}
 
 	// find the project name from the line text
-	getProjectNameFromCommentOnLineText(linetext: string) {
+	getProjectNameFromCommentOnLineText(line_text: string) {
 		const regex_project_search = /%%\[p::\s*([^\]]+?)\s*\]%%+/g;
-		const project = linetext.match(regex_project_search) || [];
+		const project = line_text.match(regex_project_search) || [];
 
 		const project_raw = project
 			.toString()
@@ -702,17 +703,20 @@ export class TaskParser {
 
 	async compareTaskDuration(
 		lineTaskDuration: number | undefined,
-		todoistTaskDuration: number | undefined,
+		todoistTaskDuration: {amount: number, unit: string} | undefined,
 	): Promise<boolean> {
-		if (lineTaskDuration && todoistTaskDuration === undefined) {
+
+		const todoistTaskDurationAmount = todoistTaskDuration?.amount
+
+		if (lineTaskDuration && todoistTaskDurationAmount === undefined) {
 			return true;
 		}
 
 		// If the line duration was removed or updated in Todoist, needs to update on the lineTask as well
-		if (lineTaskDuration && todoistTaskDuration) {
-			// TODO it shoudl check if there is a duration on the lineTask, if does not, retrieve the task duration and add it. If it has, check if matches the current duration on Todoist
+		if (lineTaskDuration && todoistTaskDurationAmount) {
+			// TODO it should check if there is a duration on the lineTask, if does not, retrieve the task duration and add it. If it has, check if matches the current duration on Todoist
 			const lineTaskDurationNumber = Number(lineTaskDuration);
-			const todoistCacheTaskDurationNumber = Number(todoistTaskDuration);
+			const todoistCacheTaskDurationNumber = Number(todoistTaskDurationAmount);
 
 			if (lineTaskDurationNumber === todoistCacheTaskDurationNumber) {
 				return false;
@@ -810,17 +814,14 @@ export class TaskParser {
 		return text.replace(regex, "- [$2] ");
 	}
 
-	//判断line是不是空行
+	// Determine whether line is a blank line
 	isLineBlank(lineText: string) {
-		// BLANK_LINE: /^\s*$/,
 		const blank_line_regex = /^\s*$/;
 		return blank_line_regex.test(lineText);
-		// return(REGEX.BLANK_LINE.test(lineText))
 	}
 
-	//在linetext中插入日期
+	// Insert the date in line text
 	insertDueDateBeforeTodoist(text: string, dueDate: string) {
-		// const regex = new RegExp(`(${keywords.TODOIST_TAG})`)
 		const tagToLookFor = this.keywords_function("TODOIST_TAG");
 		return text.replace(tagToLookFor, `📅 ${dueDate} ${tagToLookFor}`);
 	}
@@ -840,14 +841,13 @@ export class TaskParser {
 	}
 
 	//extra date from obsidian event
-	// 使用示例
 	ISOStringToLocalDateString(utcTimeString: string) {
 		try {
 			if (utcTimeString === null) {
 				return null;
 			}
 			const utcDateString = utcTimeString;
-			const dateObj = new Date(utcDateString); // 将UTC格式字符串转换为Date对象
+			const dateObj = new Date(utcDateString); // Convert a UTC format string to a Date object
 
 			const year = dateObj.getFullYear();
 			const month = (dateObj.getMonth() + 1).toString().padStart(2, "0");
@@ -870,7 +870,7 @@ export class TaskParser {
 				return null;
 			}
 			const utcDateString = utcTimeString;
-			const dateObj = new Date(utcDateString); // 将UTC格式字符串转换为Date对象
+			const dateObj = new Date(utcDateString); // Convert a UTC format string to a Date object
 
 			const timeHour = dateObj.getHours();
 			const timeMinute = dateObj.getMinutes();
@@ -921,7 +921,7 @@ export class TaskParser {
 				return null;
 			}
 			const utcDateString = utcTimeString;
-			const dateObj = new Date(utcDateString); // 将UTC格式字符串转换为Date对象
+			const dateObj = new Date(utcDateString); // Convert a UTC format string to a Date object
 			const result = dateObj.toString();
 			return result;
 		} catch (error) {
@@ -989,7 +989,7 @@ export class TaskParser {
 		return obsidianUrl;
 	}
 
-	addTodoistLink(linetext: string, todoistLink: string): string {
+	addTodoistLink(line_text: string, todoistLink: string): string {
 		// const regex = new RegExp(`${keywords.TODOIST_TAG}`, "g");
 
 		// Looks for #todoist to identify where to put the link.
@@ -1000,22 +1000,22 @@ export class TaskParser {
 			/(?:🗓️|📅|📆|🗓|@)\s\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])\b/;
 		const grab_regex_date = new RegExp(date_regex, "g");
 		if (
-			date_regex.test(linetext) &&
+			date_regex.test(line_text) &&
 			this.plugin.settings.changeDateOrder &&
 			!this.plugin.taskParser?.hasTodoistLink
 		) {
 			// TODO check if already has a link, to prevent from adding multiple links
-			return linetext.replace(grab_regex_date, `${todoistLink} $&`);
+			return line_text.replace(grab_regex_date, `${todoistLink} $&`);
 		}
 		// TODO check if already has a link, to prevent from adding multiple links
-		return linetext.replace(regex, ` $& ${todoistLink}`);
+		return line_text.replace(regex, ` $& ${todoistLink}`);
 	}
 
-	hasTodoistLink(lineText: string) {
+	hasTodoistLink(line_text: string) {
 		const regex_has_todoist_link = new RegExp(
 			/tid:: \[\d+\]\((?:https:\/\/app.todoist.com\/app\/task\/\d+|todoist:\/\/task\?id=\d+)\)/,
 		);
-		return regex_has_todoist_link.test(lineText);
+		return regex_has_todoist_link.test(line_text);
 	}
 
 	// Extract deadline_date from {{MM-DD}} and always return it as YYYY-MM-DD
