@@ -123,6 +123,7 @@ export class TodoistNewAPI {
 				taskData.duration === 0
 			) {
 				taskData.duration = undefined;
+				taskData.duration_unit = undefined;
 			}
 
 			if(this.plugin.settings.debugMode) {
