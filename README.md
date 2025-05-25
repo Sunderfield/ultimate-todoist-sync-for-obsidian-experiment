@@ -125,6 +125,23 @@ The default project in the setting applies to all files. You can set a separate 
 <img src="/attachment/command-set-default-project-for-file.png" width="500">
 <img src="/attachment/default-project-for-file-modal.png" width="500">
 
+### Tips
+
+#### List your Todoist tasks within Obsidian
+
+You can list all synchronized tasks from your Obsidian Vault using the [Obsidian DataView plugin](https://github.com/blacksmithgu/obsidian-dataview). If you create a view using the following code:
+
+````markdown
+```dataview
+task
+where !completed and contains(tags, "#tdsync")
+```
+````
+
+#### Expose tasks meta data
+
+If you have the [Obsidian DataView plugin](https://github.com/blacksmithgu/obsidian-dataview) you will be able to see the task ID on your tasks within Obsidian.
+
 ## Disclaimer
 
 This plugin is for learning purposes only. The author and contributors makes no representations or warranties of any kind, express or implied, about the accuracy, completeness, or usefulness of this plugin and shall not be liable for any losses or damages resulting from the use of this plugin.

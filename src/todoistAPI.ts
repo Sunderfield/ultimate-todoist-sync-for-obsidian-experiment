@@ -61,7 +61,7 @@ export class TodoistNewAPI {
 		labels?: Array<string>;
 		description?: string;
 		priority?: number;
-		duration?: number;
+		duration?:number;
 		duration_unit?: string;
 		section_id?: string;
 		path?: string;
@@ -380,7 +380,7 @@ export class TodoistNewAPI {
 
 			// Handle duration
 			if (updates.duration) {
-				taskData.duration = updates.duration;
+				taskData.duration = updates.duration ?? 0;
 				taskData.duration_unit = updates.duration_unit || "minute";
 			}
 

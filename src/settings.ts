@@ -94,7 +94,7 @@ export interface TodoistTasksData {
 	};
 }
 
-export interface AnotherTodoistSyncPluginSettings {
+export interface AnotherSimpleTodoistSyncSettings {
 	todoistTasksData: TodoistTasksData;
 	fileMetadata: FileMetadata;
 	initialized: boolean;
@@ -114,7 +114,7 @@ export interface AnotherTodoistSyncPluginSettings {
 	delayedSync: boolean;
 }
 
-export const DEFAULT_SETTINGS: Partial<AnotherTodoistSyncPluginSettings> = {
+export const DefaultAppSettings: Partial<AnotherSimpleTodoistSyncSettings> = {
 	todoistTasksData: {
 		projects: { results: [] },
 		tasks: [],
@@ -143,7 +143,7 @@ export const DEFAULT_SETTINGS: Partial<AnotherTodoistSyncPluginSettings> = {
 	delayedSync: false,
 };
 
-export class AnotherTodoistSyncPluginSettingTab extends PluginSettingTab {
+export class AnotherSimpleTodoistSyncPluginSettingTab extends PluginSettingTab {
 	plugin: AnotherSimpleTodoistSync;
 
 	constructor(app: App, plugin: AnotherSimpleTodoistSync) {

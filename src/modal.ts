@@ -3,7 +3,7 @@ import { Modal, Setting } from "obsidian";
 import type AnotherSimpleTodoistSync from "../main";
 import type { TodoistProject } from "./settings";
 
-export class SetDefalutProjectInTheFilepathModal extends Modal {
+export class SetDefaultProjectInTheFilepathModal extends Modal {
 	defaultProjectId: string;
 	defaultProjectName: string;
 	filepath: string;

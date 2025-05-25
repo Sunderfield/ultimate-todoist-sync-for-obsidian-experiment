@@ -32,7 +32,7 @@ export interface Task {
 	assignee_id?: string;
 	assigner_id?: string;
 	labels?: string[];
-	duration?: number;
+	duration?: number | {amount: number; unit: string};
 	duration_unit?: "minute" | "day";
 	isCompleted?: boolean;
 	path?: string;
@@ -77,48 +77,48 @@ export class CacheOperation {
 		this.plugin = plugin;
 	}
 
-	async getFileMetadata(filepath: string) {
+	async getFileMetadataByFilePath(filepath: string) {
 		return this.plugin.settings.fileMetadata[filepath] ?? null;
 	}
 
-	async getFileMetadatas() {
+	async getFileMetadata() {
 		return this.plugin.settings.fileMetadata ?? null;
 	}
 
 	async newEmptyFileMetadata(filepath: string) {
-		const metadatas = this.plugin.settings.fileMetadata;
-		if (metadatas[filepath]) {
+		const metadata = this.plugin.settings.fileMetadata;
+		if (metadata[filepath]) {
 			return;
 		}
-		metadatas[filepath] = {
+		metadata[filepath] = {
 			todoistTasks: [],
 			todoistCount: 0,
 		};
-		// 将更新后的metadatas对象保存回设置对象中
-		this.plugin.settings.fileMetadata = metadatas;
+		// Save the updated metadata object back to the settings object
+		this.plugin.settings.fileMetadata = metadata;
 	}
 
 	async updateFileMetadata(filepath: string, newMetadata: FileMetadata) {
-		const metadatas = this.plugin.settings.fileMetadata;
+		const metadata = this.plugin.settings.fileMetadata;
 
-		// 如果元数据对象不存在，则创建一个新的对象并添加到metadatas中
-		if (!metadatas[filepath]) {
-			metadatas[filepath] = {
+		// If the metadata object does not exist, create a new object and add it to metadata
+		if (!metadata[filepath]) {
+			metadata[filepath] = {
 				todoistTasks: [],
 				todoistCount: 0,
 			};
 		}
 
-		// 更新元数据对象中的属性值
-		metadatas[filepath].todoistTasks = newMetadata.todoistTasks;
-		metadatas[filepath].todoistCount = newMetadata.todoistCount;
+		// Update the properties of the metadata object
+		metadata[filepath].todoistTasks = newMetadata.todoistTasks;
+		metadata[filepath].todoistCount = newMetadata.todoistCount;
 
-		// 将更新后的metadatas对象保存回设置对象中
-		this.plugin.settings.fileMetadata = metadatas;
+		// Save the updated metadata object back to the settings object
+		this.plugin.settings.fileMetadata = metadata;
 	}
 
 	async deleteTaskIdFromMetadata(filepath: string, taskId: string) {
-		const metadata = await this.getFileMetadata(filepath);
+		const metadata = await this.getFileMetadataByFilePath(filepath);
 		const newTodoistTasks = metadata.todoistTasks.filter(
 			(element: string) => element !== taskId,
 		);
@@ -136,12 +136,12 @@ export class CacheOperation {
 		this.plugin.saveSettings();
 	}
 
-	//Check errors in filemata where the filepath is incorrect.
+	//Check errors in filemetadata where the filepath is incorrect.
 	async checkFileMetadata() {
-		const metadatas = await this.getFileMetadatas();
-		for (const key in metadatas) {
+		const metadata = await this.getFileMetadata();
+		for (const key in metadata) {
 			const filepath = key;
-			const value = metadatas[key];
+			const value = metadata[key];
 			const file = this.app.vault.getAbstractFileByPath(key);
 			if (!file && (value.todoistTasks?.length === 0 || !value.todoistTasks)) {
 				await this.deleteFilepathFromMetadata(key);
@@ -149,7 +149,7 @@ export class CacheOperation {
 			}
 			if (value.todoistTasks?.length === 0 || !value.todoistTasks) {
 				//todo
-				//delelte empty metadata
+				//delete empty metadata
 				continue;
 			}
 			//check if file exist
@@ -158,7 +158,7 @@ export class CacheOperation {
 				//search new filepath
 				const todoistId1 = value.todoistTasks[0];
 				const searchResult =
-					await this.plugin.fileOperation?.searchFilepathsByTaskidInVault(
+					await this.plugin.fileOperation?.searchFilePathsByTaskIdInVault(
 						todoistId1,
 					);
 
@@ -168,43 +168,32 @@ export class CacheOperation {
 				}
 				this.plugin.saveSettings();
 			}
-
-			//const fileContent = await this.app.vault.read(file)
-			//check if file include all tasks
-
-			/*
-            value.todoistTasks.forEach(async(taskId) => {
-                const taskObject = await this.plugin.cacheOperation.loadTaskFromCacheID(taskId)
-
-
-            });
-            */
 		}
 	}
 
 	getDefaultProjectNameForFilepath(filepath: string) {
-		const metadatas = this.plugin.settings.fileMetadata;
+		const metadata = this.plugin.settings.fileMetadata;
 		if (
-			!metadatas[filepath] ||
-			metadatas[filepath].defaultProjectId === undefined
+			!metadata[filepath] ||
+			metadata[filepath].defaultProjectId === undefined
 		) {
 			return this.plugin.settings.defaultProjectName;
 		}
-		const defaultProjectId = metadatas[filepath].defaultProjectId;
+		const defaultProjectId = metadata[filepath].defaultProjectId;
 		const defaultProjectName =
 			this.getProjectNameByIdFromCache(defaultProjectId);
 		return defaultProjectName;
 	}
 
 	getDefaultProjectIdForFilepath(filepath: string) {
-		const metadatas = this.plugin.settings.fileMetadata;
+		const metadata = this.plugin.settings.fileMetadata;
 		if (
-			!metadatas[filepath] ||
-			metadatas[filepath].defaultProjectId === undefined
+			!metadata[filepath] ||
+			metadata[filepath].defaultProjectId === undefined
 		) {
 			return this.plugin.settings.defaultProjectId;
 		}
-		const defaultProjectId = metadatas[filepath].defaultProjectId;
+		const defaultProjectId = metadata[filepath].defaultProjectId;
 		return defaultProjectId;
 	}
 
@@ -213,23 +202,23 @@ export class CacheOperation {
 		defaultProjectId: string,
 		defaultProjectName: string,
 	) {
-		const metadatas = this.plugin.settings.fileMetadata;
-		if (!metadatas[filepath]) {
-			metadatas[filepath] = {
+		const metadata = this.plugin.settings.fileMetadata;
+		if (!metadata[filepath]) {
+			metadata[filepath] = {
 				todoistTasks: [],
 				todoistCount: 0,
 				defaultProjectId: defaultProjectId,
 				defaultProjectName: defaultProjectName,
 			};
 		}
-		metadatas[filepath].defaultProjectId = defaultProjectId;
-		metadatas[filepath].defaultProjectName = defaultProjectName;
+		metadata[filepath].defaultProjectId = defaultProjectId;
+		metadata[filepath].defaultProjectName = defaultProjectName;
 
-		// 将更新后的metadatas对象保存回设置对象中
-		this.plugin.settings.fileMetadata = metadatas;
+		// Save the updated metadata object back to the settings object
+		this.plugin.settings.fileMetadata = metadata;
 	}
 
-	// 从 Cache读取所有task
+	// Read all tasks from Cache
 	loadTasksFromCache() {
 		try {
 			const savedTasks = this.plugin.settings.todoistTasksData.tasks;
@@ -240,7 +229,7 @@ export class CacheOperation {
 		}
 	}
 
-	// 覆盖保存所有task到cache
+	// Overwrite and save all tasks to cache
 	saveTasksToCache(newTasks: Task[]) {
 		try {
 			this.plugin.settings.todoistTasksData.tasks = newTasks;
@@ -320,7 +309,7 @@ export class CacheOperation {
 			// const savedTasks = this.plugin.settings.todoistTasksData.tasks
 			//const taskAlreadyExists = savedTasks.some((t) => t.id === task.id);
 			//if (!taskAlreadyExists) {
-			//，使用push方法将字符串插入到Cache对象时，它将被视为一个简单的键值对，其中键是数组的数字索引，而值是该字符串本身。但如果您使用push方法将另一个Cache对象（或数组）插入到Cache对象中，则该对象将成为原始Cache对象的一个嵌套子对象。在这种情况下，键是数字索引，值是嵌套的Cache对象本身。
+			//, when you insert a string into a Cache object using the push method, it is treated as a simple key-value pair, where the key is the numeric index of the array and the value is the string itself. But if you use the push method to insert another Cache object (or array) into a Cache object, the object becomes a nested child object of the original Cache object. In this case, the key is the numeric index and the value is the nested Cache object itself.
 			//}
 			this.plugin.settings.todoistTasksData.tasks.push(taskToAppend);
 		} catch (error) {
@@ -328,7 +317,7 @@ export class CacheOperation {
 		}
 	}
 
-	// As Todoist default object doesn't contain the filepath, this helps ensure we know where each task is located for future sync updateds
+	// As Todoist default object doesn't contain the filepath, this helps ensure we know where each task is located for future sync updates
 	appendPathToTaskInCache(taskId: string, filepath: string) {
 		const findObject = this.plugin.settings.todoistTasksData.tasks.find(
 			(task: Task & { path?: string }) => task.id === taskId,
@@ -664,10 +653,10 @@ export class CacheOperation {
 			await this.saveTasksToCache(newTasks);
 
 			//update filepath
-			const fileMetadatas = this.plugin.settings.fileMetadata;
-			fileMetadatas[newpath] = fileMetadatas[oldpath];
-			delete fileMetadatas[oldpath];
-			this.plugin.settings.fileMetadata = fileMetadatas;
+			const fileMetadata = this.plugin.settings.fileMetadata;
+			fileMetadata[newpath] = fileMetadata[oldpath];
+			delete fileMetadata[oldpath];
+			this.plugin.settings.fileMetadata = fileMetadata;
 		} catch (error) {
 			console.error(`Error updating renamed file path to cache: ${error}`);
 		}
@@ -691,7 +680,20 @@ export class CacheOperation {
 
 		const savedEvents = this.plugin.settings.todoistTasksData.events;
 
-		const newSavedEvents = savedEvents.filter((e: TodoistEvent) => {
+		const newSavedEvents = savedEvents.filter((e: {
+			id: string;
+			object_type: string;
+			object_id: string;
+			event_type: string;
+			event_date: string;
+			parent_item_id?: string;
+			extra_data?: {
+				content?: string;
+				last_content?: string;
+				last_due_date?: string;
+				client?: string;
+			};
+		}) => {
 			const eventDate = new Date(e.event_date);
 			const year = eventDate.getFullYear();
 			const month = eventDate.getMonth() + 1;
@@ -717,15 +719,15 @@ export class CacheOperation {
 			this.plugin.settings.todoistTasksData.projects.results = newSavedProjects;
 		}
 
-		// inside todoistTaskData.fileMetadata, delete all itens that the todoistCount is 0
-		const fileMetadatas = this.plugin.settings.fileMetadata;
-		const newFileMetadatas = Object.fromEntries(
-			Object.entries(fileMetadatas).filter(
+		// inside todoistTaskData.fileMetadata, delete all items that the todoistCount is 0
+		const fileMetadata = this.plugin.settings.fileMetadata;
+		const newFileMetadata = Object.fromEntries(
+			Object.entries(fileMetadata).filter(
 				([_, value]) => value.todoistCount !== 0,
 			),
 		);
 		const newFileMetadataRemovingOldTasks = Object.fromEntries(
-			Object.entries(newFileMetadatas).filter(
+			Object.entries(newFileMetadata).filter(
 				([_, value]) => value.todoistTasks[0].length !== 10,
 			),
 		);
