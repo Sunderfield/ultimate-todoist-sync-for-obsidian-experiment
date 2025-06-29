@@ -1,5 +1,11 @@
 ## CHANGELOG
 
+## 2025-06-29
+
+### 0.5.9
+
+-   Wrapped the main onLoad sync with Obsidian's onLayoutReady to improve startup time
+
 ## 2025-05-24
 
 ### 0.5.7

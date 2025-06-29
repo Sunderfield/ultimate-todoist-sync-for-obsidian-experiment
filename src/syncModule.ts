@@ -65,6 +65,7 @@ export class TodoistSync {
 		}
 		const frontMatter =
 			await this.plugin.cacheOperation?.getFileMetadataByFilePath(filepath);
+
 		if (!frontMatter || !frontMatter.todoistTasks) {
 			return;
 		}

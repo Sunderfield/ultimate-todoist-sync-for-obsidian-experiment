@@ -24,17 +24,20 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 	statusBar: HTMLElement;
 	syncLock: boolean;
 
-	async onload() {
-		const isSettingsLoaded = await this.loadSettings();
+	
 
-		if (!isSettingsLoaded) {
-			new Notice(
-				"Settings failed to load. Please reload the Another Simple Todoist Sync plugin.",
-			);
-			return;
-		}
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new AnotherSimpleTodoistSyncPluginSettingTab(this.app, this));
+	async onload() {
+		this.app.workspace.onLayoutReady(async () => {
+			const isSettingsLoaded = await this.loadSettings();
+
+			if (!isSettingsLoaded) {
+				new Notice(
+					"Settings failed to load. Please reload the Another Simple Todoist Sync plugin.",
+				);
+				return;
+			}
+			// This adds a settings tab so the user can configure various aspects of the plugin
+			this.addSettingTab(new AnotherSimpleTodoistSyncPluginSettingTab(this.app, this));
 		if (!this.settings.todoistAPIToken) {
 			new Notice("Please enter your Todoist API.");
 			//return
@@ -339,6 +342,7 @@ export default class AnotherSimpleTodoistSync extends Plugin {
 		//display default project for the current file on status bar
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
 		this.statusBar = this.addStatusBarItem();
+		});
 	}
 
 	async onunload() {
